@@ -1,0 +1,41 @@
+## See https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
+## and https://github.com/github/gitignore/blob/main/Node.gitignore
+
+# User-specific files
+*.DS_Store
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ist/
+[Ll]og/
+
+# Visual Studio files
+.vs/
+.vscode/
+*.vspscc
+*.vssscc
+*~
+*.log
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.env
+.env.local
+.env.*.local
+
+# Rider
+.idea/
+
+# Gemini/Specify temp folders
+.gemini/
+.specify/

@@ -31,7 +31,11 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+*   [ ] **API 優先設計**: 功能是否透過定義良好的 API 合約（如 OpenAPI）提供？
+*   [ ] **測試驅動開發**: 是否在實作前編寫測試？是否有明確的測試策略（單元、整合）？
+*   [ ] **乾淨架構**: 提議的結構是否遵循關注點分離（領域、應用、基礎設施）？
+*   [ ] **CI/CD**: 功能是否已整合到自動化的建置、測試和部署管線中？
+*   [ ] **可觀察性**: 設計是否包含結構化日誌、指標和追蹤？
 
 ## Project Structure
 

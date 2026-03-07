@@ -1,0 +1,124 @@
+openapi: 3.0.1
+info:
+  title: B2C 預約系統 API
+  description: 用於管理服務、可用時段和預約的 API。
+  version: v1.0
+paths:
+  /api/providers/availability:
+    post:
+      tags:
+        - ProviderAvailability
+      summary: (Provider) 批次建立可用時段
+      description: 允許 Provider 為自己建立一個或多個可用時段。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  startTime:
+                    type: string
+                    format: date-time
+                  endTime:
+                    type: string
+                    format: date-time
+      responses:
+        '201':
+          description: 時段已成功建立。
+        '400':
+          description: 輸入資料無效或時間重疊。
+  
+  /api/providers/availability/{slotId}:
+    delete:
+      tags:
+        - ProviderAvailability
+      summary: (Provider) 刪除一個可用時段
+      parameters:
+        - name: slotId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: 時段已成功刪除。
+        '404':
+          description: 找不到指定的時段。
+
+  /api/customers/providers/{providerId}/availability:
+    get:
+      tags:
+        - CustomerAvailability
+      summary: (Customer) 查詢 Provider 在特定日期範圍內的可用時段
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 成功返回可用時段列表。
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailabilitySlotDto'
+  
+  /api/bookings:
+    post:
+      tags:
+        - Bookings
+      summary: (Customer) 建立一個新的預約
+      description: Customer 選擇一個可用時段來建立預約，此操作應具備原子性。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingDto'
+      responses:
+        '201':
+          description: 預約請求已成功建立，狀態為 Pending。
+        '400':
+          description: 請求無效（例如時段已被預約）。
+        '404':
+          description: 找不到指定的服務或時段。
+
+components:
+  schemas:
+    AvailabilitySlotDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+    
+    CreateBookingDto:
+      type: object
+      properties:
+        serviceId:
+          type: integer
+        availabilitySlotId:
+          type: integer
