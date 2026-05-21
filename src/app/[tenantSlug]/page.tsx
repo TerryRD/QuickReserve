@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { addDays, format, parseISO, startOfDay } from 'date-fns'
-import { Calendar, Clock, DollarSign, ChevronRight } from 'lucide-react'
+import { Calendar, Clock, DollarSign, ChevronRight, Mail, Phone, MessageCircle } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getTenantBySlug } from '@/lib/auth/get-tenant-context'
 
@@ -114,9 +114,45 @@ export default async function TenantPublicPage({
               <span className="italic">{tenant.name}</span>
             </h1>
             <p className="mt-6 max-w-md text-sm leading-relaxed text-background/75">
-              在下方選擇您想預訂的服務、日期與時段。送出後狀態為「待確認」，
-              教練確認後即正式成立。
+              {tenant.description?.trim() ||
+                '在下方選擇您想預訂的服務、日期與時段。送出後狀態為「待確認」，教練確認後即正式成立。'}
             </p>
+            {(tenant.contact_email ||
+              tenant.contact_phone ||
+              tenant.contact_line_id ||
+              tenant.contact_note) && (
+              <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-xs text-background/80">
+                {tenant.contact_email && (
+                  <a
+                    href={`mailto:${tenant.contact_email}`}
+                    className="inline-flex items-center gap-1.5 hover:text-background"
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    {tenant.contact_email}
+                  </a>
+                )}
+                {tenant.contact_phone && (
+                  <a
+                    href={`tel:${tenant.contact_phone}`}
+                    className="inline-flex items-center gap-1.5 hover:text-background"
+                  >
+                    <Phone className="h-3.5 w-3.5" />
+                    {tenant.contact_phone}
+                  </a>
+                )}
+                {tenant.contact_line_id && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    LINE：{tenant.contact_line_id}
+                  </span>
+                )}
+                {tenant.contact_note && (
+                  <span className="inline-flex items-center gap-1.5 text-background/70">
+                    {tenant.contact_note}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </header>
 

@@ -8,6 +8,14 @@ export type TenantContext = {
   status: 'active' | 'suspended'
 }
 
+export type PublicTenant = TenantContext & {
+  description: string | null
+  contact_email: string | null
+  contact_phone: string | null
+  contact_line_id: string | null
+  contact_note: string | null
+}
+
 export async function getTenantContext(tenantId: string): Promise<TenantContext> {
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase
@@ -25,12 +33,14 @@ export async function getTenantContext(tenantId: string): Promise<TenantContext>
  * is responsible for rendering the "suspended" state. Without this, anonymous
  * users would see a generic 404 instead of "服務暫停中".
  */
-export async function getTenantBySlug(slug: string): Promise<TenantContext | null> {
+export async function getTenantBySlug(slug: string): Promise<PublicTenant | null> {
   const admin = createSupabaseAdminClient()
   const { data } = await admin
     .from('tenants')
-    .select('id, slug, name, status')
+    .select(
+      'id, slug, name, status, description, contact_email, contact_phone, contact_line_id, contact_note',
+    )
     .eq('slug', slug)
     .maybeSingle()
-  return (data as TenantContext) ?? null
+  return (data as PublicTenant) ?? null
 }

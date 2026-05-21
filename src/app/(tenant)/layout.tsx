@@ -3,6 +3,7 @@ import { Calendar, LogOut } from 'lucide-react'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { getTenantContext } from '@/lib/auth/get-tenant-context'
 import SidebarNav from './sidebar-nav'
+import MobileSidebar from './mobile-sidebar'
 
 export default async function TenantLayout({ children }: { children: React.ReactNode }) {
   const session = await requireTenantMember()
@@ -24,9 +25,17 @@ export default async function TenantLayout({ children }: { children: React.React
 
   const roleLabel = session.role === 'tenant_owner' ? 'Owner' : 'Staff'
 
+  const isOwner = session.role === 'tenant_owner'
+
   return (
-    <div className="grid min-h-screen md:grid-cols-[240px_1fr]">
-      <aside className="flex flex-col bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:h-screen">
+    <div className="md:grid md:min-h-screen md:grid-cols-[240px_1fr]">
+      <MobileSidebar
+        tenantName={tenant.name}
+        tenantSlug={tenant.slug}
+        roleLabel={roleLabel}
+        isOwner={isOwner}
+      />
+      <aside className="hidden flex-col bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:flex md:h-screen">
         <div className="border-b border-sidebar-border p-4">
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white">

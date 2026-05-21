@@ -1,7 +1,7 @@
 # QuickReserve 重新架構設計文件
 
 **建立日期**: 2026-05-21
-**最後更新**: 2026-05-21（含 UX audit 後新增的 FR-070~076）
+**最後更新**: 2026-05-21（第三輪 UX 收尾：FR-100~104 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm）
 **狀態**: MVP 已實作完成（v0.1）
 **作者**: terry@webplus.com.tw（透過 brainstorming skill 共同產出）
 
@@ -228,6 +228,22 @@
 ### 4.16 助教 UX 標示（UX audit 第二輪）
 - **FR-098**: Sidebar 顯示明顯的 Owner / Staff 角色 badge（顏色不同）
 - **FR-099**: Staff 在 `/services` 頁看到「唯讀」說明 banner
+
+### 4.17 租戶資料管理（UX audit 第三輪）
+- **FR-100**: 租戶 Owner 可於 `/settings/profile` 編輯租戶名稱、描述以及聯絡方式（Email / 電話 / LINE ID / 自由備註）。schema 對應 `tenants.contact_email / contact_phone / contact_line_id / contact_note`
+- **FR-101**: 公開預約頁 `/[tenantSlug]` 在 hero 區顯示租戶 description 與已填寫的聯絡方式（mailto:、tel: 可點擊），未填寫的欄位自動隱藏
+
+### 4.18 行事曆視圖模式（UX audit 第三輪）
+- **FR-102**: 行事曆支援三種視圖模式 `?view=week|day|list`：
+  - `week`（預設）：原有 7 日網格
+  - `day`：單日 1 欄網格，URL 帶 `?date=yyyy-MM-dd`（預設今天），前/後切換以日為單位
+  - `list`：依日期分組的線性清單，適合行動裝置與快速掃描
+
+### 4.19 行動側欄（UX audit 第三輪）
+- **FR-103**: 在 `md` 以下的螢幕寬度，主要側欄改為頂端「☰」漢堡選單，點開後以 Sheet drawer 顯示完整導覽；點任一連結後自動關閉，避免行動裝置被側欄佔滿畫面
+
+### 4.20 全面替換 native confirm()（UX audit 第三輪）
+- **FR-104**: 所有破壞性 / 不可逆動作改用 shadcn `AlertDialog`-based `ConfirmDialog`，涵蓋：移除助教、暫停 / 啟用租戶、學員取消預約、教練取消預約、刪除時段、刪除重複規則、封鎖 / 解除封鎖學員。Native `window.confirm()` 不再出現於程式碼
 
 ---
 
@@ -1000,5 +1016,9 @@ SENTRY_AUTH_TOKEN
 | 2026-05-21 | 學員封鎖（schema 變更 + RPC 防呆） | FR-088 ~ 091 | （本次） |
 | 2026-05-21 | 改期 reschedule（新 RPC + 跨頁面整合） | FR-092 ~ 096 | （本次） |
 | 2026-05-21 | 服務啟用 toggle / 助教 UX 標示 | FR-097 ~ 099 | （本次） |
+| 2026-05-21 | 租戶資料 + 公開頁聯絡方式（新增 `tenants.contact_*` 欄位、`/settings/profile`）| FR-100 ~ 101 | （本次） |
+| 2026-05-21 | 行事曆 `?view=week\|day\|list` 視圖切換 | FR-102 | （本次） |
+| 2026-05-21 | 行動裝置漢堡側欄（`md:hidden` Sheet drawer） | FR-103 | （本次） |
+| 2026-05-21 | 全面替換 `window.confirm()` 為 `ConfirmDialog` | FR-104 | （本次） |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。

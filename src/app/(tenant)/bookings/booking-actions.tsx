@@ -3,6 +3,7 @@
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import ConfirmDialog from '@/components/confirm-dialog'
 import { cancelBookingByTenantAction, confirmBookingAction } from './actions'
 
 export function ConfirmButton({ bookingId }: { bookingId: string }) {
@@ -23,15 +24,17 @@ export function CancelButton({ bookingId }: { bookingId: string }) {
     onError: ({ error }) => toast.error(error.serverError?.message ?? '取消失敗'),
   })
   return (
-    <Button
-      size="sm"
-      variant="outline"
-      disabled={isPending}
-      onClick={() => {
-        if (confirm('確定要取消此預約嗎？')) execute({ bookingId })
-      }}
-    >
-      {isPending ? '...' : '取消'}
-    </Button>
+    <ConfirmDialog
+      trigger={
+        <Button size="sm" variant="outline" disabled={isPending}>
+          {isPending ? '...' : '取消'}
+        </Button>
+      }
+      title="確定要取消此預約嗎？"
+      description="取消後該時段會釋出，且學員會收到通知（若啟用推播）。"
+      confirmLabel="取消預約"
+      variant="destructive"
+      onConfirm={() => execute({ bookingId })}
+    />
   )
 }

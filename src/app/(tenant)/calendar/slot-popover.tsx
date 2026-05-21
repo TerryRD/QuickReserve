@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import ConfirmDialog from '@/components/confirm-dialog'
 import { deleteSlotAction } from './actions'
 
 const STATUS_LABEL: Record<string, { label: string; class: string }> = {
@@ -110,17 +111,19 @@ export default function SlotPopover({
             </Link>
           ) : null}
           {canDelete && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={deleting}
-              onClick={() => {
-                if (confirm('確定要刪除此時段嗎？')) deleteSlot({ id: slot.id })
-              }}
-            >
-              <Trash2 className="mr-1 h-3.5 w-3.5" />
-              {deleting ? '刪除中...' : '刪除時段'}
-            </Button>
+            <ConfirmDialog
+              trigger={
+                <Button variant="outline" size="sm" disabled={deleting}>
+                  <Trash2 className="mr-1 h-3.5 w-3.5" />
+                  {deleting ? '刪除中...' : '刪除時段'}
+                </Button>
+              }
+              title="確定要刪除此時段嗎？"
+              description="刪除後將從行事曆移除。若此時段屬於重複規則，下一輪會重新產生。"
+              confirmLabel="刪除"
+              variant="destructive"
+              onConfirm={() => deleteSlot({ id: slot.id })}
+            />
           )}
           {!canDelete && slot.status === 'available' && !slot.isOwn && (
             <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>

@@ -32,13 +32,21 @@ export default function WeekGrid({
   slots,
   tzOffsetHours,
   showMemberLabel,
+  daysCount = 7,
 }: {
   weekStart: Date
   slots: SlotDisplay[]
   tzOffsetHours: number
   showMemberLabel: boolean
+  daysCount?: number
 }) {
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+  const days = Array.from({ length: daysCount }, (_, i) => addDays(weekStart, i))
+  const gridCols =
+    daysCount === 1
+      ? 'grid-cols-[60px_1fr]'
+      : daysCount === 7
+        ? 'grid-cols-[60px_repeat(7,1fr)]'
+        : `grid-cols-[60px_repeat(${daysCount},1fr)]`
 
   const slotsByDay: Record<string, SlotDisplay[]> = {}
   for (const s of slots) {
@@ -50,7 +58,7 @@ export default function WeekGrid({
 
   return (
     <div className="overflow-x-auto rounded-xl border bg-card">
-      <div className="grid grid-cols-[60px_repeat(7,1fr)] gap-px bg-border text-xs">
+      <div className={`grid ${gridCols} gap-px bg-border text-xs`}>
         <div className="bg-card p-2" />
         {days.map((d) => (
           <div key={d.toISOString()} className="bg-card p-2 text-center font-medium">

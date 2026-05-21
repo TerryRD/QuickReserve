@@ -6,7 +6,7 @@
 
 1. 教練給你一個專屬連結，例如：
    - `quick-reserve-mu.vercel.app/demo-wang-coach`
-2. 開啟連結 → 看到教練介紹頁
+2. 開啟連結 → 看到教練介紹頁（hero 區會看到教練的描述與聯絡方式 — Email / 電話 / LINE，可直接點擊）
 
 頁面上會有三步：
 

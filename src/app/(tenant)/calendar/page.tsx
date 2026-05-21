@@ -1,5 +1,16 @@
 import Link from 'next/link'
-import { addWeeks, endOfWeek, format, parseISO, startOfWeek, subWeeks } from 'date-fns'
+import {
+  addDays,
+  addWeeks,
+  endOfDay,
+  endOfWeek,
+  format,
+  parseISO,
+  startOfDay,
+  startOfWeek,
+  subDays,
+  subWeeks,
+} from 'date-fns'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { buttonVariants } from '@/components/ui/button'
@@ -7,19 +18,38 @@ import WeekGrid from './week-grid'
 import NewSlotDialog from './new-slot-dialog'
 import RecurringRuleDialog from './recurring-rule-dialog'
 import MemberFilter from './member-filter'
+import ViewTabs from './view-tabs'
+import CalendarListView from './list-view'
 
 const TZ_OFFSET_HOURS = 8
+
+type View = 'week' | 'day' | 'list'
 
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string; members?: string }>
+  searchParams: Promise<{
+    week?: string
+    members?: string
+    view?: string
+    date?: string
+  }>
 }) {
   const session = await requireTenantMember()
   const params = await searchParams
-  const anchor = params.week ? parseISO(params.week) : new Date()
-  const weekStart = startOfWeek(anchor, { weekStartsOn: 1 })
-  const weekEnd = endOfWeek(anchor, { weekStartsOn: 1 })
+  const view: View =
+    params.view === 'day' || params.view === 'list' ? params.view : 'week'
+
+  // Anchor & range:
+  // week / list: full week
+  // day: a single day (defaults to today)
+  const dayAnchor = params.date ? parseISO(params.date) : new Date()
+  const weekAnchor = params.week ? parseISO(params.week) : new Date()
+  const weekStart = startOfWeek(weekAnchor, { weekStartsOn: 1 })
+  const weekEnd = endOfWeek(weekAnchor, { weekStartsOn: 1 })
+
+  const rangeStart = view === 'day' ? startOfDay(dayAnchor) : weekStart
+  const rangeEnd = view === 'day' ? endOfDay(dayAnchor) : weekEnd
 
   const supabase = await createSupabaseServerClient()
 
@@ -36,7 +66,7 @@ export default async function CalendarPage({
       .select('id, role, invited_email, user_id')
       .eq('tenant_id', session.tenantId)
       .eq('status', 'active')
-      .order('role', { ascending: false }) // owner first (descending: owner > staff)
+      .order('role', { ascending: false })
     allMembers = (data ?? []).map((m) => ({
       id: m.id,
       role: m.role,
@@ -47,7 +77,6 @@ export default async function CalendarPage({
     allMembers = [{ id: session.memberId, role: 'staff', label: '我', isSelf: true }]
   }
 
-  // Parse selected members
   const isAll = !params.members || params.members === 'all'
   const selectedIds = isAll
     ? allMembers.map((m) => m.id)
@@ -59,11 +88,10 @@ export default async function CalendarPage({
     .from('availability_slots')
     .select('id, start_at, end_at, status, member_id, service_id, services(name)')
     .in('member_id', effectiveIds)
-    .gte('start_at', weekStart.toISOString())
-    .lte('start_at', weekEnd.toISOString())
+    .gte('start_at', rangeStart.toISOString())
+    .lte('start_at', rangeEnd.toISOString())
     .order('start_at')
 
-  // For each slot, find the booking if status is pending or booked
   const slotIds = (slots ?? []).filter((s) => s.status !== 'available').map((s) => s.id)
   const bookingsBySlot: Record<
     string,
@@ -91,9 +119,39 @@ export default async function CalendarPage({
     .eq('is_active', true)
     .order('name')
 
+  // Nav links
+  const memberQs = params.members ? `&members=${params.members}` : ''
+  const viewQs = view !== 'week' ? `&view=${view}` : ''
+
+  // For week/list mode use week-based prev/next; for day use day-based
   const prevWeek = format(subWeeks(weekStart, 1), 'yyyy-MM-dd')
   const nextWeek = format(addWeeks(weekStart, 1), 'yyyy-MM-dd')
-  const memberQs = params.members ? `&members=${params.members}` : ''
+  const prevDay = format(subDays(dayAnchor, 1), 'yyyy-MM-dd')
+  const nextDay = format(addDays(dayAnchor, 1), 'yyyy-MM-dd')
+
+  const navPrevHref =
+    view === 'day'
+      ? `/calendar?view=day&date=${prevDay}${memberQs}`
+      : `/calendar?week=${prevWeek}${memberQs}${viewQs}`
+  const navNextHref =
+    view === 'day'
+      ? `/calendar?view=day&date=${nextDay}${memberQs}`
+      : `/calendar?week=${nextWeek}${memberQs}${viewQs}`
+  const navTodayHref =
+    view === 'day'
+      ? `/calendar?view=day${memberQs}`
+      : `/calendar${memberQs ? `?${memberQs.slice(1)}${viewQs}` : viewQs ? `?${viewQs.slice(1)}` : ''}`
+
+  const navLabel =
+    view === 'day'
+      ? format(dayAnchor, 'yyyy/MM/dd (EEEE)')
+      : `${format(weekStart, 'yyyy/MM/dd')} – ${format(weekEnd, 'MM/dd')}`
+
+  // Build view-tabs query (preserving current week / members / date)
+  const tabQuery = new URLSearchParams()
+  if (params.week) tabQuery.set('week', params.week)
+  if (params.members) tabQuery.set('members', params.members)
+  if (view === 'day' && params.date) tabQuery.set('date', params.date)
 
   return (
     <div className="space-y-5">
@@ -110,6 +168,7 @@ export default async function CalendarPage({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
+          <ViewTabs current={view} query={tabQuery.toString()} />
           {allMembers.length > 1 && (
             <MemberFilter
               members={allMembers}
@@ -119,22 +178,20 @@ export default async function CalendarPage({
           )}
           <div className="flex items-center gap-2 text-sm">
             <Link
-              href={`/calendar?week=${prevWeek}${memberQs}`}
+              href={navPrevHref}
               className={buttonVariants({ variant: 'outline', size: 'sm' })}
             >
               ◄
             </Link>
-            <div className="min-w-44 text-center font-medium">
-              {format(weekStart, 'yyyy/MM/dd')} – {format(weekEnd, 'MM/dd')}
-            </div>
+            <div className="min-w-44 text-center font-medium">{navLabel}</div>
             <Link
-              href={`/calendar${memberQs ? `?${memberQs.slice(1)}` : ''}`}
+              href={navTodayHref}
               className={buttonVariants({ variant: 'ghost', size: 'sm' })}
             >
-              本週
+              {view === 'day' ? '今天' : '本週'}
             </Link>
             <Link
-              href={`/calendar?week=${nextWeek}${memberQs}`}
+              href={navNextHref}
               className={buttonVariants({ variant: 'outline', size: 'sm' })}
             >
               ►
@@ -165,9 +222,8 @@ export default async function CalendarPage({
         </div>
       </div>
 
-      <WeekGrid
-        weekStart={weekStart}
-        slots={(slots ?? []).map((s) => {
+      {(() => {
+        const slotDisplays = (slots ?? []).map((s) => {
           const member = allMembers.find((m) => m.id === s.member_id)
           const booking = bookingsBySlot[s.id]
           return {
@@ -182,10 +238,29 @@ export default async function CalendarPage({
             customerName: booking?.customerName ?? null,
             bookingId: booking?.id ?? null,
           }
-        })}
-        tzOffsetHours={TZ_OFFSET_HOURS}
-        showMemberLabel={!viewingSelfOnly}
-      />
+        })
+
+        if (view === 'list') {
+          return (
+            <CalendarListView
+              slots={slotDisplays}
+              tzOffsetHours={TZ_OFFSET_HOURS}
+              showMemberLabel={!viewingSelfOnly}
+            />
+          )
+        }
+
+        // week (full 7 days) or day (single-day filter applied via query range)
+        return (
+          <WeekGrid
+            weekStart={view === 'day' ? startOfDay(dayAnchor) : weekStart}
+            slots={slotDisplays}
+            tzOffsetHours={TZ_OFFSET_HOURS}
+            showMemberLabel={!viewingSelfOnly}
+            daysCount={view === 'day' ? 1 : 7}
+          />
+        )
+      })()}
     </div>
   )
 }

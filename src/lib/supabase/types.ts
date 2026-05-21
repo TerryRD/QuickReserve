@@ -550,6 +550,10 @@ export type Database = {
       tenants: {
         Row: {
           avatar_url: string | null
+          contact_email: string | null
+          contact_line_id: string | null
+          contact_note: string | null
+          contact_phone: string | null
           created_at: string
           description: string | null
           id: string
@@ -560,6 +564,10 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          contact_email?: string | null
+          contact_line_id?: string | null
+          contact_note?: string | null
+          contact_phone?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -570,6 +578,10 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          contact_email?: string | null
+          contact_line_id?: string | null
+          contact_note?: string | null
+          contact_phone?: string | null
           created_at?: string
           description?: string | null
           id?: string
