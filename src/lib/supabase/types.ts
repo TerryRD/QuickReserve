@@ -110,6 +110,83 @@ export type Database = {
           },
         ]
       }
+      bookings: {
+        Row: {
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          customer_id: string
+          customer_notes: string | null
+          extended_properties: Json | null
+          id: string
+          service_id: string
+          slot_id: string
+          status: string
+          tenant_id: string
+          tenant_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          customer_id: string
+          customer_notes?: string | null
+          extended_properties?: Json | null
+          id?: string
+          service_id: string
+          slot_id: string
+          status?: string
+          tenant_id: string
+          tenant_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          customer_id?: string
+          customer_notes?: string | null
+          extended_properties?: Json | null
+          id?: string
+          service_id?: string
+          slot_id?: string
+          status?: string
+          tenant_id?: string
+          tenant_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "availability_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string
@@ -403,6 +480,82 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      book_slot_atomic: {
+        Args: {
+          p_customer_id: string
+          p_customer_notes?: string
+          p_slot_id: string
+        }
+        Returns: {
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          customer_id: string
+          customer_notes: string | null
+          extended_properties: Json | null
+          id: string
+          service_id: string
+          slot_id: string
+          status: string
+          tenant_id: string
+          tenant_notes: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      cancel_booking: {
+        Args: { p_booking_id: string }
+        Returns: {
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          customer_id: string
+          customer_notes: string | null
+          extended_properties: Json | null
+          id: string
+          service_id: string
+          slot_id: string
+          status: string
+          tenant_id: string
+          tenant_notes: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      confirm_booking: {
+        Args: { p_booking_id: string }
+        Returns: {
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          customer_id: string
+          customer_notes: string | null
+          extended_properties: Json | null
+          id: string
+          service_id: string
+          slot_id: string
+          status: string
+          tenant_id: string
+          tenant_notes: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       current_user_owner_tenant_ids: { Args: never; Returns: string[] }
       current_user_tenant_ids: { Args: never; Returns: string[] }
       is_platform_admin: { Args: never; Returns: boolean }
