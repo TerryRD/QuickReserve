@@ -1,7 +1,7 @@
 # QuickReserve 重新架構設計文件
 
 **建立日期**: 2026-05-21
-**最後更新**: 2026-05-21（第三輪 UX 收尾：FR-100~104 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm）
+**最後更新**: 2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
 **狀態**: MVP 已實作完成（v0.1）
 **作者**: terry@webplus.com.tw（透過 brainstorming skill 共同產出）
 
@@ -244,6 +244,17 @@
 
 ### 4.20 全面替換 native confirm()（UX audit 第三輪）
 - **FR-104**: 所有破壞性 / 不可逆動作改用 shadcn `AlertDialog`-based `ConfirmDialog`，涵蓋：移除助教、暫停 / 啟用租戶、學員取消預約、教練取消預約、刪除時段、刪除重複規則、封鎖 / 解除封鎖學員。Native `window.confirm()` 不再出現於程式碼
+
+### 4.21 錯誤頁友善化（Production-safe error boundary）
+- **FR-105**: 所有 `error.tsx`（root / `(tenant)` / `(customer)` / `(platform)`）不再直接顯示 `error.message`：
+  - 顯示固定的中文友善文案 + AlertCircle 圖示
+  - 顯示 Next.js 自動產生的 `error.digest` 作為可引用的錯誤代碼（方便對 server log）
+  - 提供「重試 / 回首頁 / 回儀表板」按鈕
+  - **僅在 `NODE_ENV !== 'production'` 時**顯示 stack trace（避免把 React minified error #N、檔案路徑、內部 stack 洩露給最終使用者）
+- **FR-106**: `(platform)` route group 補上自己的 `error.tsx`（原本沒有 → 平台後台任何錯誤都會冒泡到 root boundary，破壞 layout 結構）
+
+### 4.22 PlatformSidebarNav icon map 強化
+- **FR-107**: `PlatformSidebarNav` 的 `ICONS` map 在 lookup 失敗時 fallback 到 `LayoutDashboard`（`ICONS[name] ?? LayoutDashboard`），防止未來新增路由時忘記註冊圖示就 throw React error #130
 
 ---
 
@@ -1020,5 +1031,7 @@ SENTRY_AUTH_TOKEN
 | 2026-05-21 | 行事曆 `?view=week\|day\|list` 視圖切換 | FR-102 | （本次） |
 | 2026-05-21 | 行動裝置漢堡側欄（`md:hidden` Sheet drawer） | FR-103 | （本次） |
 | 2026-05-21 | 全面替換 `window.confirm()` 為 `ConfirmDialog` | FR-104 | （本次） |
+| 2026-05-21 | Hotfix: PlatformSidebarNav `ClipboardList` 漏註冊 → React #130；補 fallback | FR-107 | `6d865b5` |
+| 2026-05-21 | Hotfix: error.tsx 不再外洩 `error.message`（顯示友善文案 + digest，dev 才秀 stack）；補 `(platform)/error.tsx` | FR-105 ~ 106 | `6d865b5` |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。
