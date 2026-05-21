@@ -39,6 +39,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      availability_slots: {
+        Row: {
+          created_at: string
+          end_at: string
+          extended_properties: Json | null
+          id: string
+          member_id: string
+          recurring_rule_id: string | null
+          service_id: string
+          start_at: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_at: string
+          extended_properties?: Json | null
+          id?: string
+          member_id: string
+          recurring_rule_id?: string | null
+          service_id: string
+          start_at: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_at?: string
+          extended_properties?: Json | null
+          id?: string
+          member_id?: string
+          recurring_rule_id?: string | null
+          service_id?: string
+          start_at?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_slots_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "availability_slots_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "availability_slots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string
