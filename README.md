@@ -1,105 +1,246 @@
-# QuickReserve - B2C 預約系統 (全端)
+# QuickReserve — B2B2C 預約系統 SaaS
 
-## 專案概述
+一個多租戶預約 SaaS 平台，給服務提供者（教練、顧問等）管理可預約時段、開放給自己的客戶預約。
 
-QuickReserve 是一個全端 B2C 預約系統，旨在讓服務供應商管理其可用時段和服務，並讓客戶預約這些服務。系統中也包含用於監控的管理員介面。
-
-## 使用技術
-
-### 後端
-- **語言/版本**: C# (.NET 9.0)
-- **框架**: ASP.NET Core Web API
-- **ORM**: Entity Framework Core, Dapper
-- **資料庫**: SQL Server
-- **測試**: xUnit, Moq, Microsoft.AspNetCore.Mvc.Testing
-- **日誌**: NLog
-- **映射**: AutoMapper
-- **身份驗證**: JWT Bearer
-
-### 前端
-- **語言/版本**: TypeScript
-- **框架**: Vue 3 (Composition API, Vite)
-- **UI 函式庫**: Naive UI
-- **狀態管理**: Pinia
-- **HTTP 用戶端**: Axios
-- **測試**: Vitest, Vue Testing Library
-- **日期工具**: date-fns
-
-## 專案結構
-
-```
-/
-├── WebApi/                # 後端 ASP.NET Core Web API 專案
-├── WebApi.Test/           # 後端 xUnit 測試專案
-├── WebApp/                # 前端 Vue 3 + TypeScript 專案
-└── README.md              # 此檔案
-```
-
-## 設定與運行說明
-
-### 先決條件
-- .NET 9.0 SDK
-- Node.js (LTS 版本)
-- Docker Desktop (用於 SQL Server)
-- Git 用戶端
-
-### 1. 複製儲存庫
-```bash
-git clone <repository-url>
-cd QuickReserve
-```
-
-### 2. 啟動資料庫 (透過 Docker 運行 SQL Server)
-```bash
-docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=yourStrong(!)Password" \
-   -p 1433:1433 --name sql1 -d mcr.microsoft.com/mssql/server:2022-latest
-```
-*請務必將 `yourStrong(!)Password` 替換為一個安全的密碼。*
-
-### 3. 後端設定
-1.  **進入 `WebApi` 目錄:*
-    ```bash
-    cd WebApi
-    ```
-2.  **更新資料庫遷移和綱要:*
-    *(目前尚未新增任何遷移。此步驟將在建立遷移後應用。)*
-    ```bash
-    dotnet ef database update
-    ```
-3.  **運行後端應用程式:*
-    ```bash
-    dotnet run
-    ```
-    後端 API 通常可在 `https://localhost:7123` 存取，Swagger UI 則在 `https://localhost:7123/swagger`。
-
-### 4. 前端設定
-1.  **進入 `WebApp` 目錄:*
-    ```bash
-    cd WebApp
-    ```
-2.  **安裝依賴套件:*
-    ```bash
-    npm install
-    ```
-3.  **建立 `.env.local` 以設定 API 基本 URL:*
-    在 `WebApp` 目錄中，建立一個 `.env.local` 檔案，內容如下：
-    ```
-VITE_API_BASE_URL=https://localhost:7123
-```
-4.  **運行前端開發伺服器:*
-    ```bash
-    npm run dev
-    ```
-    前端應用程式通常可在 `http://localhost:5173` 存取。
-
-## 身份驗證與授權 (後端)
-- 後端使用 JWT Bearer 身份驗證。
-- 管理員端點 (`/api/admin/*`) 受基於角色的授權保護 (`[Authorize(Roles = "Admin")]`)。
-- JWT 配置詳細資訊位於 `appsettings.json` 中。
-
-## 測試
-- **後端測試**: 位於 `WebApi.Test/`。運行命令為 `dotnet test`。
-- **前端測試**: 位於 `WebApp/tests/unit/`。在 `WebApp` 目錄中運行命令為 `npm test`。
+> 舊版的 ASP.NET Core + Vue 程式碼已封存於 `legacy/`，僅保留作參考。
 
 ---
-**注意**: 此 `README.md` 提供了一般指南。有關資料初始化、實際使用者角色以及更複雜的身份驗證流程的具體細節將作為進一步開發的一部分。
+
+## 技術堆疊
+
+| 層 | 技術 |
+|----|------|
+| 框架 | Next.js 15（App Router、RSC、Server Actions） |
+| 語言 | TypeScript (strict) |
+| UI | Tailwind CSS + shadcn/ui (base-ui) |
+| 表單 | React Hook Form + Zod |
+| Server Action | `next-safe-action`（統一錯誤處理） |
+| 資料庫 | Supabase PostgreSQL（RLS、GIST EXCLUDE、RPC） |
+| 認證 | Supabase Auth |
+| 通知 | Web Push（VAPID）+ Service Worker |
+| 排程 | Vercel Cron（4 個 job） |
+| 部署 | Vercel（Production + Preview per branch） |
+| 測試 | Vitest（unit + integration with live Supabase） |
+
+---
+
+## 三層使用者
+
+| 角色 | 進入方式 | 可做什麼 |
+|------|---------|---------|
+| **平台管理員** | SQL 加入 `platform_admins` 表 | 看所有租戶 / 暫停啟用 / 邀請新教練 / 平台儀表板 |
+| **教練 Owner** | 平台管理員邀請 | 管理服務、行事曆、預約、邀請助教、看助教行事曆 |
+| **教練 Staff（助教）** | Owner 邀請 | 管理自己的行事曆與預約 |
+| **學員 (Customer)** | 自行註冊 | 透過 `/[tenantSlug]` 預約教練、看自己的預約 |
+
+---
+
+## 路由地圖
+
+```
+/                              首頁（依角色 redirect）
+/login, /signup, /callback     Auth
+/invite/[token]                邀請接受流程
+
+(platform) — 平台管理員
+  /platform/dashboard          統計儀表板
+  /platform/tenants            租戶管理（邀請 / 暫停 / 啟用）
+
+(tenant) — 教練後台
+  /dashboard                   儀表板
+  /calendar                    行事曆週檢視
+  /calendar?member=<id>        Owner 檢視他人行事曆
+  /services                    服務項目管理
+  /bookings                    預約管理（確認 / 取消）
+  /staff                       助教管理（Owner 限定）
+  /settings/notifications      通知偏好
+
+(customer) — 學員後台
+  /my-bookings                 我的預約
+
+[tenantSlug] — 公開預約頁
+  /[slug]                      教練介紹 + 服務列表 + 日期/時間挑選
+  /book/[slotId]               預約確認頁
+
+API
+  /api/cron/materialize-recurring    每日 00:30 UTC+8（90 天滑動視窗）
+  /api/cron/weekly-summary           每週日 20:00 UTC+8
+  /api/cron/daily-reminder           每小時 06-12 UTC+8（hourly cron）
+  /api/cron/pre-event-reminder       每分鐘（需 Vercel Pro）
+  /api/push/subscribe                Web Push 訂閱
+```
+
+---
+
+## 開發環境設定
+
+### 先決條件
+
+- Node.js 20+
+- npm 10+
+- Vercel CLI (`npm i -g vercel`)
+- Supabase CLI（已透過 devDependency 提供 `npx supabase`）
+- Supabase 雲端 project + Vercel project（兩者已串接 GitHub）
+
+### 第一次設定
+
+```bash
+# 1. Clone
+git clone https://github.com/TerryRD/QuickReserve.git
+cd QuickReserve
+
+# 2. 安裝
+npm install
+
+# 3. 連結 Vercel（會問 login → 選 project）
+vercel link
+
+# 4. 拉 env vars 到本機
+vercel env pull .env.local
+
+# 5. 連結 Supabase
+npx supabase login  # 或設 SUPABASE_ACCESS_TOKEN env
+npx supabase link --project-ref <your-project-ref>
+
+# 6. 套 migrations（cloud DB 已有，本機僅同步檔案）
+npm run db:push
+npm run db:types  # 重新產生 TS 型別
+
+# 7. 啟動 dev server
+npm run dev      # http://localhost:3000
+```
+
+---
+
+## 環境變數
+
+| 變數 | 說明 | 敏感 |
+|------|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | 否 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase publishable key | 否 |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase secret key（server-only） | **是** |
+| `SUPABASE_PROJECT_REF` | Supabase project ref | 否 |
+| `NEXT_PUBLIC_APP_URL` | 應用 base URL | 否 |
+| `CRON_SECRET` | Vercel Cron 認證 token | **是** |
+| `LOG_LEVEL` | `info` / `debug` / `error` | 否 |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push 公鑰 | 否 |
+| `VAPID_PRIVATE_KEY` | Web Push 私鑰 | **是** |
+| `VAPID_SUBJECT` | `mailto:` 聯絡信箱 | 否 |
+
+---
+
+## 開發指令
+
+```bash
+npm run dev              # 啟動 dev server
+npm run build            # 產生 production build
+npm run lint             # ESLint
+npm run format           # Prettier 寫入
+npm run format:check     # Prettier 檢查（CI 用）
+npm run typecheck        # TypeScript 檢查
+npm run test             # Unit tests (Vitest)
+npm run test:integration # 對 live Supabase 跑整合測試
+npm run db:push          # 套 migrations 到 cloud
+npm run db:diff          # 看 cloud vs local schema diff
+npm run db:types         # 從 cloud schema 重新產生 src/lib/supabase/types.ts
+npm run db:reset         # 重置 cloud DB（小心！）
+```
+
+---
+
+## 部署
+
+- **Production**：push 到 `master` → Vercel 自動部署到 production 域名
+- **Preview**：push 到任何 feature branch → Vercel 建 preview deploy（每個 branch 有獨立 URL）
+- **Vercel Pro 必須**：`pre-event-reminder` cron 為每分鐘頻率，需要 Pro 計畫。Hobby 計畫只支援每日 cron，請至少把這個 cron 暫時註解掉
+
+---
+
+## 平台管理員初始化
+
+Plan 1 把第一位平台管理員設計成手動建立（intentional 安全邊界）：
+
+```sql
+-- 在 Supabase Dashboard → SQL Editor 跑
+insert into public.platform_admins (user_id)
+values ('YOUR-AUTH-USER-UUID')
+on conflict (user_id) do nothing;
+```
+
+UUID 可以在 Supabase Dashboard → Authentication → Users 找到。
+
+---
+
+## 資料庫 Schema 概覽
+
+13 個 migrations 建立的 11 個業務表：
+
+```
+身分群（5 表）
+  tenants — 教練租戶
+  tenant_members — Owner / Staff（多層 hierarchy 預留）
+  platform_admins — 平台管理員
+  customers — 學員 (1:1 auth.users)
+  tenant_customers — 學員與租戶的橋接（資料隔離用）
+
+服務 / 行事曆（3 表）
+  services — 教練的服務項目
+  recurring_rules — 重複規則設定
+  availability_slots — 物化的時段（GIST EXCLUDE 防重疊）
+
+預約（1 表）
+  bookings — 預約紀錄（pending/confirmed/completed/cancelled）
+
+通知（3 表）
+  push_subscriptions — Web Push 訂閱
+  notification_preferences — 使用者偏好
+  notification_log — 去重 + 審計
+```
+
+關鍵 RPC 函式：
+- `book_slot_atomic(slot_id, customer_id, notes)` — 原子性預約建立（SELECT FOR UPDATE）
+- `confirm_booking(booking_id)` — 教練確認
+- `cancel_booking(booking_id)` — 客戶或教練取消
+
+---
+
+## 測試覆蓋
+
+| 種類 | 數量 | 範圍 |
+|------|------|------|
+| Unit | 20 | errors, safe-action, recurrence, conflicts |
+| Integration（live Supabase） | 13 | RLS 隔離、EXCLUDE 約束、recurring rules、atomic booking、staff isolation |
+
+---
+
+## 規格與計畫
+
+- 規格：[`docs/superpowers/specs/2026-05-21-quickreserve-redesign-design.md`](docs/superpowers/specs/2026-05-21-quickreserve-redesign-design.md)
+- 計畫：[`docs/superpowers/plans/`](docs/superpowers/plans/) — Plan 1 完整 task 分解；Plan 2-7 為小型 spec
+
+完成的 7 個 git tags：
+- `plan-1-foundation`
+- `plan-2-services-and-calendar`
+- `plan-3-recurring-and-bulk`
+- `plan-4-booking-flow`
+- `plan-5-staff-management`
+- `plan-6-notifications`
+- `plan-7-platform-and-polish`（最終）
+
+---
+
+## 已知限制 / 後續可做
+
+- **金流**：尚未整合（Stripe / ECPay / LINE Pay）
+- **多時區**：MVP 只支援 Asia/Taipei
+- **多層助教**：DB schema 已預留 `parent_member_id`，UI 只支援一層
+- **檔案匯入**：CSV / iCal / Google Calendar 同步未做
+- **LINE 通知**：規格保留，目前只有 Web Push
+- **Rate limit**：尚未串 Upstash，但 spec 已設計（L1 防護）
+- **Sentry**：尚未串接，目前僅 `console.error`
+
+---
+
+## 授權 / 維護
+
+Personal project, all rights reserved. terry@webplus.com.tw
