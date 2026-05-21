@@ -456,6 +456,7 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
+          is_blocked: boolean
           tenant_id: string
           tenant_notes: string | null
         }
@@ -463,6 +464,7 @@ export type Database = {
           created_at?: string
           customer_id: string
           id?: string
+          is_blocked?: boolean
           tenant_id: string
           tenant_notes?: string | null
         }
@@ -470,6 +472,7 @@ export type Database = {
           created_at?: string
           customer_id?: string
           id?: string
+          is_blocked?: boolean
           tenant_id?: string
           tenant_notes?: string | null
         }
@@ -661,6 +664,30 @@ export type Database = {
       current_user_owner_tenant_ids: { Args: never; Returns: string[] }
       current_user_tenant_ids: { Args: never; Returns: string[] }
       is_platform_admin: { Args: never; Returns: boolean }
+      reschedule_booking: {
+        Args: { p_new_slot_id: string; p_old_booking_id: string }
+        Returns: {
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          customer_id: string
+          customer_notes: string | null
+          extended_properties: Json | null
+          id: string
+          service_id: string
+          slot_id: string
+          status: string
+          tenant_id: string
+          tenant_notes: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never

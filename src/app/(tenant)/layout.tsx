@@ -34,7 +34,17 @@ export default async function TenantLayout({ children }: { children: React.React
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold">{tenant.name}</div>
-              <div className="text-xs text-sidebar-foreground/60">{roleLabel}</div>
+              <div className="mt-0.5 inline-flex items-center gap-1">
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider ${
+                    session.role === 'tenant_owner'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'bg-sidebar-accent text-sidebar-accent-foreground'
+                  }`}
+                >
+                  {roleLabel}
+                </span>
+              </div>
             </div>
           </Link>
         </div>

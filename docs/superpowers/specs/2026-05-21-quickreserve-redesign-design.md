@@ -203,6 +203,32 @@
 - **FR-082**: 詳情頁顯示：基本資訊、成員列表、服務列表、最近 10 筆預約、學員 chip 列
 - **FR-083**: 4 個統計卡：成員數、服務數、未來時段數、預約數 + 待確認數
 
+### 4.12 平台管理員擴充能力（UX audit 第二輪）
+- **FR-084**: `/platform/tenants` 加入搜尋框（名稱 / slug / email）+ 狀態 filter
+- **FR-085**: 過期或未接受的邀請可由平台管理員「重新產生邀請連結」（保留同 tenant，重設 token 與 7 天 expiry）
+- **FR-086**: 平台管理員可為任意教練「產生密碼重設連結」（透過 Supabase Auth `generateLink` recovery type）
+- **FR-087**: 新增 `/platform/bookings` 全平台預約唯讀頁（status filter + tenant select，前 100 筆）
+
+### 4.13 學員封鎖（UX audit 第二輪，含 schema 變更）
+- **FR-088**: 教練可在 `/customers` 頁切換特定學員為「封鎖」狀態
+- **FR-089**: `tenant_customers` 新增 `is_blocked` 欄位（default false）
+- **FR-090**: `book_slot_atomic` RPC 新增封鎖檢查：若 `is_blocked=true`，拋出 `CUSTOMER_BLOCKED`
+- **FR-091**: 既有預約不受封鎖影響（只擋未來的新預約）
+
+### 4.14 改期 / Reschedule（UX audit 第二輪）
+- **FR-092**: 學員可在 `/my-bookings` 對 pending/confirmed 預約按「改時間」
+- **FR-093**: 系統導到該租戶公開頁，顯示「改期模式」橫幅
+- **FR-094**: 選新時段 → `/book/[slotId]?reschedule=<oldBookingId>` 顯示「確認改期」
+- **FR-095**: 確認後呼叫新 RPC `reschedule_booking(old_id, new_slot_id)`，原子性「取消舊 + 建立新」於同一 transaction
+- **FR-096**: 限制 same-tenant（不可跨教練改期）；新預約 status 為 `pending`
+
+### 4.15 服務啟用 toggle（UX audit 第二輪）
+- **FR-097**: 服務編輯 dialog 顯示「啟用此服務」勾選框（之前只能透過 deactivateService action）
+
+### 4.16 助教 UX 標示（UX audit 第二輪）
+- **FR-098**: Sidebar 顯示明顯的 Owner / Staff 角色 badge（顏色不同）
+- **FR-099**: Staff 在 `/services` 頁看到「唯讀」說明 banner
+
 ---
 
 ## 5. 非功能需求 (Non-Functional Requirements)
@@ -968,7 +994,11 @@ SENTRY_AUTH_TOKEN
 | 2026-05-21 | 多成員行事曆 + 點擊 slot detail | FR-077 ~ 080 | `dfc816c+` |
 | 2026-05-21 | 學員清單頁 `/customers` | FR-070 ~ 072 | `dfc816c+` |
 | 2026-05-21 | 公開頁 7 天 → 14 天 + 服務 description | FR-031 補充 | `dfc816c+` |
-| 2026-05-21 | 重複規則管理頁 `/calendar/rules` | FR-073 ~ 076 | （本次） |
-| 2026-05-21 | 平台管理員 drill-in `/platform/tenants/[id]` | FR-081 ~ 083 | （本次） |
+| 2026-05-21 | 重複規則管理頁 `/calendar/rules` | FR-073 ~ 076 | `dfc816c+` |
+| 2026-05-21 | 平台管理員 drill-in `/platform/tenants/[id]` | FR-081 ~ 083 | `dfc816c+` |
+| 2026-05-21 | 平台管理員：tenant 搜尋 + 重發邀請 + 密碼重設 + 全平台預約頁 | FR-084 ~ 087 | （本次） |
+| 2026-05-21 | 學員封鎖（schema 變更 + RPC 防呆） | FR-088 ~ 091 | （本次） |
+| 2026-05-21 | 改期 reschedule（新 RPC + 跨頁面整合） | FR-092 ~ 096 | （本次） |
+| 2026-05-21 | 服務啟用 toggle / 助教 UX 標示 | FR-097 ~ 099 | （本次） |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。

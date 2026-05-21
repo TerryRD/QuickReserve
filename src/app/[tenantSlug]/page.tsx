@@ -13,10 +13,20 @@ export default async function TenantPublicPage({
   searchParams,
 }: {
   params: Promise<{ tenantSlug: string }>
-  searchParams: Promise<{ service?: string; date?: string; from?: string }>
+  searchParams: Promise<{
+    service?: string
+    date?: string
+    from?: string
+    reschedule?: string
+  }>
 }) {
   const { tenantSlug } = await params
-  const { service: selectedServiceId, date: selectedDate, from: fromOffset } = await searchParams
+  const {
+    service: selectedServiceId,
+    date: selectedDate,
+    from: fromOffset,
+    reschedule: rescheduleFrom,
+  } = await searchParams
   const tenant = await getTenantBySlug(tenantSlug)
   if (!tenant) notFound()
 
@@ -110,6 +120,11 @@ export default async function TenantPublicPage({
           </div>
         </header>
 
+        {rescheduleFrom && (
+          <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+            ⓘ <strong>改期模式</strong>：選擇新時段後，原預約會自動取消並建立新「待確認」預約。
+          </div>
+        )}
         {!services || services.length === 0 ? (
           <div className="mt-8 rounded-xl border bg-white p-10 text-center text-sm text-slate-500">
             此教練尚未開放任何服務
@@ -249,7 +264,7 @@ export default async function TenantPublicPage({
                     return (
                       <Link
                         key={s.id}
-                        href={`/book/${s.id}`}
+                        href={`/book/${s.id}${rescheduleFrom ? `?reschedule=${rescheduleFrom}` : ''}`}
                         className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 transition hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-sm"
                       >
                         <div>

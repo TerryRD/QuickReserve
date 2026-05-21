@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Users, ClipboardList } from 'lucide-react'
+import { Users, ClipboardList, Ban } from 'lucide-react'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
+import BlockButton from './block-button'
 
 export default async function CustomersPage() {
   const session = await requireTenantMember()
@@ -13,7 +14,7 @@ export default async function CustomersPage() {
   const { data: rows } = await supabase
     .from('tenant_customers')
     .select(
-      'customer_id, tenant_notes, created_at, customers(id, display_name, phone)',
+      'customer_id, tenant_notes, created_at, is_blocked, customers(id, display_name, phone)',
     )
     .eq('tenant_id', session.tenantId)
     .order('created_at', { ascending: false })
@@ -74,15 +75,29 @@ export default async function CustomersPage() {
             if (!c) return null
             const s = stats[c.id]
             return (
-              <Card key={c.id}>
+              <Card key={c.id} className={r.is_blocked ? 'border-red-300 bg-red-50/30' : ''}>
                 <CardContent className="p-5">
                   <div className="flex items-start gap-3">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-foreground text-base font-bold text-background">
+                    <div
+                      className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-base font-bold ${
+                        r.is_blocked
+                          ? 'bg-red-200 text-red-900'
+                          : 'bg-foreground text-background'
+                      }`}
+                    >
                       {(c.display_name ?? '?').slice(0, 1)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-semibold">
-                        {c.display_name ?? '匿名學員'}
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-semibold">
+                          {c.display_name ?? '匿名學員'}
+                        </span>
+                        {r.is_blocked && (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] text-red-800">
+                            <Ban className="h-2.5 w-2.5" />
+                            已封鎖
+                          </span>
+                        )}
                       </div>
                       {c.phone && (
                         <div className="mt-0.5 truncate text-xs text-muted-foreground">
@@ -99,6 +114,9 @@ export default async function CustomersPage() {
                           最近預約：{format(new Date(s.latest), 'yyyy/MM/dd')}
                         </div>
                       )}
+                      <div className="mt-3 flex justify-end">
+                        <BlockButton customerId={c.id} isBlocked={r.is_blocked ?? false} />
+                      </div>
                     </div>
                   </div>
                 </CardContent>

@@ -13,10 +13,13 @@ const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HO
 
 export default async function BookConfirmPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slotId: string }>
+  searchParams: Promise<{ reschedule?: string }>
 }) {
   const { slotId } = await params
+  const { reschedule: rescheduleFrom } = await searchParams
   const supabase = await createSupabaseServerClient()
 
   const { data: slot } = await supabase
@@ -81,8 +84,19 @@ export default async function BookConfirmPage({
           </Link>
         )}
 
-        <h1 className="text-2xl font-bold tracking-tight">確認預約</h1>
-        <p className="mt-1 text-sm text-muted-foreground">確認資訊後送出預約申請</p>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {rescheduleFrom ? '確認改期' : '確認預約'}
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {rescheduleFrom
+            ? '送出後將自動取消原預約並改為此時段'
+            : '確認資訊後送出預約申請'}
+        </p>
+        {rescheduleFrom && (
+          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+            ⓘ 您正在改期。原預約將被取消，重新建立的新預約狀態為「待確認」。
+          </div>
+        )}
 
         <Card className="mt-6 border-2 border-blue-500/20 bg-blue-50/30">
           <CardContent className="space-y-3 p-5">
@@ -120,7 +134,7 @@ export default async function BookConfirmPage({
         </Card>
 
         <div className="mt-6">
-          <BookForm slotId={slotId} />
+          <BookForm slotId={slotId} rescheduleFrom={rescheduleFrom ?? null} />
         </div>
       </main>
     </div>

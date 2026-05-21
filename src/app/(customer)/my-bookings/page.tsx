@@ -30,7 +30,7 @@ export default async function MyBookingsPage() {
   const { data: bookings } = await supabase
     .from('bookings')
     .select(
-      'id, status, customer_notes, created_at, tenants(name, slug), services(name, duration_minutes), availability_slots(start_at, end_at)',
+      'id, status, customer_notes, created_at, service_id, tenants(name, slug), services(name, duration_minutes), availability_slots(start_at, end_at)',
     )
     .eq('customer_id', session.userId)
     .order('created_at', { ascending: false })
@@ -110,7 +110,19 @@ export default async function MyBookingsPage() {
                         </div>
                       )}
                     </div>
-                    {canCancel && <CancelMyBookingButton bookingId={b.id} />}
+                    {canCancel && (
+                      <div className="flex shrink-0 flex-col gap-2">
+                        {tenant && b.service_id && (
+                          <Link
+                            href={`/${tenant.slug}?service=${b.service_id}&reschedule=${b.id}`}
+                            className="rounded-md border px-2.5 py-1 text-center text-xs font-medium hover:bg-muted"
+                          >
+                            改時間
+                          </Link>
+                        )}
+                        <CancelMyBookingButton bookingId={b.id} />
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

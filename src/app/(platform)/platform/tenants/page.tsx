@@ -1,86 +1,64 @@
-import Link from 'next/link'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import InviteCoachForm from './invite-coach-form'
-import SuspendButton from './suspend-button'
+import TenantsTable from './tenants-table'
 
 export default async function TenantsListPage() {
-  const supabase = await createSupabaseServerClient()
+  // Use admin client so we can join tenant_members.invite_email for owners
+  // even when status='invited' (RLS would otherwise hide pre-acceptance rows
+  // from cross-table joins).
+  const supabase = createSupabaseAdminClient()
   const { data: tenants } = await supabase
     .from('tenants')
     .select('id, slug, name, status, created_at')
     .order('created_at', { ascending: false })
 
+  // Fetch owners for each tenant
+  const tenantIds = (tenants ?? []).map((t) => t.id)
+  const { data: owners } = await supabase
+    .from('tenant_members')
+    .select('id, tenant_id, status, invited_email, user_id')
+    .in('tenant_id', tenantIds)
+    .eq('role', 'owner')
+  const ownerByTenant: Record<
+    string,
+    {
+      id: string
+      status: string
+      invited_email: string | null
+      user_id: string | null
+    }
+  > = {}
+  for (const o of owners ?? []) {
+    ownerByTenant[o.tenant_id] = {
+      id: o.id,
+      status: o.status,
+      invited_email: o.invited_email,
+      user_id: o.user_id,
+    }
+  }
+
+  const enriched = (tenants ?? []).map((t) => ({
+    ...t,
+    ownerMember: ownerByTenant[t.id] ?? null,
+  }))
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">租戶管理</h1>
-      </div>
+      <header>
+        <h1 className="font-display text-3xl tracking-tight">
+          <span className="italic">租戶管理</span>
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          邀請、暫停、重發邀請、重設密碼
+        </p>
+      </header>
 
       <InviteCoachForm />
 
-      <div>
-        <h2 className="mb-2 text-lg font-semibold">租戶列表</h2>
-        <table className="w-full bg-white">
-          <thead>
-            <tr className="border-b text-left text-sm text-slate-600">
-              <th className="p-3">Slug</th>
-              <th className="p-3">名稱</th>
-              <th className="p-3">狀態</th>
-              <th className="p-3">建立日期</th>
-              <th className="p-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {tenants?.map((t) => (
-              <tr key={t.id} className="border-b text-sm">
-                <td className="p-3 font-mono text-xs">
-                  <Link
-                    href={`/platform/tenants/${t.id}`}
-                    className="text-primary hover:underline"
-                  >
-                    {t.slug}
-                  </Link>
-                </td>
-                <td className="p-3">
-                  <Link
-                    href={`/platform/tenants/${t.id}`}
-                    className="font-medium hover:underline"
-                  >
-                    {t.name}
-                  </Link>
-                </td>
-                <td className="p-3">
-                  {t.status === 'active' ? (
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">
-                      啟用中
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">
-                      已暫停
-                    </span>
-                  )}
-                </td>
-                <td className="p-3 text-xs text-slate-500">
-                  {new Date(t.created_at).toLocaleDateString('zh-TW')}
-                </td>
-                <td className="p-3 text-right">
-                  <SuspendButton
-                    tenantId={t.id}
-                    currentStatus={t.status as 'active' | 'suspended'}
-                  />
-                </td>
-              </tr>
-            ))}
-            {!tenants?.length && (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-slate-400">
-                  尚無租戶
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <section>
+        <h2 className="mb-2 font-display text-xl">租戶列表</h2>
+        <TenantsTable tenants={enriched} />
+      </section>
     </div>
   )
 }

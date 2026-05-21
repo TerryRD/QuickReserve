@@ -24,6 +24,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
             items={[
               { href: '/platform/dashboard', label: '儀表板', icon: 'LayoutDashboard' },
               { href: '/platform/tenants', label: '租戶管理', icon: 'Building2' },
+              { href: '/platform/bookings', label: '所有預約', icon: 'ClipboardList' },
             ]}
           />
         </div>

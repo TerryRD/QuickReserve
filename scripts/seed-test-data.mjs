@@ -137,7 +137,7 @@ async function createService({ tenantId, name, duration, price, description }) {
   return svc
 }
 
-async function createSlots({ tenantId, memberId, serviceId, schedule }) {
+async function createSlots({ tenantId, memberId, serviceId, schedule, ruleId }) {
   // schedule: array of { date: 'YYYY-MM-DD', start: 'HH:MM', end: 'HH:MM' }
   const rows = schedule.map((s) => ({
     tenant_id: tenantId,
@@ -146,6 +146,7 @@ async function createSlots({ tenantId, memberId, serviceId, schedule }) {
     start_at: localIso(s.date, s.start),
     end_at: localIso(s.date, s.end),
     status: 'available',
+    recurring_rule_id: ruleId ?? null,
   }))
   const { data, error } = await admin.from('availability_slots').insert(rows).select()
   if (error) fail(`slots: ${error.message}`)
@@ -260,6 +261,49 @@ async function main() {
   })
   log(`  ✓ 林教練 + 2 services`)
 
+  log('\n─── Creating recurring rules ───')
+  // 王教練: weekly Mon/Wed/Fri 19:00-21:00 for 12 occurrences (demo for /calendar/rules)
+  const todayDate = todayStr()
+  const { data: wangRule } = await admin
+    .from('recurring_rules')
+    .insert({
+      tenant_id: wang.tenant.id,
+      member_id: wang.member.id,
+      service_id: wangSvc1.id,
+      freq: 'weekly',
+      interval_n: 1,
+      by_weekday: [1, 3, 5],
+      start_time: '19:00:00',
+      end_time: '21:00:00',
+      start_date: todayDate,
+      end_condition: 'count',
+      end_count: 12,
+      is_active: true,
+    })
+    .select()
+    .single()
+  log(`  ✓ 王教練 rule: 每週一三五 19-21 共 12 次`)
+
+  // 陳教練: weekly Tue/Thu 14:00-15:30 indefinite
+  const { data: chenRule } = await admin
+    .from('recurring_rules')
+    .insert({
+      tenant_id: chen.tenant.id,
+      member_id: chen.member.id,
+      service_id: chenSvc.id,
+      freq: 'weekly',
+      interval_n: 1,
+      by_weekday: [2, 4],
+      start_time: '14:00:00',
+      end_time: '15:30:00',
+      start_date: todayDate,
+      end_condition: 'none',
+      is_active: true,
+    })
+    .select()
+    .single()
+  log(`  ✓ 陳教練 rule: 每週二四 14-15:30 無限期`)
+
   log('\n─── Creating slots ───')
   // 王教練: this week + next 2 weeks, Mon/Wed/Fri 19-21
   const wangSchedule = []
@@ -278,8 +322,9 @@ async function main() {
     memberId: wang.member.id,
     serviceId: wangSvc1.id,
     schedule: wangSchedule,
+    ruleId: wangRule.id,
   })
-  log(`  ✓ 王教練 (1對1): ${wangSlots.length} slots`)
+  log(`  ✓ 王教練 (1對1): ${wangSlots.length} slots (linked to rule)`)
 
   // 陳教練: this week + next, Tue/Thu 14-16
   const chenSchedule = []
@@ -297,8 +342,9 @@ async function main() {
     memberId: chen.member.id,
     serviceId: chenSvc.id,
     schedule: chenSchedule,
+    ruleId: chenRule.id,
   })
-  log(`  ✓ 陳教練 (高爾夫): ${chenSlots.length} slots`)
+  log(`  ✓ 陳教練 (高爾夫): ${chenSlots.length} slots (linked to rule)`)
 
   // 林教練: this week Sat AM
   const linSchedule = [

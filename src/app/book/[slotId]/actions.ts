@@ -12,6 +12,7 @@ import { notifyBookingChange } from '@/lib/notify-booking'
 const CreateBookingSchema = z.object({
   slotId: z.string().uuid(),
   customerNotes: z.string().max(500).optional().nullable(),
+  rescheduleFrom: z.string().uuid().optional().nullable(),
 })
 
 export const createBookingAction = actionClient
@@ -19,6 +20,28 @@ export const createBookingAction = actionClient
   .action(async ({ parsedInput }) => {
     const session = await requireSession()
     const supabase = await createSupabaseServerClient()
+
+    // Reschedule path: cancel old + book new atomically via RPC
+    if (parsedInput.rescheduleFrom) {
+      const { data, error } = await supabase.rpc('reschedule_booking', {
+        p_old_booking_id: parsedInput.rescheduleFrom,
+        p_new_slot_id: parsedInput.slotId,
+      })
+      if (error) {
+        if (error.message?.includes('SLOT_UNAVAILABLE')) throw new SlotUnavailableError()
+        if (error.message?.includes('INVALID_STATE'))
+          throw new AppError('INVALID_STATE', '原預約已無法改期')
+        if (error.message?.includes('CROSS_TENANT'))
+          throw new AppError('CROSS_TENANT', '不可跨教練改期')
+        throw new AppError('RESCHEDULE_FAILED', error.message)
+      }
+      const newBooking = data as { id: string }
+      void notifyBookingChange(parsedInput.rescheduleFrom, 'cancelled', session.userId)
+      void notifyBookingChange(newBooking.id, 'created', session.userId)
+      revalidatePath('/my-bookings')
+      redirect(`/my-bookings?rescheduled=${newBooking.id}`)
+    }
+
     const { data, error } = await supabase.rpc('book_slot_atomic', {
       p_slot_id: parsedInput.slotId,
       p_customer_id: session.userId,
@@ -26,7 +49,10 @@ export const createBookingAction = actionClient
     })
     if (error) {
       if (error.message?.includes('SLOT_UNAVAILABLE')) throw new SlotUnavailableError()
-      if (error.message?.includes('SLOT_NOT_FOUND')) throw new AppError('SLOT_NOT_FOUND', '時段不存在')
+      if (error.message?.includes('SLOT_NOT_FOUND'))
+        throw new AppError('SLOT_NOT_FOUND', '時段不存在')
+      if (error.message?.includes('CUSTOMER_BLOCKED'))
+        throw new AppError('CUSTOMER_BLOCKED', '此教練已封鎖您的預約')
       throw new AppError('BOOKING_FAILED', error.message)
     }
     const booking = data as { id: string }

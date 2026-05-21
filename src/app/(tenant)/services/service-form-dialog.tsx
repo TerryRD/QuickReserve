@@ -39,6 +39,7 @@ export default function ServiceFormDialog(props: Props) {
   const [price, setPrice] = useState(
     initial?.price !== undefined && initial?.price !== null ? String(initial.price) : '',
   )
+  const [isActive, setIsActive] = useState(initial?.is_active ?? true)
 
   const onSuccess = () => {
     toast.success(isEdit ? '已更新' : '已新增')
@@ -58,7 +59,7 @@ export default function ServiceFormDialog(props: Props) {
       durationMinutes,
       price: price === '' ? null : price,
     }
-    if (isEdit) updateMut.execute({ ...payload, id: initial!.id, isActive: initial!.is_active })
+    if (isEdit) updateMut.execute({ ...payload, id: initial!.id, isActive })
     else createMut.execute(payload)
   }
 
@@ -111,6 +112,22 @@ export default function ServiceFormDialog(props: Props) {
               />
             </div>
           </div>
+          {isEdit && (
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border bg-muted/30 p-3">
+              <input
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-primary"
+              />
+              <span className="text-sm">
+                <strong>啟用此服務</strong>
+                <span className="block text-xs text-muted-foreground">
+                  停用後，公開預約頁不會顯示，但既有預約保留
+                </span>
+              </span>
+            </label>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
