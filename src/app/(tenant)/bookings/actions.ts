@@ -6,13 +6,14 @@ import { actionClient } from '@/lib/safe-action'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError } from '@/lib/errors'
+import { notifyBookingChange } from '@/lib/notify-booking'
 
 const ConfirmSchema = z.object({ bookingId: z.string().uuid() })
 
 export const confirmBookingAction = actionClient
   .inputSchema(ConfirmSchema)
   .action(async ({ parsedInput }) => {
-    await requireTenantMember()
+    const session = await requireTenantMember()
     const supabase = await createSupabaseServerClient()
     const { error } = await supabase.rpc('confirm_booking', { p_booking_id: parsedInput.bookingId })
     if (error) {
@@ -21,6 +22,7 @@ export const confirmBookingAction = actionClient
       if (error.message?.includes('FORBIDDEN')) throw new AppError('FORBIDDEN', '無權限')
       throw new AppError('CONFIRM_FAILED', error.message)
     }
+    void notifyBookingChange(parsedInput.bookingId, 'confirmed', session.userId)
     revalidatePath('/bookings')
     revalidatePath('/calendar')
     return { ok: true }
@@ -31,10 +33,11 @@ const CancelSchema = z.object({ bookingId: z.string().uuid() })
 export const cancelBookingByTenantAction = actionClient
   .inputSchema(CancelSchema)
   .action(async ({ parsedInput }) => {
-    await requireTenantMember()
+    const session = await requireTenantMember()
     const supabase = await createSupabaseServerClient()
     const { error } = await supabase.rpc('cancel_booking', { p_booking_id: parsedInput.bookingId })
     if (error) throw new AppError('CANCEL_FAILED', error.message)
+    void notifyBookingChange(parsedInput.bookingId, 'cancelled', session.userId)
     revalidatePath('/bookings')
     revalidatePath('/calendar')
     return { ok: true }
