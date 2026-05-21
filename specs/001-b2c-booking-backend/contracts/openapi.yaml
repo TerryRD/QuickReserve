@@ -30,7 +30,7 @@ paths:
           description: 時段已成功建立。
         '400':
           description: 輸入資料無效或時間重疊。
-  
+
   /api/providers/availability/{slotId}:
     delete:
       tags:
@@ -80,7 +80,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AvailabilitySlotDto'
-  
+
   /api/bookings:
     post:
       tags:
@@ -114,7 +114,7 @@ components:
         endTime:
           type: string
           format: date-time
-    
+
     CreateBookingDto:
       type: object
       properties:
