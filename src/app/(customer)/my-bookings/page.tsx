@@ -1,7 +1,9 @@
+import Link from 'next/link'
 import { format } from 'date-fns'
 import { requireSession } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import PushOptIn from '@/components/push-opt-in'
 import CancelMyBookingButton from './cancel-button'
 
 const TZ_OFFSET_HOURS = 8
@@ -33,7 +35,13 @@ export default async function MyBookingsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">我的預約</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">我的預約</h1>
+        <Link href="/settings/notifications" className="text-sm text-blue-600 hover:underline">
+          通知設定
+        </Link>
+      </div>
+      <PushOptIn />
       {!bookings || bookings.length === 0 ? (
         <p className="rounded border bg-white p-6 text-center text-slate-400">
           尚無預約紀錄
