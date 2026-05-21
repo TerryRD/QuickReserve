@@ -88,6 +88,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "availability_slots_recurring_rule_fk"
+            columns: ["recurring_rule_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_rules"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "availability_slots_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
@@ -138,6 +145,85 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      recurring_rules: {
+        Row: {
+          by_month_day: number | null
+          by_weekday: number[] | null
+          created_at: string
+          end_condition: string
+          end_count: number | null
+          end_time: string
+          end_until: string | null
+          freq: string
+          id: string
+          interval_n: number
+          is_active: boolean
+          member_id: string
+          service_id: string
+          start_date: string
+          start_time: string
+          tenant_id: string
+        }
+        Insert: {
+          by_month_day?: number | null
+          by_weekday?: number[] | null
+          created_at?: string
+          end_condition: string
+          end_count?: number | null
+          end_time: string
+          end_until?: string | null
+          freq: string
+          id?: string
+          interval_n?: number
+          is_active?: boolean
+          member_id: string
+          service_id: string
+          start_date: string
+          start_time: string
+          tenant_id: string
+        }
+        Update: {
+          by_month_day?: number | null
+          by_weekday?: number[] | null
+          created_at?: string
+          end_condition?: string
+          end_count?: number | null
+          end_time?: string
+          end_until?: string | null
+          freq?: string
+          id?: string
+          interval_n?: number
+          is_active?: boolean
+          member_id?: string
+          service_id?: string
+          start_date?: string
+          start_time?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_rules_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
