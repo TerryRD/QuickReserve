@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Building2, Calendar, LayoutDashboard, LogOut } from 'lucide-react'
+import { Calendar, LogOut } from 'lucide-react'
 import { requirePlatformAdmin } from '@/lib/auth/get-session'
 import PlatformSidebarNav from './platform-sidebar-nav'
 

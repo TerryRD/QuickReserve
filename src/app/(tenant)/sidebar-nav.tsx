@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   Calendar,
   ClipboardList,
+  Contact,
   LayoutDashboard,
   Package,
   Settings,
@@ -20,6 +21,7 @@ export default function SidebarNav({ isOwner }: { isOwner: boolean }) {
     { href: '/dashboard', label: '儀表板', icon: LayoutDashboard },
     { href: '/calendar', label: '行事曆', icon: Calendar },
     { href: '/bookings', label: '預約管理', icon: ClipboardList },
+    { href: '/customers', label: '學員', icon: Contact },
     { href: '/services', label: '服務項目', icon: Package },
     ...(isOwner ? [{ href: '/staff', label: '助教管理', icon: Users }] : []),
     { href: '/settings/notifications', label: '通知設定', icon: Settings },

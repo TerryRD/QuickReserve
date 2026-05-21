@@ -13,10 +13,10 @@ export default async function TenantPublicPage({
   searchParams,
 }: {
   params: Promise<{ tenantSlug: string }>
-  searchParams: Promise<{ service?: string; date?: string }>
+  searchParams: Promise<{ service?: string; date?: string; from?: string }>
 }) {
   const { tenantSlug } = await params
-  const { service: selectedServiceId, date: selectedDate } = await searchParams
+  const { service: selectedServiceId, date: selectedDate, from: fromOffset } = await searchParams
   const tenant = await getTenantBySlug(tenantSlug)
   if (!tenant) notFound()
 
@@ -61,19 +61,22 @@ export default async function TenantPublicPage({
     availableSlots = data
   }
 
+  const fromN = Math.max(0, parseInt(fromOffset ?? '0', 10) || 0)
+  const stripDays = 14
   const today = startOfDay(new Date())
-  const days = Array.from({ length: 7 }, (_, i) => addDays(today, i))
+  const stripStart = addDays(today, fromN)
+  const days = Array.from({ length: stripDays }, (_, i) => addDays(stripStart, i))
   const dayCounts: Record<string, number> = {}
   if (activeServiceId) {
-    const weekEnd = addDays(today, 7)
+    const stripEnd = addDays(stripStart, stripDays)
     const { data: weekSlots } = await supabase
       .from('availability_slots')
       .select('start_at')
       .eq('tenant_id', tenant.id)
       .eq('service_id', activeServiceId)
       .eq('status', 'available')
-      .gte('start_at', today.toISOString())
-      .lt('start_at', weekEnd.toISOString())
+      .gte('start_at', stripStart.toISOString())
+      .lt('start_at', stripEnd.toISOString())
     for (const s of weekSlots ?? []) {
       const key = format(toLocal(s.start_at), 'yyyy-MM-dd')
       dayCounts[key] = (dayCounts[key] ?? 0) + 1
@@ -135,14 +138,19 @@ export default async function TenantPublicPage({
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="font-semibold text-slate-900">{s.name}</div>
+                        <div className="font-semibold text-foreground">{s.name}</div>
                         {isActive && (
-                          <div className="grid h-5 w-5 place-items-center rounded-full bg-blue-500 text-xs text-white">
+                          <div className="grid h-5 w-5 place-items-center rounded-full bg-accent text-xs text-accent-foreground">
                             ✓
                           </div>
                         )}
                       </div>
-                      <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
+                      {s.description && (
+                        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                          {s.description}
+                        </p>
+                      )}
+                      <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
                           <Clock className="h-3 w-3" /> {s.duration_minutes} 分鐘
                         </span>
@@ -159,12 +167,30 @@ export default async function TenantPublicPage({
 
             {/* Date selection */}
             <section>
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
-                  2
-                </span>
-                選擇日期
-              </h2>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+                    2
+                  </span>
+                  選擇日期
+                </h2>
+                <div className="flex items-center gap-1 text-xs">
+                  {fromN > 0 && (
+                    <Link
+                      href={`/${tenantSlug}?service=${activeServiceId}&from=${Math.max(0, fromN - 7)}`}
+                      className="rounded-md border bg-white px-2 py-1 hover:bg-muted"
+                    >
+                      ◄ 上週
+                    </Link>
+                  )}
+                  <Link
+                    href={`/${tenantSlug}?service=${activeServiceId}&from=${fromN + 7}`}
+                    className="rounded-md border bg-white px-2 py-1 hover:bg-muted"
+                  >
+                    再 7 天 ►
+                  </Link>
+                </div>
+              </div>
               <div className="grid grid-cols-7 gap-1.5">
                 {days.map((d) => {
                   const key = format(d, 'yyyy-MM-dd')

@@ -6,13 +6,14 @@ import { buttonVariants } from '@/components/ui/button'
 import WeekGrid from './week-grid'
 import NewSlotDialog from './new-slot-dialog'
 import RecurringRuleDialog from './recurring-rule-dialog'
+import MemberFilter from './member-filter'
 
-const TZ_OFFSET_HOURS = 8 // Asia/Taipei (single-tz MVP)
+const TZ_OFFSET_HOURS = 8
 
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string; member?: string }>
+  searchParams: Promise<{ week?: string; members?: string }>
 }) {
   const session = await requireTenantMember()
   const params = await searchParams
@@ -22,17 +23,67 @@ export default async function CalendarPage({
 
   const supabase = await createSupabaseServerClient()
 
-  // Owner-only: can view any tenant member's calendar. Staff: locked to own.
-  const targetMemberId =
-    session.role === 'tenant_owner' && params.member ? params.member : session.memberId
+  // Owner sees all members; Staff sees only self
+  let allMembers: Array<{
+    id: string
+    role: string
+    label: string
+    isSelf: boolean
+  }> = []
+  if (session.role === 'tenant_owner') {
+    const { data } = await supabase
+      .from('tenant_members')
+      .select('id, role, invited_email, user_id')
+      .eq('tenant_id', session.tenantId)
+      .eq('status', 'active')
+      .order('role', { ascending: false }) // owner first (descending: owner > staff)
+    allMembers = (data ?? []).map((m) => ({
+      id: m.id,
+      role: m.role,
+      label: m.role === 'owner' ? '我' : (m.invited_email?.split('@')[0] ?? 'Staff'),
+      isSelf: m.id === session.memberId,
+    }))
+  } else {
+    allMembers = [{ id: session.memberId, role: 'staff', label: '我', isSelf: true }]
+  }
+
+  // Parse selected members
+  const isAll = !params.members || params.members === 'all'
+  const selectedIds = isAll
+    ? allMembers.map((m) => m.id)
+    : params.members!.split(',').filter((id) => allMembers.some((m) => m.id === id))
+  const effectiveIds = selectedIds.length > 0 ? selectedIds : [session.memberId]
+  const viewingSelfOnly = effectiveIds.length === 1 && effectiveIds[0] === session.memberId
 
   const { data: slots } = await supabase
     .from('availability_slots')
-    .select('id, start_at, end_at, status, service_id, services(name)')
-    .eq('member_id', targetMemberId)
+    .select('id, start_at, end_at, status, member_id, service_id, services(name)')
+    .in('member_id', effectiveIds)
     .gte('start_at', weekStart.toISOString())
     .lte('start_at', weekEnd.toISOString())
     .order('start_at')
+
+  // For each slot, find the booking if status is pending or booked
+  const slotIds = (slots ?? []).filter((s) => s.status !== 'available').map((s) => s.id)
+  const bookingsBySlot: Record<
+    string,
+    { id: string; status: string; customerName: string | null } | undefined
+  > = {}
+  if (slotIds.length) {
+    const { data: bks } = await supabase
+      .from('bookings')
+      .select('id, slot_id, status, customers(display_name)')
+      .in('slot_id', slotIds)
+      .neq('status', 'cancelled')
+    for (const b of bks ?? []) {
+      const c = b.customers as { display_name: string | null } | null
+      bookingsBySlot[b.slot_id] = {
+        id: b.id,
+        status: b.status,
+        customerName: c?.display_name ?? null,
+      }
+    }
+  }
 
   const { data: services } = await supabase
     .from('services')
@@ -40,102 +91,94 @@ export default async function CalendarPage({
     .eq('is_active', true)
     .order('name')
 
-  // Owner sees all members for the dropdown
-  let members:
-    | Array<{ id: string; role: string; invited_email: string | null; user_id: string | null }>
-    | null = null
-  if (session.role === 'tenant_owner') {
-    const { data } = await supabase
-      .from('tenant_members')
-      .select('id, role, invited_email, user_id')
-      .eq('tenant_id', session.tenantId)
-      .eq('status', 'active')
-      .order('role') // owners first
-    members = data
-  }
-
   const prevWeek = format(subWeeks(weekStart, 1), 'yyyy-MM-dd')
   const nextWeek = format(addWeeks(weekStart, 1), 'yyyy-MM-dd')
-  const viewingSelf = targetMemberId === session.memberId
+  const memberQs = params.members ? `&members=${params.members}` : ''
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">行事曆</h1>
+    <div className="space-y-5">
+      <header>
+        <h1 className="font-display text-3xl tracking-tight">
+          <span className="italic">行事曆</span>
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {viewingSelfOnly
+            ? '檢視您的時段'
+            : `檢視 ${effectiveIds.length} 位成員的時段`}
+        </p>
+      </header>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {allMembers.length > 1 && (
+            <MemberFilter
+              members={allMembers}
+              selectedIds={selectedIds}
+              week={params.week}
+            />
+          )}
+          <div className="flex items-center gap-2 text-sm">
+            <Link
+              href={`/calendar?week=${prevWeek}${memberQs}`}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              ◄
+            </Link>
+            <div className="min-w-44 text-center font-medium">
+              {format(weekStart, 'yyyy/MM/dd')} – {format(weekEnd, 'MM/dd')}
+            </div>
+            <Link
+              href={`/calendar${memberQs ? `?${memberQs.slice(1)}` : ''}`}
+              className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+            >
+              本週
+            </Link>
+            <Link
+              href={`/calendar?week=${nextWeek}${memberQs}`}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              ►
+            </Link>
+          </div>
+        </div>
         <div className="flex gap-2">
-          {viewingSelf && (
+          {viewingSelfOnly && (
             <>
               <RecurringRuleDialog services={services ?? []} />
-              <NewSlotDialog services={services ?? []} weekStart={weekStart.toISOString()} />
+              <NewSlotDialog
+                services={services ?? []}
+                weekStart={weekStart.toISOString()}
+              />
             </>
+          )}
+          {!viewingSelfOnly && (
+            <span className="self-center rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+              多成員視圖（只能編輯自己的時段）
+            </span>
           )}
         </div>
       </div>
 
-      {members && members.length > 1 && (
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-slate-500">檢視成員：</span>
-          {members.map((m) => {
-            const label = m.role === 'owner' ? 'Owner' : (m.invited_email ?? 'Staff')
-            const isActive = m.id === targetMemberId
-            const href = `/calendar?member=${m.id}${params.week ? `&week=${params.week}` : ''}`
-            return (
-              <Link
-                key={m.id}
-                href={href}
-                className={`rounded border px-3 py-1 ${
-                  isActive
-                    ? 'border-blue-500 bg-blue-50 font-medium'
-                    : 'border-slate-200 bg-white text-slate-600'
-                }`}
-              >
-                {label}
-                {m.role === 'owner' ? '' : ' (Staff)'}
-              </Link>
-            )
-          })}
-        </div>
-      )}
-
-      <div className="flex items-center gap-3 text-sm">
-        <Link
-          href={`/calendar?week=${prevWeek}${!viewingSelf ? `&member=${targetMemberId}` : ''}`}
-          className={buttonVariants({ variant: 'outline', size: 'sm' })}
-        >
-          ◄
-        </Link>
-        <div className="min-w-48 text-center font-medium">
-          {format(weekStart, 'yyyy/MM/dd')} – {format(weekEnd, 'MM/dd')}
-        </div>
-        <Link
-          href={`/calendar?week=${nextWeek}${!viewingSelf ? `&member=${targetMemberId}` : ''}`}
-          className={buttonVariants({ variant: 'outline', size: 'sm' })}
-        >
-          ►
-        </Link>
-        <Link
-          href={!viewingSelf ? `/calendar?member=${targetMemberId}` : '/calendar'}
-          className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-        >
-          回本週
-        </Link>
-        {!viewingSelf && (
-          <span className="ml-auto rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-            檢視他人行事曆（唯讀）
-          </span>
-        )}
-      </div>
-
       <WeekGrid
         weekStart={weekStart}
-        slots={(slots ?? []).map((s) => ({
-          id: s.id,
-          startAt: s.start_at,
-          endAt: s.end_at,
-          status: s.status as 'available' | 'pending' | 'booked' | 'cancelled',
-          serviceName: (s.services as { name: string } | null)?.name ?? null,
-        }))}
+        slots={(slots ?? []).map((s) => {
+          const member = allMembers.find((m) => m.id === s.member_id)
+          const booking = bookingsBySlot[s.id]
+          return {
+            id: s.id,
+            startAt: s.start_at,
+            endAt: s.end_at,
+            status: s.status as 'available' | 'pending' | 'booked' | 'cancelled',
+            serviceName: (s.services as { name: string } | null)?.name ?? null,
+            memberLabel: member?.label ?? '',
+            memberId: s.member_id,
+            isOwn: s.member_id === session.memberId,
+            customerName: booking?.customerName ?? null,
+            bookingId: booking?.id ?? null,
+          }
+        })}
         tzOffsetHours={TZ_OFFSET_HOURS}
+        showMemberLabel={!viewingSelfOnly}
       />
     </div>
   )

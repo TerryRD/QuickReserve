@@ -4,7 +4,7 @@ import { Calendar, ClipboardList, Package, TrendingUp, ChevronRight } from 'luci
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { getTenantContext } from '@/lib/auth/get-tenant-context'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 
 const TZ_OFFSET_HOURS = 8
 const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
