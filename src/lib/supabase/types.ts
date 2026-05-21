@@ -208,6 +208,75 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_log: {
+        Row: {
+          channel: string
+          error_message: string | null
+          id: string
+          related_id: string | null
+          scheduled_for: string | null
+          sent_at: string
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          error_message?: string | null
+          id?: string
+          related_id?: string | null
+          scheduled_for?: string | null
+          sent_at?: string
+          status: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          error_message?: string | null
+          id?: string
+          related_id?: string | null
+          scheduled_for?: string | null
+          sent_at?: string
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          booking_status_changes_enabled: boolean
+          daily_reminder_enabled: boolean
+          daily_reminder_hour: number
+          pre_event_enabled: boolean
+          pre_event_minutes: number[]
+          updated_at: string
+          user_id: string
+          weekly_summary_enabled: boolean
+        }
+        Insert: {
+          booking_status_changes_enabled?: boolean
+          daily_reminder_enabled?: boolean
+          daily_reminder_hour?: number
+          pre_event_enabled?: boolean
+          pre_event_minutes?: number[]
+          updated_at?: string
+          user_id: string
+          weekly_summary_enabled?: boolean
+        }
+        Update: {
+          booking_status_changes_enabled?: boolean
+          daily_reminder_enabled?: boolean
+          daily_reminder_hour?: number
+          pre_event_enabled?: boolean
+          pre_event_minutes?: number[]
+          updated_at?: string
+          user_id?: string
+          weekly_summary_enabled?: boolean
+        }
+        Relationships: []
+      }
       platform_admins: {
         Row: {
           created_at: string
@@ -219,6 +288,39 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_used_at: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_used_at?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_used_at?: string
+          p256dh?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
