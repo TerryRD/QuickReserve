@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAction } from 'next-safe-action/hooks'
@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { signupAction } from './actions'
 
-export default function SignupPage() {
+function SignupForm() {
   const params = useSearchParams()
   const inviteToken = params.get('invite')
   const presetEmail = params.get('email') ?? ''
@@ -77,5 +77,13 @@ export default function SignupPage() {
         </CardFooter>
       </form>
     </Card>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
   )
 }
