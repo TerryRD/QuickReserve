@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { buttonVariants } from '@/components/ui/button'
 import WeekGrid from './week-grid'
 import NewSlotDialog from './new-slot-dialog'
+import RecurringRuleDialog from './recurring-rule-dialog'
 
 const TZ_OFFSET_HOURS = 8 // Asia/Taipei (single-tz MVP)
 
@@ -41,7 +42,10 @@ export default async function CalendarPage({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">行事曆</h1>
-        <NewSlotDialog services={services ?? []} weekStart={weekStart.toISOString()} />
+        <div className="flex gap-2">
+          <RecurringRuleDialog services={services ?? []} />
+          <NewSlotDialog services={services ?? []} weekStart={weekStart.toISOString()} />
+        </div>
       </div>
       <div className="flex items-center gap-3 text-sm">
         <Link
