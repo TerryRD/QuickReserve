@@ -2,11 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Building2, LayoutDashboard, type LucideIcon } from 'lucide-react'
+import {
+  Building2,
+  ClipboardList,
+  LayoutDashboard,
+  type LucideIcon,
+} from 'lucide-react'
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard,
   Building2,
+  ClipboardList,
 }
 
 export default function PlatformSidebarNav({
@@ -19,7 +25,7 @@ export default function PlatformSidebarNav({
     <nav className="flex flex-col gap-0.5">
       {items.map((it) => {
         const active = pathname === it.href || pathname.startsWith(it.href + '/')
-        const Icon = ICONS[it.icon]!
+        const Icon = ICONS[it.icon] ?? LayoutDashboard
         return (
           <Link
             key={it.href}

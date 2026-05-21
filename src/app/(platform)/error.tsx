@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export default function TenantError({
+export default function PlatformError({
   error,
   reset,
 }: {
@@ -13,7 +13,7 @@ export default function TenantError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('[tenant-error]', error)
+    console.error('[platform-error]', error)
   }, [error])
   const isDev = process.env.NODE_ENV !== 'production'
 
@@ -23,9 +23,9 @@ export default function TenantError({
         <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-rose-50 text-rose-600">
           <AlertCircle className="h-6 w-6" />
         </div>
-        <h2 className="mt-4 font-display text-xl italic">教練後台載入失敗</h2>
+        <h2 className="mt-4 font-display text-xl italic">平台後台載入失敗</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          這個頁面暫時無法載入，請稍候再試。若持續發生請聯絡我們並提供下方代碼。
+          頁面暫時無法載入，請稍候再試。若持續發生請查看 server logs 與下方代碼。
         </p>
         {error.digest && (
           <p className="mt-3 font-mono text-xs text-muted-foreground/70">
@@ -40,7 +40,7 @@ export default function TenantError({
         <div className="mt-5 flex items-center justify-center gap-2">
           <Button onClick={reset}>重試</Button>
           <Link
-            href="/dashboard"
+            href="/platform/dashboard"
             className="inline-flex items-center rounded-md border bg-background px-3 py-1.5 text-sm hover:bg-muted"
           >
             回儀表板
