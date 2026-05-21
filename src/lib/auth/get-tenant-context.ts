@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabase/server'
 import { NotFoundError } from '@/lib/errors'
 
 export type TenantContext = {
@@ -19,9 +19,15 @@ export async function getTenantContext(tenantId: string): Promise<TenantContext>
   return data as TenantContext
 }
 
+/**
+ * Public lookup by slug (the slug is in the URL, so already public knowledge).
+ * Uses admin client so we can return suspended tenants too — the page handler
+ * is responsible for rendering the "suspended" state. Without this, anonymous
+ * users would see a generic 404 instead of "服務暫停中".
+ */
 export async function getTenantBySlug(slug: string): Promise<TenantContext | null> {
-  const supabase = await createSupabaseServerClient()
-  const { data } = await supabase
+  const admin = createSupabaseAdminClient()
+  const { data } = await admin
     .from('tenants')
     .select('id, slug, name, status')
     .eq('slug', slug)
