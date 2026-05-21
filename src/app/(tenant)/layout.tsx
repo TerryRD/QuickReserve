@@ -30,6 +30,7 @@ export default async function TenantLayout({ children }: { children: React.React
           <Link href="/bookings">預約管理</Link>
           <Link href="/services">服務項目</Link>
           {session.role === 'tenant_owner' && <Link href="/staff">助教管理</Link>}
+          <Link href="/settings/notifications">通知設定</Link>
         </nav>
       </aside>
       <main className="flex-1 bg-slate-50 p-6">{children}</main>
