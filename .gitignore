@@ -39,3 +39,9 @@ lerna-debug.log*
 # Gemini/Specify temp folders
 .gemini/
 .specify/
+
+# Superpowers brainstorm session files (local only)
+.superpowers/
+
+# Claude Code local settings
+.claude/
