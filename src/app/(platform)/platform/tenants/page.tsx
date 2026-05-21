@@ -1,5 +1,7 @@
+import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import InviteCoachForm from './invite-coach-form'
+import SuspendButton from './suspend-button'
 
 export default async function TenantsListPage() {
   const supabase = await createSupabaseServerClient()
@@ -25,20 +27,47 @@ export default async function TenantsListPage() {
               <th className="p-3">名稱</th>
               <th className="p-3">狀態</th>
               <th className="p-3">建立日期</th>
+              <th className="p-3" />
             </tr>
           </thead>
           <tbody>
             {tenants?.map((t) => (
               <tr key={t.id} className="border-b text-sm">
-                <td className="p-3">{t.slug}</td>
+                <td className="p-3">
+                  <Link
+                    href={`/${t.slug}`}
+                    target="_blank"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {t.slug}
+                  </Link>
+                </td>
                 <td className="p-3">{t.name}</td>
-                <td className="p-3">{t.status}</td>
-                <td className="p-3">{new Date(t.created_at).toLocaleDateString('zh-TW')}</td>
+                <td className="p-3">
+                  {t.status === 'active' ? (
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">
+                      啟用中
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">
+                      已暫停
+                    </span>
+                  )}
+                </td>
+                <td className="p-3 text-xs text-slate-500">
+                  {new Date(t.created_at).toLocaleDateString('zh-TW')}
+                </td>
+                <td className="p-3 text-right">
+                  <SuspendButton
+                    tenantId={t.id}
+                    currentStatus={t.status as 'active' | 'suspended'}
+                  />
+                </td>
               </tr>
             ))}
             {!tenants?.length && (
               <tr>
-                <td colSpan={4} className="p-6 text-center text-slate-400">
+                <td colSpan={5} className="p-6 text-center text-slate-400">
                   尚無租戶
                 </td>
               </tr>
