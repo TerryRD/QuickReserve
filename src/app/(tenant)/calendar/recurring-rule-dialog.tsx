@@ -60,7 +60,7 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
     return 30 // fallback estimate
   }, [freq, byWeekday, endCondition, endCount])
 
-  const { execute, isPending, result } = useAction(createRecurringRuleAction, {
+  const { execute, isPending } = useAction(createRecurringRuleAction, {
     onSuccess: ({ data }) => {
       if (!data) return
       if (data.conflicts.length > 0 && !skipMode) {
