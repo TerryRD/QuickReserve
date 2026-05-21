@@ -36,22 +36,26 @@ function dateOnly(date: Date): string {
   return new Date(taipeiMs).toISOString().slice(0, 10)
 }
 
+function parseDateParts(dateStr: string): [number, number, number] {
+  const parts = dateStr.split('-').map(Number)
+  return [parts[0]!, parts[1]!, parts[2]!]
+}
+
 function addDays(dateStr: string, days: number): string {
-  const [y, m, d] = dateStr.split('-').map(Number)
+  const [y, m, d] = parseDateParts(dateStr)
   const dt = new Date(Date.UTC(y, m - 1, d))
   dt.setUTCDate(dt.getUTCDate() + days)
   return dt.toISOString().slice(0, 10)
 }
 
 function addMonths(dateStr: string, months: number): string {
-  const [y, m, d] = dateStr.split('-').map(Number)
+  const [y, m] = parseDateParts(dateStr)
   const dt = new Date(Date.UTC(y, m - 1 + months, 1))
-  return dt.toISOString().slice(0, 10) // first of resulting month
+  return dt.toISOString().slice(0, 10)
 }
 
 function isoWeekday(dateStr: string): number {
-  // 1=Mon..7=Sun for the given YYYY-MM-DD in UTC+8 (date-only, TZ doesn't matter)
-  const [y, m, d] = dateStr.split('-').map(Number)
+  const [y, m, d] = parseDateParts(dateStr)
   const jsDay = new Date(Date.UTC(y, m - 1, d)).getUTCDay() // 0=Sun..6=Sat
   return ((jsDay + 6) % 7) + 1
 }
@@ -136,7 +140,9 @@ export function computeOccurrences(
     let emittedTotal = 0
     let i = 0
     while (i++ < SAFETY_CAP && emittedTotal < cap && monthCursor <= untilDay && monthCursor <= windowEndDay) {
-      const [y, m] = monthCursor.split('-').map(Number)
+      const parts = monthCursor.split('-').map(Number)
+      const y = parts[0]!
+      const m = parts[1]!
       if (isValidDayOfMonth(y, m, dom)) {
         const day = `${y}-${String(m).padStart(2, '0')}-${String(dom).padStart(2, '0')}`
         if (day >= cursor && day <= untilDay && day <= windowEndDay) {

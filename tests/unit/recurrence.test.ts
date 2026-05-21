@@ -22,9 +22,11 @@ describe('computeOccurrences - daily', () => {
     }
     const result = computeOccurrences(rule, new Date('2026-06-01T00:00:00+08:00'), new Date('2026-06-10T00:00:00+08:00'))
     expect(result).toHaveLength(3)
-    expect(result[0].startAt).toBe(localToIso('2026-06-01', '19:00:00'))
-    expect(result[1].startAt).toBe(localToIso('2026-06-02', '19:00:00'))
-    expect(result[2].startAt).toBe(localToIso('2026-06-03', '19:00:00'))
+    expect(result.map((o) => o.startAt)).toEqual([
+      localToIso('2026-06-01', '19:00:00'),
+      localToIso('2026-06-02', '19:00:00'),
+      localToIso('2026-06-03', '19:00:00'),
+    ])
   })
 
   it('honors interval_n (every 3 days)', () => {
