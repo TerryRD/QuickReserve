@@ -290,28 +290,32 @@ app/
 ├── (auth)/
 │   ├── login/page.tsx
 │   ├── signup/page.tsx
-│   └── reset-password/page.tsx
+│   └── callback/route.ts                  # 信箱驗證回呼
 │
-├── (platform)/                  # 平台管理員後台
-│   ├── platform/tenants/
-│   ├── platform/analytics/
-│   └── platform/admins/
+├── (platform)/                            # 平台管理員後台
+│   ├── platform/dashboard/                # 6 個統計卡
+│   └── platform/tenants/
+│       ├── page.tsx                       # 列表 + 邀請 + 暫停
+│       └── [tenantId]/                    # 單租戶 drill-in（FR-081）
 │
-├── (tenant)/                    # 教練後台（Owner/Staff）
-│   ├── dashboard/
-│   ├── calendar/                # 行事曆主視圖
-│   ├── calendar/slot/[id]/      # 單一 slot 編輯（衝突跳轉目的地）
-│   ├── bookings/                # 預約管理
-│   ├── services/                # 服務項目管理
-│   ├── staff/                   # 助教管理（僅 Owner 可見）
-│   ├── customers/               # 學員清單
+├── (tenant)/                              # 教練後台（Owner/Staff）
+│   ├── dashboard/                         # 統計 + 即將到來預約
+│   ├── calendar/                          # 行事曆主視圖（多成員 FR-077）
+│   │   └── rules/                         # 重複規則管理（FR-073）
+│   ├── bookings/                          # 預約管理
+│   ├── services/                          # 服務項目管理
+│   ├── staff/                             # 助教管理（僅 Owner 可見）
+│   ├── customers/                         # 學員清單（FR-070）
 │   └── settings/notifications/
 │
-├── [tenantSlug]/                # 公開預約頁
-│   ├── page.tsx                 # 教練介紹 + 服務列表
-│   └── book/[serviceId]/        # 選時段 + 預約
+├── [tenantSlug]/                          # 公開預約頁
+│   └── page.tsx                           # 教練 + 服務 + 14 天 strip
 │
-├── (customer)/                  # 學員後台
+├── book/[slotId]/                         # 預約確認頁
+│
+├── invite/[token]/                        # 邀請接受
+│
+├── (customer)/                            # 學員後台
 │   ├── my-bookings/
 │   └── settings/notifications/
 │
