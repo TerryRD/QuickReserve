@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import InviteCoachForm from './invite-coach-form'
 
 export default async function TenantsListPage() {
   const supabase = await createSupabaseServerClient()
@@ -8,35 +9,43 @@ export default async function TenantsListPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">租戶管理</h1>
-      <table className="mt-6 w-full bg-white">
-        <thead>
-          <tr className="border-b text-left text-sm text-slate-600">
-            <th className="p-3">Slug</th>
-            <th className="p-3">名稱</th>
-            <th className="p-3">狀態</th>
-            <th className="p-3">建立日期</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tenants?.map((t) => (
-            <tr key={t.id} className="border-b text-sm">
-              <td className="p-3">{t.slug}</td>
-              <td className="p-3">{t.name}</td>
-              <td className="p-3">{t.status}</td>
-              <td className="p-3">{new Date(t.created_at).toLocaleDateString('zh-TW')}</td>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">租戶管理</h1>
+      </div>
+
+      <InviteCoachForm />
+
+      <div>
+        <h2 className="mb-2 text-lg font-semibold">租戶列表</h2>
+        <table className="w-full bg-white">
+          <thead>
+            <tr className="border-b text-left text-sm text-slate-600">
+              <th className="p-3">Slug</th>
+              <th className="p-3">名稱</th>
+              <th className="p-3">狀態</th>
+              <th className="p-3">建立日期</th>
             </tr>
-          ))}
-          {!tenants?.length && (
-            <tr>
-              <td colSpan={4} className="p-6 text-center text-slate-400">
-                尚無租戶
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {tenants?.map((t) => (
+              <tr key={t.id} className="border-b text-sm">
+                <td className="p-3">{t.slug}</td>
+                <td className="p-3">{t.name}</td>
+                <td className="p-3">{t.status}</td>
+                <td className="p-3">{new Date(t.created_at).toLocaleDateString('zh-TW')}</td>
+              </tr>
+            ))}
+            {!tenants?.length && (
+              <tr>
+                <td colSpan={4} className="p-6 text-center text-slate-400">
+                  尚無租戶
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

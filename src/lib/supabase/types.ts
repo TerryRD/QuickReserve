@@ -125,7 +125,7 @@ export type Database = {
           role: string
           status: string
           tenant_id: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -137,7 +137,7 @@ export type Database = {
           role: string
           status?: string
           tenant_id: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -149,7 +149,7 @@ export type Database = {
           role?: string
           status?: string
           tenant_id?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -206,7 +206,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_user_tenant_ids: { Args: never; Returns: string[] }
+      is_platform_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
