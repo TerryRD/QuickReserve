@@ -4,10 +4,10 @@
 
 | 角色 | 在系統中能做什麼 | 手冊 |
 |------|-----------------|------|
-| 🛠️ 平台管理員（你） | 邀請教練、暫停/啟用租戶、看全平台統計 | [`01-platform-admin.md`](01-platform-admin.md) |
-| 🏓 教練 Owner | 自己的服務、行事曆、預約、助教管理 | [`02-coach-owner.md`](02-coach-owner.md) |
-| 👨‍🏫 助教 Staff | 自己的時段與預約 | [`03-staff.md`](03-staff.md) |
-| 👤 學員（客戶） | 找教練 → 看可用時段 → 預約 → 管理我的預約 | [`04-customer.md`](04-customer.md) |
+| 🛠️ 平台管理員（你） | 邀請教練、暫停/啟用租戶、drill-in 單租戶資料、全平台統計 | [`01-platform-admin.md`](01-platform-admin.md) |
+| 🏓 教練 Owner | 服務、行事曆（多成員視圖）、重複規則管理、預約、學員、助教 | [`02-coach-owner.md`](02-coach-owner.md) |
+| 👨‍🏫 助教 Staff | 自己的時段、規則與預約 | [`03-staff.md`](03-staff.md) |
+| 👤 學員（客戶） | 找教練 → 看 14 天可用時段 → 預約 → 管理我的預約 | [`04-customer.md`](04-customer.md) |
 
 ---
 

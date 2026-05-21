@@ -144,6 +144,12 @@ export default async function CalendarPage({
         <div className="flex gap-2">
           {viewingSelfOnly && (
             <>
+              <Link
+                href="/calendar/rules"
+                className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+              >
+                管理重複規則
+              </Link>
               <RecurringRuleDialog services={services ?? []} />
               <NewSlotDialog
                 services={services ?? []}

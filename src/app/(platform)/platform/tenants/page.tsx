@@ -33,16 +33,22 @@ export default async function TenantsListPage() {
           <tbody>
             {tenants?.map((t) => (
               <tr key={t.id} className="border-b text-sm">
-                <td className="p-3">
+                <td className="p-3 font-mono text-xs">
                   <Link
-                    href={`/${t.slug}`}
-                    target="_blank"
-                    className="text-blue-600 hover:underline"
+                    href={`/platform/tenants/${t.id}`}
+                    className="text-primary hover:underline"
                   >
                     {t.slug}
                   </Link>
                 </td>
-                <td className="p-3">{t.name}</td>
+                <td className="p-3">
+                  <Link
+                    href={`/platform/tenants/${t.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {t.name}
+                  </Link>
+                </td>
                 <td className="p-3">
                   {t.status === 'active' ? (
                     <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">
