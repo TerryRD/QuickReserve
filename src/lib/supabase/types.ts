@@ -75,6 +75,53 @@ export type Database = {
         }
         Relationships: []
       }
+      services: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          extended_properties: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_minutes: number
+          extended_properties?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          extended_properties?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_customers: {
         Row: {
           created_at: string
@@ -206,6 +253,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_owner_tenant_ids: { Args: never; Returns: string[] }
       current_user_tenant_ids: { Args: never; Returns: string[] }
       is_platform_admin: { Args: never; Returns: boolean }
     }
