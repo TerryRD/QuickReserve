@@ -1,0 +1,16 @@
+-- supabase/seed.sql
+-- Optional seed data for local/dev environments.
+-- Production platform admins should be inserted manually via Supabase SQL Editor.
+
+-- ─────────────── Platform admin bootstrap ───────────────
+-- Plan 1 acceptance requires one platform admin. There is no UI to elevate a
+-- user; this is intentional (security boundary). Process:
+--
+-- 1. Sign up at https://your-app.vercel.app/signup with your real email/password
+-- 2. Find your auth user_id in Supabase Dashboard → Authentication → Users
+-- 3. Run the SQL below (in Supabase Dashboard → SQL Editor) with your UUID
+--
+-- Example:
+--   insert into public.platform_admins (user_id)
+--   values ('00000000-0000-0000-0000-000000000000')
+--   on conflict (user_id) do nothing;
