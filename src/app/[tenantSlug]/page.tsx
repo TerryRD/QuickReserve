@@ -81,20 +81,29 @@ export default async function TenantPublicPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <main className="mx-auto max-w-3xl px-4 pb-12">
-        {/* Hero */}
-        <header className="relative -mx-4 overflow-hidden rounded-b-3xl bg-gradient-to-br from-blue-600 via-indigo-700 to-slate-900 px-6 pb-10 pt-12 text-white sm:mx-0 sm:rounded-3xl sm:mt-8">
-          <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-indigo-400/30 blur-3xl" />
-          <div className="relative flex items-center gap-4">
-            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/15 text-3xl backdrop-blur">
-              {tenant.name.slice(0, 1)}
+    <div className="min-h-screen">
+      <main className="mx-auto max-w-3xl px-4 pb-16">
+        {/* Editorial hero */}
+        <header className="relative -mx-4 mb-2 overflow-hidden bg-foreground px-6 pb-12 pt-14 text-background sm:mx-0 sm:mt-8 sm:rounded-3xl sm:px-10">
+          <div
+            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground via-foreground to-[oklch(0.28_0.12_270)]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent/40 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative">
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-60">
+              預約 · /{tenant.slug}
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{tenant.name}</h1>
-              <p className="mt-1 text-sm text-white/75">線上預約 · /{tenant.slug}</p>
-            </div>
+            <h1 className="mt-4 font-display text-5xl leading-[0.95] tracking-tight sm:text-6xl">
+              <span className="italic">{tenant.name}</span>
+            </h1>
+            <p className="mt-6 max-w-md text-sm leading-relaxed text-background/75">
+              在下方選擇您想預訂的服務、日期與時段。送出後狀態為「待確認」，
+              教練確認後即正式成立。
+            </p>
           </div>
         </header>
 

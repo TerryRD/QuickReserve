@@ -26,7 +26,9 @@ function LoginForm() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">登入帳號</h1>
+        <h1 className="font-display text-4xl tracking-tight">
+          <span className="italic">歡迎</span>回來
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">輸入您的帳號密碼以繼續</p>
       </div>
 

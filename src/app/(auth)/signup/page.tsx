@@ -27,7 +27,9 @@ function SignupForm() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">建立帳號</h1>
+        <h1 className="font-display text-4xl tracking-tight">
+          <span className="italic">建立</span>帳號
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {inviteToken ? '完成註冊後將自動接受邀請' : '註冊後即可預約教練的課程'}
         </p>
