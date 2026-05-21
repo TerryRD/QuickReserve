@@ -11,8 +11,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --exclude 'tests/integration/**'",
     "test:watch": "vitest",
+    "test:integration": "vitest run tests/integration --reporter=verbose",
     "db:push": "supabase db push",
     "db:diff": "supabase db diff",
     "db:reset": "supabase db reset --linked",
@@ -48,6 +49,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^3.2.4",
+    "dotenv": "^17.4.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.18",
     "eslint-config-prettier": "^10.1.8",
@@ -56,6 +59,7 @@
     "supabase": "^2.101.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "ws": "^8.20.1"
   }
 }
