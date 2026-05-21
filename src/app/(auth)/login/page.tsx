@@ -8,12 +8,12 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { loginAction } from './actions'
 
 function LoginForm() {
   const params = useSearchParams()
   const redirectTo = params.get('redirect') ?? '/'
+  const signedUp = params.get('signedup')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -24,48 +24,59 @@ function LoginForm() {
   })
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>登入 QuickReserve</CardTitle>
-      </CardHeader>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">登入帳號</h1>
+        <p className="mt-2 text-sm text-muted-foreground">輸入您的帳號密碼以繼續</p>
+      </div>
+
+      {signedUp && (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+          ✓ 註冊成功，請使用該帳號登入
+        </div>
+      )}
+
       <form
+        className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault()
           execute({ email, password, redirectTo })
         }}
       >
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">密碼</Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Link href="/signup" className="text-sm text-blue-600 hover:underline">
-            還沒有帳號？
-          </Link>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? '登入中...' : '登入'}
-          </Button>
-        </CardFooter>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            required
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">密碼</Label>
+          <Input
+            id="password"
+            type="password"
+            required
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        <Button type="submit" disabled={isPending} className="w-full" size="lg">
+          {isPending ? '登入中...' : '登入'}
+        </Button>
       </form>
-    </Card>
+
+      <p className="text-center text-sm text-muted-foreground">
+        還沒有帳號？{' '}
+        <Link href="/signup" className="font-medium text-primary hover:underline">
+          建立帳號
+        </Link>
+      </p>
+    </div>
   )
 }
 

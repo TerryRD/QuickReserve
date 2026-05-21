@@ -31,11 +31,11 @@ export default function BookForm({ slotId }: { slotId: string }) {
           placeholder="例如：第一次上課、想學發球..."
         />
       </div>
-      <Button type="submit" disabled={isPending} className="w-full">
+      <Button type="submit" disabled={isPending} className="w-full" size="lg">
         {isPending ? '送出中...' : '送出預約申請'}
       </Button>
-      <p className="text-xs text-slate-500">
-        送出後狀態為「待確認」，教練確認後正式成立。
+      <p className="text-center text-xs text-muted-foreground">
+        送出後狀態為「待確認」，教練確認後即正式成立
       </p>
     </form>
   )
