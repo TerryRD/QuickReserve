@@ -256,6 +256,12 @@
 ### 4.22 PlatformSidebarNav icon map 強化
 - **FR-107**: `PlatformSidebarNav` 的 `ICONS` map 在 lookup 失敗時 fallback 到 `LayoutDashboard`（`ICONS[name] ?? LayoutDashboard`），防止未來新增路由時忘記註冊圖示就 throw React error #130
 
+### 4.23 Toast 持久度（UX audit ⚪ X3 收尾）
+- **FR-108**: 全域 `<Toaster>` 設定 `duration={5000}`（原預設 4000）並啟用 `closeButton`，讓使用者有足夠時間閱讀成功訊息，並可手動關閉或保留。對應 `src/components/ui/sonner.tsx`
+
+### 4.24 學員「我的教練」聚合（UX audit ⚪ C4 收尾）
+- **FR-109**: `/my-bookings` 上方新增「我的教練」聚合區塊，按 `tenant` 分組顯示：教練名稱、累計預約次數、未來尚未完成的預約數，並提供連結回該教練公開頁。資料完全從現有 `bookings → tenants` 關聯計算，不新增 schema
+
 ---
 
 ## 5. 非功能需求 (Non-Functional Requirements)
@@ -1033,5 +1039,7 @@ SENTRY_AUTH_TOKEN
 | 2026-05-21 | 全面替換 `window.confirm()` 為 `ConfirmDialog` | FR-104 | （本次） |
 | 2026-05-21 | Hotfix: PlatformSidebarNav `ClipboardList` 漏註冊 → React #130；補 fallback | FR-107 | `6d865b5` |
 | 2026-05-21 | Hotfix: error.tsx 不再外洩 `error.message`（顯示友善文案 + digest，dev 才秀 stack）；補 `(platform)/error.tsx` | FR-105 ~ 106 | `6d865b5` |
+| 2026-05-22 | UX audit 收尾：Sonner toast `duration=5000` + `closeButton` | FR-108 | （本次） |
+| 2026-05-22 | UX audit 收尾：`/my-bookings` 上方「我的教練」聚合區塊（按 tenant 分組計次） | FR-109 | （本次） |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。

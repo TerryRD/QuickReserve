@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Calendar, Settings, MapPin } from 'lucide-react'
+import { Calendar, Settings, MapPin, ExternalLink, UserCircle2 } from 'lucide-react'
 import { requireSession } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
@@ -38,6 +38,34 @@ export default async function MyBookingsPage() {
   const now = new Date()
   const isFuture = (iso: string) => new Date(iso) > now
 
+  const coachStats: Record<
+    string,
+    { name: string; slug: string; total: number; upcoming: number; latestAt: string }
+  > = {}
+  for (const b of bookings ?? []) {
+    const t = b.tenants as { name: string; slug: string } | null
+    if (!t) continue
+    const slot = b.availability_slots as { start_at: string } | null
+    const entry = coachStats[t.slug] ?? {
+      name: t.name,
+      slug: t.slug,
+      total: 0,
+      upcoming: 0,
+      latestAt: b.created_at,
+    }
+    entry.total += 1
+    if (
+      slot &&
+      isFuture(slot.start_at) &&
+      (b.status === 'pending' || b.status === 'confirmed')
+    ) {
+      entry.upcoming += 1
+    }
+    if (b.created_at > entry.latestAt) entry.latestAt = b.created_at
+    coachStats[t.slug] = entry
+  }
+  const coaches = Object.values(coachStats).sort((a, b) => b.total - a.total)
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -55,6 +83,40 @@ export default async function MyBookingsPage() {
       </div>
 
       <PushOptIn />
+
+      {coaches.length > 0 && (
+        <section>
+          <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <UserCircle2 className="h-4 w-4" />
+            我的教練
+            <span className="text-xs font-normal text-muted-foreground">
+              （曾預約 {coaches.length} 位）
+            </span>
+          </h2>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {coaches.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/${c.slug}`}
+                className="group flex items-center justify-between gap-2 rounded-xl border bg-card p-3 transition hover:border-primary/40 hover:shadow-sm"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold">{c.name}</div>
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">
+                    共 {c.total} 次
+                    {c.upcoming > 0 && (
+                      <span className="ml-1.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] text-emerald-800">
+                        {c.upcoming} 即將到來
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition group-hover:text-primary" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {!bookings || bookings.length === 0 ? (
         <Card>
