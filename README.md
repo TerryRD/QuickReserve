@@ -53,7 +53,8 @@
   /services                    服務項目管理
   /bookings                    預約管理（確認 / 取消）
   /staff                       助教管理（Owner 限定）
-  /settings/notifications      通知偏好
+  /notifications               通知偏好（教練 / 助教，留在 tenant 後台 chrome）
+  /settings/profile            租戶資料（Owner 限定）
 
 (customer) — 學員後台
   /my-bookings                 我的預約
@@ -201,6 +202,29 @@ UUID 可以在 Supabase Dashboard → Authentication → Users 找到。
 - `book_slot_atomic(slot_id, customer_id, notes)` — 原子性預約建立（SELECT FOR UPDATE）
 - `confirm_booking(booking_id)` — 教練確認
 - `cancel_booking(booking_id)` — 客戶或教練取消
+
+---
+
+## 除錯 Runbook — `error.digest` 怎麼查
+
+Production 環境的 error boundary 為了不洩漏 stack trace 給使用者，只顯示一串雜湊碼（例如「錯誤代碼：2263577791」）。這串就是 Next.js 在 server 端記到 log 的 `error.digest`。
+
+### 找對應 stack 的步驟
+
+1. 在 Vercel Dashboard → 該專案 → Logs 篩選時間區間（出錯前後 5 分鐘）
+2. 搜尋欄輸入 digest 串（去頭尾空白）
+3. 第一筆命中的 log 會包含 stack trace、檔案路徑與行號
+4. 若 production 找不到，切到 preview deployment 的 logs 也搜一遍
+
+### 常見類型
+
+| 症狀 | 通常 root cause |
+|---|---|
+| Server Component render 時失敗 | 在 RSC 裡寫了 `onChange` / `onClick` / 用 `window` 等 client-only API |
+| Build 後第一次造訪某動態路由 | 資料庫 RLS 或 PostgREST relationship 配置變動 |
+| 偶發性 | 第三方 API 超時 / Supabase 連線拋例外 |
+
+開發中 `process.env.NODE_ENV !== 'production'` 時，error boundary 會直接顯示 stack（見 `src/app/error.tsx`），免去查 digest。
 
 ---
 
