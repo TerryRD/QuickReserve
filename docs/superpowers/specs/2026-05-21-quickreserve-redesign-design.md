@@ -1043,7 +1043,7 @@ SENTRY_AUTH_TOKEN
 | 2026-05-22 | UX audit 收尾：`/my-bookings` 上方「我的教練」聚合區塊（按 tenant 分組計次） | FR-109 | （本次） |
 | 2026-05-23 | S1: 邀請流程 slug 即時 normalize + 共用 `FormFieldErrors` 顯示欄位錯誤 + helper text | FR-110 | `bcf27aa`, `659edf6`, `ce80084`, `f2da039` |
 | 2026-05-23 | S1: `/platform/bookings` Server Component 違規修正（抽 `TenantFilter` client component、`Promise.all` 並行 query） | FR-111 | `388bf39` |
-| 2026-05-23 | S1: 通知設定 route 群組分離（教練端 `/notifications`、客戶端 `/settings/notifications`，共用 `NotificationPreferences` server block） | FR-112 | `da07ee3`, `cbde4f9`, `c7081a9` |
+| 2026-05-24 | S1: 通知設定 route 群組分離（教練端 `/notifications`、客戶端 `/settings/notifications`，共用 `NotificationPreferences` server block）+ middleware 補 `/notifications` 為保護路徑 | FR-112 | `da07ee3`, `cbde4f9`, `c7081a9`, `5dc2065` |
 | 2026-05-23 | S1: 平台群組 `loading.tsx` 4 個 + `PageSkeleton` 共用元件 + tenants 空清單 short-circuit | FR-113 | `5fa1f0c`, `0d1e7f6`, `d101236` |
 | 2026-05-23 | S1: README 加入 `error.digest` runbook | FR-114 | `b610f68` |
 
