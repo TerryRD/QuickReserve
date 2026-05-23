@@ -1,7 +1,7 @@
 # QuickReserve 重新架構設計文件
 
 **建立日期**: 2026-05-21
-**最後更新**: 2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
+**最後更新**: 2026-05-23（S1 bug triage：FR-110~114 — 邀請流程、Server Component crash、通知設定 route、loading skeleton、digest runbook）；2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
 **狀態**: MVP 已實作完成（v0.1）
 **作者**: terry@webplus.com.tw（透過 brainstorming skill 共同產出）
 
@@ -1041,5 +1041,10 @@ SENTRY_AUTH_TOKEN
 | 2026-05-21 | Hotfix: error.tsx 不再外洩 `error.message`（顯示友善文案 + digest，dev 才秀 stack）；補 `(platform)/error.tsx` | FR-105 ~ 106 | `6d865b5` |
 | 2026-05-22 | UX audit 收尾：Sonner toast `duration=5000` + `closeButton` | FR-108 | （本次） |
 | 2026-05-22 | UX audit 收尾：`/my-bookings` 上方「我的教練」聚合區塊（按 tenant 分組計次） | FR-109 | （本次） |
+| 2026-05-23 | S1: 邀請流程 slug 即時 normalize + 共用 `FormFieldErrors` 顯示欄位錯誤 + helper text | FR-110 | TBD |
+| 2026-05-23 | S1: `/platform/bookings` Server Component 違規修正（抽 `TenantFilter` client component、`Promise.all` 並行 query） | FR-111 | TBD |
+| 2026-05-23 | S1: 通知設定 route 群組分離（教練端 `/notifications`、客戶端 `/settings/notifications`，共用 `NotificationPreferences` server block） | FR-112 | TBD |
+| 2026-05-23 | S1: 平台群組 `loading.tsx` 4 個 + `PageSkeleton` 共用元件 + tenants 空清單 short-circuit | FR-113 | TBD |
+| 2026-05-23 | S1: README 加入 `error.digest` runbook | FR-114 | TBD |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。
