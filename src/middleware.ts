@@ -39,6 +39,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/customers') ||
     pathname.startsWith('/my-bookings') ||
     pathname.startsWith('/settings') ||
+    pathname.startsWith('/notifications') ||
     pathname.startsWith('/invite')
 
   if (!user && isProtected && !isPublic) {
