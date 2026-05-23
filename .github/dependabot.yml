@@ -5,8 +5,29 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # React 與 react-dom 必須相同版本，群組成單一 PR 避免 dependabot 拆開拆斷
+    groups:
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+    # 框架核心 / 編譯器：忽略 major bump，需要手動評估升級
     ignore:
       - dependency-name: next
+        update-types:
+          - version-update:semver-major
+      - dependency-name: eslint-config-next
+        update-types:
+          - version-update:semver-major
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
+      - dependency-name: react
+        update-types:
+          - version-update:semver-major
+      - dependency-name: react-dom
         update-types:
           - version-update:semver-major
 
