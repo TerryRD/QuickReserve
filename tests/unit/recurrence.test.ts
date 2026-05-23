@@ -20,7 +20,11 @@ describe('computeOccurrences - daily', () => {
       end_count: 3,
       end_until: null,
     }
-    const result = computeOccurrences(rule, new Date('2026-06-01T00:00:00+08:00'), new Date('2026-06-10T00:00:00+08:00'))
+    const result = computeOccurrences(
+      rule,
+      new Date('2026-06-01T00:00:00+08:00'),
+      new Date('2026-06-10T00:00:00+08:00'),
+    )
     expect(result).toHaveLength(3)
     expect(result.map((o) => o.startAt)).toEqual([
       localToIso('2026-06-01', '19:00:00'),
@@ -42,7 +46,11 @@ describe('computeOccurrences - daily', () => {
       end_count: 3,
       end_until: null,
     }
-    const result = computeOccurrences(rule, new Date('2026-06-01T00:00:00+08:00'), new Date('2026-06-30T00:00:00+08:00'))
+    const result = computeOccurrences(
+      rule,
+      new Date('2026-06-01T00:00:00+08:00'),
+      new Date('2026-06-30T00:00:00+08:00'),
+    )
     expect(result.map((o) => o.startAt)).toEqual([
       localToIso('2026-06-01', '09:00:00'),
       localToIso('2026-06-04', '09:00:00'),
@@ -66,7 +74,11 @@ describe('computeOccurrences - weekly', () => {
       end_count: 4,
       end_until: null,
     }
-    const result = computeOccurrences(rule, new Date('2026-06-01T00:00:00+08:00'), new Date('2026-06-30T00:00:00+08:00'))
+    const result = computeOccurrences(
+      rule,
+      new Date('2026-06-01T00:00:00+08:00'),
+      new Date('2026-06-30T00:00:00+08:00'),
+    )
     expect(result.map((o) => o.startAt)).toEqual([
       localToIso('2026-06-02', '19:00:00'), // Tue
       localToIso('2026-06-04', '19:00:00'), // Thu
@@ -90,7 +102,11 @@ describe('computeOccurrences - weekly', () => {
     }
     // Week containing 2026-06-01 is week 0; Saturday is 2026-06-06
     // Next Saturday in 2 weeks: 2026-06-20, then 2026-07-04
-    const result = computeOccurrences(rule, new Date('2026-06-01T00:00:00+08:00'), new Date('2026-08-01T00:00:00+08:00'))
+    const result = computeOccurrences(
+      rule,
+      new Date('2026-06-01T00:00:00+08:00'),
+      new Date('2026-08-01T00:00:00+08:00'),
+    )
     expect(result.map((o) => o.startAt)).toEqual([
       localToIso('2026-06-06', '14:00:00'),
       localToIso('2026-06-20', '14:00:00'),
@@ -113,7 +129,11 @@ describe('computeOccurrences - monthly', () => {
       end_count: 3,
       end_until: null,
     }
-    const result = computeOccurrences(rule, new Date('2026-06-01T00:00:00+08:00'), new Date('2026-12-31T00:00:00+08:00'))
+    const result = computeOccurrences(
+      rule,
+      new Date('2026-06-01T00:00:00+08:00'),
+      new Date('2026-12-31T00:00:00+08:00'),
+    )
     expect(result.map((o) => o.startAt)).toEqual([
       localToIso('2026-06-15', '10:00:00'),
       localToIso('2026-07-15', '10:00:00'),
@@ -134,7 +154,11 @@ describe('computeOccurrences - monthly', () => {
       end_count: 3,
       end_until: null,
     }
-    const result = computeOccurrences(rule, new Date('2026-01-01T00:00:00+08:00'), new Date('2026-12-31T00:00:00+08:00'))
+    const result = computeOccurrences(
+      rule,
+      new Date('2026-01-01T00:00:00+08:00'),
+      new Date('2026-12-31T00:00:00+08:00'),
+    )
     // Jan 30, [skip Feb], Mar 30, Apr 30 → first 3 occurrences
     expect(result.map((o) => o.startAt)).toEqual([
       localToIso('2026-01-30', '10:00:00'),
@@ -158,7 +182,11 @@ describe('computeOccurrences - end conditions', () => {
       end_count: null,
       end_until: '2026-06-03',
     }
-    const result = computeOccurrences(rule, new Date('2026-06-01T00:00:00+08:00'), new Date('2026-06-30T00:00:00+08:00'))
+    const result = computeOccurrences(
+      rule,
+      new Date('2026-06-01T00:00:00+08:00'),
+      new Date('2026-06-30T00:00:00+08:00'),
+    )
     expect(result).toHaveLength(3) // Jun 1, 2, 3
   })
 
@@ -175,7 +203,11 @@ describe('computeOccurrences - end conditions', () => {
       end_count: null,
       end_until: null,
     }
-    const result = computeOccurrences(rule, new Date('2026-06-01T00:00:00+08:00'), new Date('2026-06-05T00:00:00+08:00'))
+    const result = computeOccurrences(
+      rule,
+      new Date('2026-06-01T00:00:00+08:00'),
+      new Date('2026-06-05T00:00:00+08:00'),
+    )
     expect(result).toHaveLength(5) // Jun 1, 2, 3, 4, 5
   })
 })

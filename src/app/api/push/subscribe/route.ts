@@ -25,7 +25,10 @@ export async function POST(request: NextRequest) {
   }
   const parsed = SubscriptionSchema.safeParse(body)
   if (!parsed.success)
-    return NextResponse.json({ error: 'invalid subscription', details: parsed.error.flatten() }, { status: 400 })
+    return NextResponse.json(
+      { error: 'invalid subscription', details: parsed.error.flatten() },
+      { status: 400 },
+    )
 
   const userAgent = request.headers.get('user-agent') ?? null
 
@@ -43,7 +46,9 @@ export async function POST(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Initialize preferences if not present
-  await supabase.from('notification_preferences').upsert({ user_id: user.id }, { onConflict: 'user_id' })
+  await supabase
+    .from('notification_preferences')
+    .upsert({ user_id: user.id }, { onConflict: 'user_id' })
 
   return NextResponse.json({ ok: true })
 }

@@ -37,9 +37,7 @@ export default function MemberFilter({
   }
 
   function toggle(id: string) {
-    const next = selected.has(id)
-      ? selectedIds.filter((x) => x !== id)
-      : [...selectedIds, id]
+    const next = selected.has(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id]
     if (next.length === 0) return // require at least 1
     update(next)
   }
@@ -47,7 +45,7 @@ export default function MemberFilter({
   const summary = isAll
     ? `全部 ${members.length} 位`
     : selectedIds.length === 1
-      ? members.find((m) => m.id === selectedIds[0])?.label ?? '1 位'
+      ? (members.find((m) => m.id === selectedIds[0])?.label ?? '1 位')
       : `${selectedIds.length} 位`
 
   return (
@@ -63,16 +61,10 @@ export default function MemberFilter({
       </button>
       {open && (
         <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setOpen(false)}
-            aria-hidden
-          />
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} aria-hidden />
           <div className="absolute left-0 top-full z-20 mt-1 min-w-56 rounded-lg border bg-popover p-2 shadow-md">
             <div className="flex items-center justify-between border-b pb-2">
-              <span className="text-xs font-medium text-muted-foreground">
-                顯示成員時段
-              </span>
+              <span className="text-xs font-medium text-muted-foreground">顯示成員時段</span>
               <button
                 type="button"
                 onClick={() => update(members.map((m) => m.id))}

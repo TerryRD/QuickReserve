@@ -10,9 +10,7 @@ export default async function TenantProfilePage() {
   const supabase = await createSupabaseServerClient()
   const { data: tenant } = await supabase
     .from('tenants')
-    .select(
-      'name, description, contact_email, contact_phone, contact_line_id, contact_note',
-    )
+    .select('name, description, contact_email, contact_phone, contact_line_id, contact_note')
     .eq('id', session.tenantId)
     .single()
   if (!tenant) redirect('/dashboard')
@@ -23,9 +21,7 @@ export default async function TenantProfilePage() {
         <h1 className="font-display text-3xl tracking-tight">
           <span className="italic">租戶資料</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          公開頁顯示的名稱、介紹與聯絡方式
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">公開頁顯示的名稱、介紹與聯絡方式</p>
       </header>
 
       <ProfileForm initial={tenant} />

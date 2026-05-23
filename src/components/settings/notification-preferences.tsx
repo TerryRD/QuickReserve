@@ -11,11 +11,7 @@ const DEFAULT_PREFS = {
   booking_status_changes_enabled: true,
 }
 
-export default async function NotificationPreferences({
-  userId,
-}: {
-  userId: string
-}) {
+export default async function NotificationPreferences({ userId }: { userId: string }) {
   const supabase = await createSupabaseServerClient()
   const { data: prefs } = await supabase
     .from('notification_preferences')

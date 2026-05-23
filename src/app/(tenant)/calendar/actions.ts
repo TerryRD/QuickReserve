@@ -49,10 +49,7 @@ export const deleteSlotAction = actionClient
   .action(async ({ parsedInput }) => {
     await requireTenantMember()
     const supabase = await createSupabaseServerClient()
-    const { error } = await supabase
-      .from('availability_slots')
-      .delete()
-      .eq('id', parsedInput.id)
+    const { error } = await supabase.from('availability_slots').delete().eq('id', parsedInput.id)
     if (error) throw new AppError('SLOT_DELETE_FAILED', error.message)
     revalidatePath('/calendar')
     return { ok: true }

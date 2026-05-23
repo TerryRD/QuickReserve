@@ -309,9 +309,7 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
               />
             )}
             {endCondition === 'none' && (
-              <p className="text-xs text-slate-500">
-                每日 00:30 自動往前推 1 天（90 天滑動視窗）
-              </p>
+              <p className="text-xs text-slate-500">每日 00:30 自動往前推 1 天（90 天滑動視窗）</p>
             )}
           </div>
 
@@ -326,7 +324,10 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
               </p>
               <ul className="max-h-40 space-y-2 overflow-y-auto text-xs">
                 {conflicts.map((c) => (
-                  <li key={c.id} className="flex items-center justify-between gap-2 rounded bg-white p-2">
+                  <li
+                    key={c.id}
+                    className="flex items-center justify-between gap-2 rounded bg-white p-2"
+                  >
                     <span>
                       {new Date(c.startAt).toLocaleString('zh-TW')}
                       {c.endAt && ` — ${new Date(c.endAt).toLocaleString('zh-TW')}`}
@@ -356,7 +357,10 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
               略過衝突日，建立其他
             </Button>
           )}
-          <Button onClick={submit} disabled={isPending || (freq === 'weekly' && byWeekday.length === 0)}>
+          <Button
+            onClick={submit}
+            disabled={isPending || (freq === 'weekly' && byWeekday.length === 0)}
+          >
             {isPending ? '處理中...' : '建立'}
           </Button>
         </DialogFooter>

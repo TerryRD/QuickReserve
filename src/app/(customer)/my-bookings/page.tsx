@@ -54,11 +54,7 @@ export default async function MyBookingsPage() {
       latestAt: b.created_at,
     }
     entry.total += 1
-    if (
-      slot &&
-      isFuture(slot.start_at) &&
-      (b.status === 'pending' || b.status === 'confirmed')
-    ) {
+    if (slot && isFuture(slot.start_at) && (b.status === 'pending' || b.status === 'confirmed')) {
       entry.upcoming += 1
     }
     if (b.created_at > entry.latestAt) entry.latestAt = b.created_at
@@ -123,9 +119,7 @@ export default async function MyBookingsPage() {
           <CardContent className="p-12 text-center">
             <Calendar className="mx-auto h-10 w-10 text-slate-300" />
             <p className="mt-3 font-medium text-slate-700">尚無預約紀錄</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              透過教練的專屬連結即可預約
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">透過教練的專屬連結即可預約</p>
           </CardContent>
         </Card>
       ) : (

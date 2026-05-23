@@ -26,21 +26,25 @@ const CreateRecurringRuleSchema = z
     endTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
     endCondition: EndConditionEnum,
     endCount: z.coerce.number().int().positive().nullable().optional(),
-    endUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+    endUntil: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .nullable()
+      .optional(),
     skipConflicts: z.boolean().default(false),
   })
-  .refine(
-    (v) => v.freq !== 'weekly' || (v.byWeekday && v.byWeekday.length > 0),
-    { message: '每週需選擇至少一個星期幾', path: ['byWeekday'] },
-  )
+  .refine((v) => v.freq !== 'weekly' || (v.byWeekday && v.byWeekday.length > 0), {
+    message: '每週需選擇至少一個星期幾',
+    path: ['byWeekday'],
+  })
   .refine((v) => v.freq !== 'monthly' || v.byMonthDay, {
     message: '每月需指定日期',
     path: ['byMonthDay'],
   })
-  .refine(
-    (v) => v.endCondition !== 'count' || (v.endCount && v.endCount > 0),
-    { message: '請填寫次數', path: ['endCount'] },
-  )
+  .refine((v) => v.endCondition !== 'count' || (v.endCount && v.endCount > 0), {
+    message: '請填寫次數',
+    path: ['endCount'],
+  })
   .refine((v) => v.endCondition !== 'until' || v.endUntil, {
     message: '請填寫截止日期',
     path: ['endUntil'],
@@ -102,9 +106,7 @@ export const createRecurringRuleAction = actionClient
     const conflicts: ConflictSlot[] = []
     const toInsert: Occurrence[] = []
     for (const occ of occurrences) {
-      const hit = (existing ?? []).find(
-        (e) => e.start_at < occ.endAt && e.end_at > occ.startAt,
-      )
+      const hit = (existing ?? []).find((e) => e.start_at < occ.endAt && e.end_at > occ.startAt)
       if (hit) {
         conflicts.push({
           id: hit.id,
@@ -144,7 +146,8 @@ export const createRecurringRuleAction = actionClient
       })
       .select('id')
       .single()
-    if (ruleErr || !rule) throw new AppError('RULE_CREATE_FAILED', ruleErr?.message ?? '建立規則失敗')
+    if (ruleErr || !rule)
+      throw new AppError('RULE_CREATE_FAILED', ruleErr?.message ?? '建立規則失敗')
 
     // 7. Batch insert the non-conflicting slots
     if (toInsert.length > 0) {

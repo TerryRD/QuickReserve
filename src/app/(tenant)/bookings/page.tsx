@@ -103,7 +103,9 @@ export default async function TenantBookingsPage({
                         </span>
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                        <span>{service?.name} · {service?.duration_minutes} 分</span>
+                        <span>
+                          {service?.name} · {service?.duration_minutes} 分
+                        </span>
                         {slot && (
                           <span className="inline-flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />

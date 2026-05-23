@@ -7,8 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
 
 const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) =>
-  new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 export default async function PlatformTenantDetailPage({
   params,
@@ -25,36 +24,42 @@ export default async function PlatformTenantDetailPage({
     .maybeSingle()
   if (!tenant) notFound()
 
-  const [{ data: members }, { data: services }, { data: customers }, { count: bookingCount }, { count: pendingCount }, { count: slotCount }] =
-    await Promise.all([
-      admin
-        .from('tenant_members')
-        .select('id, role, status, invited_email, user_id, created_at')
-        .eq('tenant_id', tenantId)
-        .order('role', { ascending: false }),
-      admin
-        .from('services')
-        .select('id, name, duration_minutes, price, is_active')
-        .eq('tenant_id', tenantId)
-        .order('created_at', { ascending: false }),
-      admin
-        .from('tenant_customers')
-        .select('customer_id, customers(display_name)')
-        .eq('tenant_id', tenantId)
-        .limit(50),
-      admin.from('bookings').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-      admin
-        .from('bookings')
-        .select('id', { count: 'exact', head: true })
-        .eq('tenant_id', tenantId)
-        .eq('status', 'pending'),
-      admin
-        .from('availability_slots')
-        .select('id', { count: 'exact', head: true })
-        .eq('tenant_id', tenantId)
-        .gte('start_at', new Date().toISOString())
-        .neq('status', 'cancelled'),
-    ])
+  const [
+    { data: members },
+    { data: services },
+    { data: customers },
+    { count: bookingCount },
+    { count: pendingCount },
+    { count: slotCount },
+  ] = await Promise.all([
+    admin
+      .from('tenant_members')
+      .select('id, role, status, invited_email, user_id, created_at')
+      .eq('tenant_id', tenantId)
+      .order('role', { ascending: false }),
+    admin
+      .from('services')
+      .select('id, name, duration_minutes, price, is_active')
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: false }),
+    admin
+      .from('tenant_customers')
+      .select('customer_id, customers(display_name)')
+      .eq('tenant_id', tenantId)
+      .limit(50),
+    admin.from('bookings').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+    admin
+      .from('bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId)
+      .eq('status', 'pending'),
+    admin
+      .from('availability_slots')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId)
+      .gte('start_at', new Date().toISOString())
+      .neq('status', 'cancelled'),
+  ])
 
   // Last 10 bookings
   const { data: recentBookings } = await admin
@@ -114,7 +119,11 @@ export default async function PlatformTenantDetailPage({
         <Stat icon={Users} label="成員" value={members?.length ?? 0} />
         <Stat icon={Package} label="服務" value={services?.length ?? 0} />
         <Stat icon={Calendar} label="未來時段" value={slotCount ?? 0} />
-        <Stat icon={ClipboardList} label={`預約（待確認 ${pendingCount ?? 0}）`} value={bookingCount ?? 0} />
+        <Stat
+          icon={ClipboardList}
+          label={`預約（待確認 ${pendingCount ?? 0}）`}
+          value={bookingCount ?? 0}
+        />
       </div>
 
       {/* Members */}
@@ -125,7 +134,9 @@ export default async function PlatformTenantDetailPage({
             {(members ?? []).map((m) => (
               <div key={m.id} className="flex items-center justify-between p-4 text-sm">
                 <div>
-                  <div className="font-medium">{m.invited_email ?? (m.user_id ? '已加入' : '?')}</div>
+                  <div className="font-medium">
+                    {m.invited_email ?? (m.user_id ? '已加入' : '?')}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     {m.role === 'owner' ? 'Owner' : 'Staff'} · {m.status}
                   </div>
@@ -158,9 +169,7 @@ export default async function PlatformTenantDetailPage({
                 </div>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] ${
-                    s.is_active
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-slate-100 text-slate-600'
+                    s.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
                   {s.is_active ? '啟用' : '停用'}
@@ -226,9 +235,7 @@ export default async function PlatformTenantDetailPage({
                   </span>
                 )
               })}
-              {!customers?.length && (
-                <span className="text-muted-foreground">無學員</span>
-              )}
+              {!customers?.length && <span className="text-muted-foreground">無學員</span>}
             </div>
           </CardContent>
         </Card>

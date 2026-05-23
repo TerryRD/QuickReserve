@@ -37,8 +37,7 @@ export default async function CalendarPage({
 }) {
   const session = await requireTenantMember()
   const params = await searchParams
-  const view: View =
-    params.view === 'day' || params.view === 'list' ? params.view : 'week'
+  const view: View = params.view === 'day' || params.view === 'list' ? params.view : 'week'
 
   // Anchor & range:
   // week / list: full week
@@ -160,9 +159,7 @@ export default async function CalendarPage({
           <span className="italic">行事曆</span>
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {viewingSelfOnly
-            ? '檢視您的時段'
-            : `檢視 ${effectiveIds.length} 位成員的時段`}
+          {viewingSelfOnly ? '檢視您的時段' : `檢視 ${effectiveIds.length} 位成員的時段`}
         </p>
       </header>
 
@@ -170,30 +167,17 @@ export default async function CalendarPage({
         <div className="flex flex-wrap items-center gap-2">
           <ViewTabs current={view} query={tabQuery.toString()} />
           {allMembers.length > 1 && (
-            <MemberFilter
-              members={allMembers}
-              selectedIds={selectedIds}
-              week={params.week}
-            />
+            <MemberFilter members={allMembers} selectedIds={selectedIds} week={params.week} />
           )}
           <div className="flex items-center gap-2 text-sm">
-            <Link
-              href={navPrevHref}
-              className={buttonVariants({ variant: 'outline', size: 'sm' })}
-            >
+            <Link href={navPrevHref} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               ◄
             </Link>
             <div className="min-w-44 text-center font-medium">{navLabel}</div>
-            <Link
-              href={navTodayHref}
-              className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-            >
+            <Link href={navTodayHref} className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               {view === 'day' ? '今天' : '本週'}
             </Link>
-            <Link
-              href={navNextHref}
-              className={buttonVariants({ variant: 'outline', size: 'sm' })}
-            >
+            <Link href={navNextHref} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               ►
             </Link>
           </div>
@@ -208,10 +192,7 @@ export default async function CalendarPage({
                 管理重複規則
               </Link>
               <RecurringRuleDialog services={services ?? []} />
-              <NewSlotDialog
-                services={services ?? []}
-                weekStart={weekStart.toISOString()}
-              />
+              <NewSlotDialog services={services ?? []} weekStart={weekStart.toISOString()} />
             </>
           )}
           {!viewingSelfOnly && (

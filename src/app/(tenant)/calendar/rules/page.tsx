@@ -88,9 +88,7 @@ export default async function RecurringRulesPage() {
         <h1 className="font-display text-3xl tracking-tight">
           <span className="italic">重複規則</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          管理「批量 / 重複」建立的所有規則
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">管理「批量 / 重複」建立的所有規則</p>
       </div>
 
       {!rules || rules.length === 0 ? (
@@ -140,8 +138,7 @@ export default async function RecurringRulesPage() {
                       <div className="mt-2 grid gap-1 text-sm text-foreground/80 sm:grid-cols-2">
                         <div>
                           <span className="text-muted-foreground">時間：</span>
-                          {describeRule(r)} {r.start_time?.slice(0, 5)}–
-                          {r.end_time?.slice(0, 5)}
+                          {describeRule(r)} {r.start_time?.slice(0, 5)}–{r.end_time?.slice(0, 5)}
                         </div>
                         <div>
                           <span className="text-muted-foreground">起：</span>

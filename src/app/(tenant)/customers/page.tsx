@@ -13,9 +13,7 @@ export default async function CustomersPage() {
   // Pull customers via tenant_customers + counts of bookings
   const { data: rows } = await supabase
     .from('tenant_customers')
-    .select(
-      'customer_id, tenant_notes, created_at, is_blocked, customers(id, display_name, phone)',
-    )
+    .select('customer_id, tenant_notes, created_at, is_blocked, customers(id, display_name, phone)')
     .eq('tenant_id', session.tenantId)
     .order('created_at', { ascending: false })
 
@@ -80,9 +78,7 @@ export default async function CustomersPage() {
                   <div className="flex items-start gap-3">
                     <div
                       className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-base font-bold ${
-                        r.is_blocked
-                          ? 'bg-red-200 text-red-900'
-                          : 'bg-foreground text-background'
+                        r.is_blocked ? 'bg-red-200 text-red-900' : 'bg-foreground text-background'
                       }`}
                     >
                       {(c.display_name ?? '?').slice(0, 1)}

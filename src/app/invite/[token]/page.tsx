@@ -6,11 +6,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import AcceptInviteButton from './accept-invite-button'
 
-export default async function InvitePage({
-  params,
-}: {
-  params: Promise<{ token: string }>
-}) {
+export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
 
   // Look up invite (server-side, uses admin client because invite_token is the auth proof)

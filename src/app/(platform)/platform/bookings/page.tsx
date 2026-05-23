@@ -5,8 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import TenantFilter from './tenant-filter'
 
 const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) =>
-  new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-800',
@@ -59,9 +58,7 @@ export default async function PlatformBookingsPage({
         <h1 className="font-display text-3xl tracking-tight">
           <span className="italic">全平台預約</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          最近 100 筆 · 唯讀檢視
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">最近 100 筆 · 唯讀檢視</p>
       </header>
 
       <div className="flex flex-wrap gap-3">
@@ -116,10 +113,7 @@ export default async function PlatformBookingsPage({
                   <tr key={b.id} className="border-t">
                     <td className="p-3">
                       {t && (
-                        <Link
-                          href={`/platform/tenants/${t.id}`}
-                          className="hover:underline"
-                        >
+                        <Link href={`/platform/tenants/${t.id}`} className="hover:underline">
                           {t.name}
                         </Link>
                       )}

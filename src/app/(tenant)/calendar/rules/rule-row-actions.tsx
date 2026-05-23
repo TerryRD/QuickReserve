@@ -15,13 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { deleteRuleAction, toggleRuleActiveAction } from './actions'
 
-export function RuleToggle({
-  ruleId,
-  isActive,
-}: {
-  ruleId: string
-  isActive: boolean
-}) {
+export function RuleToggle({ ruleId, isActive }: { ruleId: string; isActive: boolean }) {
   const { execute, isPending } = useAction(toggleRuleActiveAction, {
     onSuccess: () => toast.success(isActive ? '已停用' : '已啟用'),
     onError: ({ error }) => toast.error(error.serverError?.message ?? '失敗'),

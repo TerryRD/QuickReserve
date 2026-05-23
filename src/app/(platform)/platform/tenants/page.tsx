@@ -18,13 +18,15 @@ export default async function TenantsListPage() {
   const tenantIds = (tenants ?? []).map((t) => t.id)
   const { data: owners } =
     tenantIds.length === 0
-      ? { data: [] as Array<{
-          id: string
-          tenant_id: string
-          status: string
-          invited_email: string | null
-          user_id: string | null
-        }> }
+      ? {
+          data: [] as Array<{
+            id: string
+            tenant_id: string
+            status: string
+            invited_email: string | null
+            user_id: string | null
+          }>,
+        }
       : await supabase
           .from('tenant_members')
           .select('id, tenant_id, status, invited_email, user_id')
@@ -60,9 +62,7 @@ export default async function TenantsListPage() {
         <h1 className="font-display text-3xl tracking-tight">
           <span className="italic">租戶管理</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          邀請、暫停、重發邀請、重設密碼
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">邀請、暫停、重發邀請、重設密碼</p>
       </header>
 
       <InviteCoachForm />

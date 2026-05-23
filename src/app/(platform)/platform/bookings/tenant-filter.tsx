@@ -2,11 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function TenantFilter({
-  tenants,
-}: {
-  tenants: { id: string; name: string }[]
-}) {
+export default function TenantFilter({ tenants }: { tenants: { id: string; name: string }[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const current = searchParams.get('tenant') ?? ''

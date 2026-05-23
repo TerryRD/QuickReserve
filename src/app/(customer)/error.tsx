@@ -24,9 +24,7 @@ export default function CustomerError({
           <AlertCircle className="h-6 w-6" />
         </div>
         <h2 className="mt-4 font-display text-xl italic">載入失敗</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          頁面暫時無法載入，請稍候再試。
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">頁面暫時無法載入，請稍候再試。</p>
         {error.digest && (
           <p className="mt-3 font-mono text-xs text-muted-foreground/70">
             錯誤代碼：{error.digest}

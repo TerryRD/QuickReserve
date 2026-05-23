@@ -67,7 +67,11 @@ async function cleanupExisting() {
   // Clean up demo students by email
   const { data: { users } = {} } = await admin.auth.admin.listUsers({ perPage: 1000 })
   for (const u of users ?? []) {
-    if (u.email?.startsWith(`${TEST_PREFIX}student`) || u.email?.startsWith(`${TEST_PREFIX}coach`) || u.email?.startsWith(`${TEST_PREFIX}staff`)) {
+    if (
+      u.email?.startsWith(`${TEST_PREFIX}student`) ||
+      u.email?.startsWith(`${TEST_PREFIX}coach`) ||
+      u.email?.startsWith(`${TEST_PREFIX}staff`)
+    ) {
       await admin.auth.admin.deleteUser(u.id).catch(() => {})
       log(`  ✗ removed user ${u.email}`)
     }
@@ -180,7 +184,8 @@ async function bookSlot({ slotId, customerId, notes, status = 'pending' }) {
     .select()
     .single()
   // Update slot status to reflect booking
-  const slotStatus = status === 'pending' ? 'pending' : status === 'confirmed' ? 'booked' : 'available'
+  const slotStatus =
+    status === 'pending' ? 'pending' : status === 'confirmed' ? 'booked' : 'available'
   await admin.from('availability_slots').update({ status: slotStatus }).eq('id', slotId)
   return booking
 }
@@ -428,9 +433,15 @@ async function main() {
   log('Accounts:')
   log(`  Platform admin: terry@gmail.com (existing)`)
   log(`  Coaches:`)
-  log(`    王教練  ${TEST_PREFIX}coach-wang@example.com  ${PASSWORD}  (slug: ${TEST_PREFIX}wang-coach)`)
-  log(`    陳教練  ${TEST_PREFIX}coach-chen@example.com  ${PASSWORD}  (slug: ${TEST_PREFIX}chen-coach)`)
-  log(`    林教練  ${TEST_PREFIX}coach-lin@example.com   ${PASSWORD}  (slug: ${TEST_PREFIX}lin-coach)`)
+  log(
+    `    王教練  ${TEST_PREFIX}coach-wang@example.com  ${PASSWORD}  (slug: ${TEST_PREFIX}wang-coach)`,
+  )
+  log(
+    `    陳教練  ${TEST_PREFIX}coach-chen@example.com  ${PASSWORD}  (slug: ${TEST_PREFIX}chen-coach)`,
+  )
+  log(
+    `    林教練  ${TEST_PREFIX}coach-lin@example.com   ${PASSWORD}  (slug: ${TEST_PREFIX}lin-coach)`,
+  )
   log(`  Staff:`)
   log(`    阿明助教 ${TEST_PREFIX}staff-ming@example.com  ${PASSWORD}  (under 林教練)`)
   log(`  Students:`)

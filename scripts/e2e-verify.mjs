@@ -35,7 +35,9 @@ async function main() {
   for (const r of routes) {
     const res = await fetch(`${PROD_URL}${r.path}`, { redirect: 'manual' })
     const ok = r.expect.includes(res.status)
-    log(`  ${ok ? '✓' : '✗'} ${r.path} → ${res.status}${ok ? '' : ` (expected ${r.expect.join('/')})`}`)
+    log(
+      `  ${ok ? '✓' : '✗'} ${r.path} → ${res.status}${ok ? '' : ` (expected ${r.expect.join('/')})`}`,
+    )
     if (!ok) fail(`route ${r.path} returned ${res.status}`)
   }
 
@@ -209,7 +211,10 @@ async function main() {
   })
   const suspHtml = await suspendedRes.text()
   if (!suspHtml.includes('服務暫停中')) {
-    log('  HTML snippet:', suspHtml.slice(suspHtml.indexOf('<main'), suspHtml.indexOf('<main') + 400))
+    log(
+      '  HTML snippet:',
+      suspHtml.slice(suspHtml.indexOf('<main'), suspHtml.indexOf('<main') + 400),
+    )
     fail('Suspended tenant should show 服務暫停中')
   }
   log(`  ✓ Suspended tenant shows "服務暫停中"`)

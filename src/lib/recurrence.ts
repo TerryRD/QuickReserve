@@ -77,8 +77,7 @@ export function computeOccurrences(
   const cursor = rule.start_date
   const occurrences: Occurrence[] = []
   const cap = rule.end_condition === 'count' ? (rule.end_count ?? 0) : Number.POSITIVE_INFINITY
-  const untilDay =
-    rule.end_condition === 'until' && rule.end_until ? rule.end_until : '9999-12-31'
+  const untilDay = rule.end_condition === 'until' && rule.end_until ? rule.end_until : '9999-12-31'
 
   // Generate up to a soft upper bound to prevent infinite loops on misconfigured rules
   const SAFETY_CAP = 5000
@@ -112,7 +111,12 @@ export function computeOccurrences(
     let weekMonday = mondayOfStart
     let emittedTotal = 0
     let i = 0
-    while (i++ < SAFETY_CAP && emittedTotal < cap && weekMonday <= untilDay && weekMonday <= windowEndDay) {
+    while (
+      i++ < SAFETY_CAP &&
+      emittedTotal < cap &&
+      weekMonday <= untilDay &&
+      weekMonday <= windowEndDay
+    ) {
       for (const wd of weekdays) {
         const day = addDays(weekMonday, wd - 1)
         if (day < cursor) continue // before rule start
@@ -139,7 +143,12 @@ export function computeOccurrences(
     let monthCursor = cursor.slice(0, 7) + '-01' // first of month
     let emittedTotal = 0
     let i = 0
-    while (i++ < SAFETY_CAP && emittedTotal < cap && monthCursor <= untilDay && monthCursor <= windowEndDay) {
+    while (
+      i++ < SAFETY_CAP &&
+      emittedTotal < cap &&
+      monthCursor <= untilDay &&
+      monthCursor <= windowEndDay
+    ) {
       const parts = monthCursor.split('-').map(Number)
       const y = parts[0]!
       const m = parts[1]!

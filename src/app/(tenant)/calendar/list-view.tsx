@@ -54,9 +54,7 @@ export default function CalendarListView({
   return (
     <div className="space-y-4">
       {sortedKeys.map((key) => {
-        const list = byDay[key]!
-          .slice()
-          .sort((a, b) => a.startAt.localeCompare(b.startAt))
+        const list = byDay[key]!.slice().sort((a, b) => a.startAt.localeCompare(b.startAt))
         const date = new Date(key + 'T00:00:00')
         return (
           <section key={key} className="rounded-xl border bg-card">

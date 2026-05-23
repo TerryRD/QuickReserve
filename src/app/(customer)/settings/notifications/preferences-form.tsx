@@ -19,13 +19,7 @@ type Prefs = {
 
 const AVAILABLE_PRE_EVENT_OPTIONS = [5, 10, 15, 30, 60, 1440]
 
-function Toggle({
-  checked,
-  onChange,
-}: {
-  checked: boolean
-  onChange: (v: boolean) => void
-}) {
+function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
       type="button"
@@ -130,9 +124,7 @@ export default function PreferencesForm({ initial }: { initial: Prefs }) {
                   key={m}
                   onClick={() => togglePreEvent(m)}
                   className={`rounded border px-3 py-1 text-xs ${
-                    active
-                      ? 'border-blue-500 bg-blue-50 font-medium'
-                      : 'border-slate-300 bg-white'
+                    active ? 'border-blue-500 bg-blue-50 font-medium' : 'border-slate-300 bg-white'
                   }`}
                 >
                   {label}

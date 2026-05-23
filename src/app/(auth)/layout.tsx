@@ -14,16 +14,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <span className="text-lg font-bold tracking-tight">QuickReserve</span>
         </Link>
         <div className="relative space-y-3">
-          <p className="text-2xl font-semibold leading-snug">
-            專業教練的預約管理工具
-          </p>
+          <p className="text-2xl font-semibold leading-snug">專業教練的預約管理工具</p>
           <p className="text-sm text-white/75">
             一次設好可用時段，開連結給學員預約，剩下交給我們。
           </p>
         </div>
-        <div className="relative text-xs text-white/60">
-          © 2026 QuickReserve
-        </div>
+        <div className="relative text-xs text-white/60">© 2026 QuickReserve</div>
       </div>
       <div className="flex items-center justify-center bg-background p-6 md:p-12">
         <div className="w-full max-w-md">

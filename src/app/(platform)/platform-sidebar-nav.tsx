@@ -2,12 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  Building2,
-  ClipboardList,
-  LayoutDashboard,
-  type LucideIcon,
-} from 'lucide-react'
+import { Building2, ClipboardList, LayoutDashboard, type LucideIcon } from 'lucide-react'
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard,

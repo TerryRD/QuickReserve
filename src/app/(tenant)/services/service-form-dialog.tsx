@@ -25,9 +25,7 @@ type Service = {
   is_active: boolean
 }
 
-type Props =
-  | { mode: 'create'; service?: undefined }
-  | { mode: 'edit'; service: Service }
+type Props = { mode: 'create'; service?: undefined } | { mode: 'edit'; service: Service }
 
 export default function ServiceFormDialog(props: Props) {
   const isEdit = props.mode === 'edit'

@@ -20,7 +20,10 @@ export default async function TenantDashboard() {
 
   const [{ count: pendingCount }, { count: weekSlotsCount }, { data: nextBookings }] =
     await Promise.all([
-      supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
       supabase
         .from('availability_slots')
         .select('id', { count: 'exact', head: true })
@@ -29,9 +32,7 @@ export default async function TenantDashboard() {
         .neq('status', 'cancelled'),
       supabase
         .from('bookings')
-        .select(
-          'id, status, customers(display_name), services(name), availability_slots(start_at)',
-        )
+        .select('id, status, customers(display_name), services(name), availability_slots(start_at)')
         .in('status', ['pending', 'confirmed'])
         .order('created_at', { ascending: false })
         .limit(5),

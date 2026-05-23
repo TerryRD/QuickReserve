@@ -75,9 +75,7 @@ export default function SlotPopover({
           </div>
           <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2">
             <span className="text-sm text-muted-foreground">狀態</span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium ${status.class}`}
-            >
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${status.class}`}>
               {status.label}
             </span>
           </div>

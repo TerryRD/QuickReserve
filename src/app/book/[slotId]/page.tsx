@@ -40,15 +40,11 @@ export default async function BookConfirmPage({
               ⚠️
             </div>
             <h2 className="mt-4 text-lg font-semibold">此時段已不可預約</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              該時段可能已被其他學員預約或取消。
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">該時段可能已被其他學員預約或取消。</p>
             {tenant && (
               <Link
                 href={`/${tenant.slug}`}
-                className={
-                  buttonVariants({ variant: 'outline', size: 'sm' }) + ' mt-6 inline-flex'
-                }
+                className={buttonVariants({ variant: 'outline', size: 'sm' }) + ' mt-6 inline-flex'}
               >
                 <ArrowLeft className="mr-1 h-3.5 w-3.5" /> 回教練頁
               </Link>
@@ -65,9 +61,11 @@ export default async function BookConfirmPage({
   }
 
   const tenant = slot.tenants as { name: string; slug: string } | null
-  const service = slot.services as
-    | { name: string; duration_minutes: number; price: number | null }
-    | null
+  const service = slot.services as {
+    name: string
+    duration_minutes: number
+    price: number | null
+  } | null
   const start = toLocal(slot.start_at)
   const end = toLocal(slot.end_at)
 
@@ -88,9 +86,7 @@ export default async function BookConfirmPage({
           {rescheduleFrom ? '確認改期' : '確認預約'}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {rescheduleFrom
-            ? '送出後將自動取消原預約並改為此時段'
-            : '確認資訊後送出預約申請'}
+          {rescheduleFrom ? '送出後將自動取消原預約並改為此時段' : '確認資訊後送出預約申請'}
         </p>
         {rescheduleFrom && (
           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">

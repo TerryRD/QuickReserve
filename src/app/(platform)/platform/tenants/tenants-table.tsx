@@ -92,9 +92,7 @@ export default function TenantsTable({ tenants }: { tenants: Tenant[] }) {
                     >
                       {t.name}
                     </Link>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      /{t.slug}
-                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">/{t.slug}</span>
                   </td>
                   <td className="p-3 text-xs">
                     {t.ownerMember?.invited_email ?? '—'}

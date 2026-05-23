@@ -24,9 +24,7 @@ export default function InviteStaffForm() {
     },
   })
 
-  const fieldErrors = result?.validationErrors as
-    | Record<string, { _errors?: string[] }>
-    | undefined
+  const fieldErrors = result?.validationErrors as Record<string, { _errors?: string[] }> | undefined
 
   return (
     <Card>
