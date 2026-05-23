@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import FormFieldErrors from '@/components/forms/form-field-errors'
+import { normalizeSlug } from '@/lib/utils/slug'
 import { inviteCoachAction } from './actions'
 
 export default function InviteCoachForm() {
@@ -15,7 +17,7 @@ export default function InviteCoachForm() {
   const [tenantSlug, setTenantSlug] = useState('')
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
 
-  const { execute, isPending } = useAction(inviteCoachAction, {
+  const { execute, isPending, result } = useAction(inviteCoachAction, {
     onSuccess: ({ data }) => {
       toast.success('已建立邀請')
       setInviteUrl(data?.inviteUrl ?? null)
@@ -24,9 +26,15 @@ export default function InviteCoachForm() {
       setTenantSlug('')
     },
     onError: ({ error }) => {
-      toast.error(error.serverError?.message ?? '邀請失敗')
+      // Field-level errors render via FormFieldErrors; only show a toast for
+      // server errors (e.g. SLUG_TAKEN) which next-safe-action surfaces via serverError.
+      if (error.serverError?.message) toast.error(error.serverError.message)
     },
   })
+
+  const fieldErrors = result?.validationErrors as
+    | Record<string, { _errors?: string[] }>
+    | undefined
 
   return (
     <Card>
@@ -51,6 +59,7 @@ export default function InviteCoachForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              <FormFieldErrors errors={fieldErrors} field="email" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="tenantName">租戶名稱</Label>
@@ -60,16 +69,21 @@ export default function InviteCoachForm() {
                 value={tenantName}
                 onChange={(e) => setTenantName(e.target.value)}
               />
+              <FormFieldErrors errors={fieldErrors} field="tenantName" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="tenantSlug">Slug (公開連結)</Label>
               <Input
                 id="tenantSlug"
                 required
-                placeholder="wang-coach"
+                placeholder="terry-coach"
                 value={tenantSlug}
-                onChange={(e) => setTenantSlug(e.target.value)}
+                onChange={(e) => setTenantSlug(normalizeSlug(e.target.value))}
               />
+              <p className="text-xs text-muted-foreground">
+                公開連結網址，只能小寫英數和短橫線。例：<code>terry-coach</code>
+              </p>
+              <FormFieldErrors errors={fieldErrors} field="tenantSlug" />
             </div>
           </div>
           <Button type="submit" disabled={isPending}>
