@@ -7,18 +7,30 @@ export default async function TenantsListPage() {
   // even when status='invited' (RLS would otherwise hide pre-acceptance rows
   // from cross-table joins).
   const supabase = createSupabaseAdminClient()
+
+  // Step 1: fetch tenants
   const { data: tenants } = await supabase
     .from('tenants')
     .select('id, slug, name, status, created_at')
     .order('created_at', { ascending: false })
 
-  // Fetch owners for each tenant
+  // Step 2: fetch owners (depends on tenantIds, so must follow tenants)
   const tenantIds = (tenants ?? []).map((t) => t.id)
-  const { data: owners } = await supabase
-    .from('tenant_members')
-    .select('id, tenant_id, status, invited_email, user_id')
-    .in('tenant_id', tenantIds)
-    .eq('role', 'owner')
+  const { data: owners } =
+    tenantIds.length === 0
+      ? { data: [] as Array<{
+          id: string
+          tenant_id: string
+          status: string
+          invited_email: string | null
+          user_id: string | null
+        }> }
+      : await supabase
+          .from('tenant_members')
+          .select('id, tenant_id, status, invited_email, user_id')
+          .in('tenant_id', tenantIds)
+          .eq('role', 'owner')
+
   const ownerByTenant: Record<
     string,
     {
