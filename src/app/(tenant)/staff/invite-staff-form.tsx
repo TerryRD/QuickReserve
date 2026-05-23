@@ -7,19 +7,26 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import FormFieldErrors from '@/components/forms/form-field-errors'
 import { inviteStaffAction } from './actions'
 
 export default function InviteStaffForm() {
   const [email, setEmail] = useState('')
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
-  const { execute, isPending } = useAction(inviteStaffAction, {
+  const { execute, isPending, result } = useAction(inviteStaffAction, {
     onSuccess: ({ data }) => {
       toast.success('已建立邀請')
       setInviteUrl(data?.inviteUrl ?? null)
       setEmail('')
     },
-    onError: ({ error }) => toast.error(error.serverError?.message ?? '邀請失敗'),
+    onError: ({ error }) => {
+      if (error.serverError?.message) toast.error(error.serverError.message)
+    },
   })
+
+  const fieldErrors = result?.validationErrors as
+    | Record<string, { _errors?: string[] }>
+    | undefined
 
   return (
     <Card>
@@ -43,6 +50,7 @@ export default function InviteStaffForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            <FormFieldErrors errors={fieldErrors} field="email" />
           </div>
           <Button type="submit" disabled={isPending}>
             {isPending ? '邀請中...' : '送出邀請'}
