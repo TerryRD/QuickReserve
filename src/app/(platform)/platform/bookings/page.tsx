@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
+import TenantFilter from './tenant-filter'
 
 const TZ_OFFSET_HOURS = 8
 const toLocal = (iso: string) =>
@@ -28,21 +29,20 @@ export default async function PlatformBookingsPage({
   const { status, tenant } = await searchParams
   const admin = createSupabaseAdminClient()
 
-  let q = admin
+  let bookingsQuery = admin
     .from('bookings')
     .select(
       'id, status, created_at, customer_id, tenants(id, name, slug), customers(display_name), services(name), availability_slots(start_at, end_at)',
     )
     .order('created_at', { ascending: false })
     .limit(100)
-  if (status && status !== 'all') q = q.eq('status', status)
-  if (tenant) q = q.eq('tenant_id', tenant)
-  const { data: bookings } = await q
+  if (status && status !== 'all') bookingsQuery = bookingsQuery.eq('status', status)
+  if (tenant) bookingsQuery = bookingsQuery.eq('tenant_id', tenant)
 
-  const { data: tenants } = await admin
-    .from('tenants')
-    .select('id, name')
-    .order('name')
+  const [{ data: bookings }, { data: tenants }] = await Promise.all([
+    bookingsQuery,
+    admin.from('tenants').select('id, name').order('name'),
+  ])
 
   const filters = [
     { key: 'all', label: '全部' },
@@ -84,24 +84,7 @@ export default async function PlatformBookingsPage({
             </Link>
           ))}
         </div>
-        <select
-          defaultValue={tenant ?? ''}
-          className="rounded-md border bg-card px-2 py-1.5 text-xs"
-          onChange={(e) => {
-            const v = e.target.value
-            const qs = new URLSearchParams()
-            if (status && status !== 'all') qs.set('status', status)
-            if (v) qs.set('tenant', v)
-            window.location.href = `/platform/bookings${qs.toString() ? `?${qs}` : ''}`
-          }}
-        >
-          <option value="">所有租戶</option>
-          {(tenants ?? []).map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+        <TenantFilter tenants={tenants ?? []} />
       </div>
 
       {!bookings || bookings.length === 0 ? (
