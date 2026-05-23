@@ -32,7 +32,7 @@ export default function SidebarNav({
     { href: '/services', label: '服務項目', icon: Package },
     ...(isOwner ? [{ href: '/staff', label: '助教管理', icon: Users }] : []),
     ...(isOwner ? [{ href: '/settings/profile', label: '租戶資料', icon: UserCog }] : []),
-    { href: '/settings/notifications', label: '通知設定', icon: Settings },
+    { href: '/notifications', label: '通知設定', icon: Settings },
   ]
 
   return (
