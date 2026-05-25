@@ -1,13 +1,13 @@
-import Link from 'next/link'
+'use client'
 
 type View = 'week' | 'day' | 'list'
 
 export default function ViewTabs({
   current,
-  query,
+  onChange,
 }: {
   current: View
-  query: string // e.g. "week=2026-05-21&members=all" without leading ?
+  onChange: (next: View) => void
 }) {
   const items: Array<{ value: View; label: string }> = [
     { value: 'week', label: '週' },
@@ -17,15 +17,12 @@ export default function ViewTabs({
   return (
     <div className="inline-flex rounded-lg border bg-card p-0.5 text-sm">
       {items.map((it) => {
-        const usp = new URLSearchParams(query)
-        if (it.value === 'week') usp.delete('view')
-        else usp.set('view', it.value)
-        const href = `/calendar${usp.toString() ? `?${usp.toString()}` : ''}`
         const active = current === it.value
         return (
-          <Link
+          <button
+            type="button"
             key={it.value}
-            href={href}
+            onClick={() => onChange(it.value)}
             className={`rounded-md px-3 py-1 transition ${
               active
                 ? 'bg-primary text-primary-foreground shadow-sm'
@@ -33,7 +30,7 @@ export default function ViewTabs({
             }`}
           >
             {it.label}
-          </Link>
+          </button>
         )
       })}
     </div>

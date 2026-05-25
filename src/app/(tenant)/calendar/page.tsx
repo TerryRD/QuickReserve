@@ -1,25 +1,19 @@
 import Link from 'next/link'
 import {
-  addDays,
   addWeeks,
-  endOfDay,
   endOfWeek,
   format,
   parseISO,
-  startOfDay,
   startOfWeek,
-  subDays,
   subWeeks,
 } from 'date-fns'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { buttonVariants } from '@/components/ui/button'
-import WeekGrid from './week-grid'
 import NewSlotDialog from './new-slot-dialog'
 import RecurringRuleDialog from './recurring-rule-dialog'
 import MemberFilter from './member-filter'
-import ViewTabs from './view-tabs'
-import CalendarListView from './list-view'
+import CalendarPanel from './calendar-panel'
 
 const TZ_OFFSET_HOURS = 8
 
@@ -37,22 +31,17 @@ export default async function CalendarPage({
 }) {
   const session = await requireTenantMember()
   const params = await searchParams
-  const view: View = params.view === 'day' || params.view === 'list' ? params.view : 'week'
+  const initialView: View =
+    params.view === 'day' || params.view === 'list' ? params.view : 'week'
 
-  // Anchor & range:
-  // week / list: full week
-  // day: a single day (defaults to today)
-  const dayAnchor = params.date ? parseISO(params.date) : new Date()
+  // Always fetch the full week. View switching is now client-only.
   const weekAnchor = params.week ? parseISO(params.week) : new Date()
   const weekStart = startOfWeek(weekAnchor, { weekStartsOn: 1 })
   const weekEnd = endOfWeek(weekAnchor, { weekStartsOn: 1 })
-
-  const rangeStart = view === 'day' ? startOfDay(dayAnchor) : weekStart
-  const rangeEnd = view === 'day' ? endOfDay(dayAnchor) : weekEnd
+  const initialDayAnchor = params.date ? parseISO(params.date) : new Date()
 
   const supabase = await createSupabaseServerClient()
 
-  // Owner sees all members; Staff sees only self
   let allMembers: Array<{
     id: string
     role: string
@@ -87,8 +76,8 @@ export default async function CalendarPage({
     .from('availability_slots')
     .select('id, start_at, end_at, status, member_id, service_id, services(name)')
     .in('member_id', effectiveIds)
-    .gte('start_at', rangeStart.toISOString())
-    .lte('start_at', rangeEnd.toISOString())
+    .gte('start_at', weekStart.toISOString())
+    .lte('start_at', weekEnd.toISOString())
     .order('start_at')
 
   const slotIds = (slots ?? []).filter((s) => s.status !== 'available').map((s) => s.id)
@@ -118,39 +107,41 @@ export default async function CalendarPage({
     .eq('is_active', true)
     .order('name')
 
-  // Nav links
-  const memberQs = params.members ? `&members=${params.members}` : ''
-  const viewQs = view !== 'week' ? `&view=${view}` : ''
-
-  // For week/list mode use week-based prev/next; for day use day-based
+  // Week navigation (only week-level; view & day-anchor now client-side)
   const prevWeek = format(subWeeks(weekStart, 1), 'yyyy-MM-dd')
   const nextWeek = format(addWeeks(weekStart, 1), 'yyyy-MM-dd')
-  const prevDay = format(subDays(dayAnchor, 1), 'yyyy-MM-dd')
-  const nextDay = format(addDays(dayAnchor, 1), 'yyyy-MM-dd')
+  const baseQs = new URLSearchParams()
+  if (params.members) baseQs.set('members', params.members)
+  if (initialView !== 'week') baseQs.set('view', initialView)
+  if (initialView === 'day' && params.date) baseQs.set('date', params.date)
+  const buildHref = (week: string | null) => {
+    const qs = new URLSearchParams(baseQs)
+    if (week) qs.set('week', week)
+    else qs.delete('week')
+    const s = qs.toString()
+    return `/calendar${s ? `?${s}` : ''}`
+  }
+  const navPrevHref = buildHref(prevWeek)
+  const navNextHref = buildHref(nextWeek)
+  const navTodayHref = buildHref(null)
+  const navLabel = `${format(weekStart, 'yyyy/MM/dd')} – ${format(weekEnd, 'MM/dd')}`
 
-  const navPrevHref =
-    view === 'day'
-      ? `/calendar?view=day&date=${prevDay}${memberQs}`
-      : `/calendar?week=${prevWeek}${memberQs}${viewQs}`
-  const navNextHref =
-    view === 'day'
-      ? `/calendar?view=day&date=${nextDay}${memberQs}`
-      : `/calendar?week=${nextWeek}${memberQs}${viewQs}`
-  const navTodayHref =
-    view === 'day'
-      ? `/calendar?view=day${memberQs}`
-      : `/calendar${memberQs ? `?${memberQs.slice(1)}${viewQs}` : viewQs ? `?${viewQs.slice(1)}` : ''}`
-
-  const navLabel =
-    view === 'day'
-      ? format(dayAnchor, 'yyyy/MM/dd (EEEE)')
-      : `${format(weekStart, 'yyyy/MM/dd')} – ${format(weekEnd, 'MM/dd')}`
-
-  // Build view-tabs query (preserving current week / members / date)
-  const tabQuery = new URLSearchParams()
-  if (params.week) tabQuery.set('week', params.week)
-  if (params.members) tabQuery.set('members', params.members)
-  if (view === 'day' && params.date) tabQuery.set('date', params.date)
+  const slotDisplays = (slots ?? []).map((s) => {
+    const member = allMembers.find((m) => m.id === s.member_id)
+    const booking = bookingsBySlot[s.id]
+    return {
+      id: s.id,
+      startAt: s.start_at,
+      endAt: s.end_at,
+      status: s.status as 'available' | 'pending' | 'booked' | 'cancelled',
+      serviceName: (s.services as { name: string } | null)?.name ?? null,
+      memberLabel: member?.label ?? '',
+      memberId: s.member_id,
+      isOwn: s.member_id === session.memberId,
+      customerName: booking?.customerName ?? null,
+      bookingId: booking?.id ?? null,
+    }
+  })
 
   return (
     <div className="space-y-5">
@@ -165,19 +156,31 @@ export default async function CalendarPage({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <ViewTabs current={view} query={tabQuery.toString()} />
           {allMembers.length > 1 && (
-            <MemberFilter members={allMembers} selectedIds={selectedIds} week={params.week} />
+            <MemberFilter
+              members={allMembers}
+              selectedIds={selectedIds}
+              week={params.week}
+            />
           )}
           <div className="flex items-center gap-2 text-sm">
-            <Link href={navPrevHref} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+            <Link
+              href={navPrevHref}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
               ◄
             </Link>
             <div className="min-w-44 text-center font-medium">{navLabel}</div>
-            <Link href={navTodayHref} className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              {view === 'day' ? '今天' : '本週'}
+            <Link
+              href={navTodayHref}
+              className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+            >
+              本週
             </Link>
-            <Link href={navNextHref} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+            <Link
+              href={navNextHref}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
               ►
             </Link>
           </div>
@@ -192,7 +195,10 @@ export default async function CalendarPage({
                 管理重複規則
               </Link>
               <RecurringRuleDialog services={services ?? []} />
-              <NewSlotDialog services={services ?? []} weekStart={weekStart.toISOString()} />
+              <NewSlotDialog
+                services={services ?? []}
+                weekStart={weekStart.toISOString()}
+              />
             </>
           )}
           {!viewingSelfOnly && (
@@ -203,45 +209,14 @@ export default async function CalendarPage({
         </div>
       </div>
 
-      {(() => {
-        const slotDisplays = (slots ?? []).map((s) => {
-          const member = allMembers.find((m) => m.id === s.member_id)
-          const booking = bookingsBySlot[s.id]
-          return {
-            id: s.id,
-            startAt: s.start_at,
-            endAt: s.end_at,
-            status: s.status as 'available' | 'pending' | 'booked' | 'cancelled',
-            serviceName: (s.services as { name: string } | null)?.name ?? null,
-            memberLabel: member?.label ?? '',
-            memberId: s.member_id,
-            isOwn: s.member_id === session.memberId,
-            customerName: booking?.customerName ?? null,
-            bookingId: booking?.id ?? null,
-          }
-        })
-
-        if (view === 'list') {
-          return (
-            <CalendarListView
-              slots={slotDisplays}
-              tzOffsetHours={TZ_OFFSET_HOURS}
-              showMemberLabel={!viewingSelfOnly}
-            />
-          )
-        }
-
-        // week (full 7 days) or day (single-day filter applied via query range)
-        return (
-          <WeekGrid
-            weekStart={view === 'day' ? startOfDay(dayAnchor) : weekStart}
-            slots={slotDisplays}
-            tzOffsetHours={TZ_OFFSET_HOURS}
-            showMemberLabel={!viewingSelfOnly}
-            daysCount={view === 'day' ? 1 : 7}
-          />
-        )
-      })()}
+      <CalendarPanel
+        initialView={initialView}
+        weekStart={weekStart.toISOString()}
+        initialDayAnchor={initialDayAnchor.toISOString()}
+        slots={slotDisplays}
+        tzOffsetHours={TZ_OFFSET_HOURS}
+        showMemberLabel={!viewingSelfOnly}
+      />
     </div>
   )
 }
