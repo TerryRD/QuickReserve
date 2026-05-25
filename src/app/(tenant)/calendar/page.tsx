@@ -108,6 +108,21 @@ export default async function CalendarPage({
     .eq('is_active', true)
     .order('name')
 
+  // Fetch unavailable events for the week range (per effective member set)
+  const { data: rawEvents } = await supabase
+    .from('unavailable_events')
+    .select('id, member_id, start_at, end_at, reason')
+    .in('member_id', effectiveIds)
+    .gte('end_at', weekStart.toISOString())
+    .lte('start_at', weekEnd.toISOString())
+  const unavailableEvents = (rawEvents ?? []).map((e) => ({
+    id: e.id,
+    memberId: e.member_id,
+    startAt: e.start_at,
+    endAt: e.end_at,
+    reason: e.reason,
+  }))
+
   // Week navigation (only week-level; view & day-anchor now client-side)
   const prevWeek = format(subWeeks(weekStart, 1), 'yyyy-MM-dd')
   const nextWeek = format(addWeeks(weekStart, 1), 'yyyy-MM-dd')
@@ -130,6 +145,10 @@ export default async function CalendarPage({
   const slotDisplays = (slots ?? []).map((s) => {
     const member = allMembers.find((m) => m.id === s.member_id)
     const booking = bookingsBySlot[s.id]
+    const conflict = unavailableEvents.find(
+      (e) =>
+        e.memberId === s.member_id && e.startAt < s.end_at && e.endAt > s.start_at,
+    )
     return {
       id: s.id,
       startAt: s.start_at,
@@ -141,6 +160,7 @@ export default async function CalendarPage({
       isOwn: s.member_id === session.memberId,
       customerName: booking?.customerName ?? null,
       bookingId: booking?.id ?? null,
+      conflictReason: conflict?.reason ?? (conflict ? '不可用事件' : null),
     }
   })
 

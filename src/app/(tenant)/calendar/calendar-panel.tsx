@@ -20,6 +20,7 @@ type SlotDisplay = {
   isOwn: boolean
   customerName: string | null
   bookingId: string | null
+  conflictReason: string | null
 }
 
 export default function CalendarPanel({

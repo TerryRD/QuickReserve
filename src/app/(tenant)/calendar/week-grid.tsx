@@ -12,6 +12,7 @@ type SlotDisplay = {
   isOwn: boolean
   customerName: string | null
   bookingId: string | null
+  conflictReason: string | null
 }
 
 const STATUS_BG: Record<SlotDisplay['status'], string> = {
@@ -119,9 +120,10 @@ function Row({
                 >
                   <button
                     type="button"
-                    className={`group w-full rounded-sm border-l-2 px-1 py-0.5 text-left text-[10px] mb-0.5 transition hover:shadow-sm ${STATUS_BG[s.status]} ${!s.isOwn ? 'border-dashed opacity-90' : ''}`}
+                    className={`group w-full rounded-sm border-l-2 px-1 py-0.5 text-left text-[10px] mb-0.5 transition hover:shadow-sm ${STATUS_BG[s.status]} ${!s.isOwn ? 'border-dashed opacity-90' : ''} ${s.conflictReason ? 'ring-1 ring-amber-400' : ''}`}
                   >
                     <div className="flex items-center gap-1">
+                      {s.conflictReason && <span title={s.conflictReason}>⚠</span>}
                       {showMemberLabel && (
                         <span className="rounded bg-white/60 px-1 font-semibold">
                           {s.memberLabel}

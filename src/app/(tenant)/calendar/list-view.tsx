@@ -12,6 +12,7 @@ type SlotDisplay = {
   isOwn: boolean
   customerName: string | null
   bookingId: string | null
+  conflictReason: string | null
 }
 
 const STATUS_BADGE: Record<SlotDisplay['status'], { label: string; cls: string }> = {
@@ -74,12 +75,13 @@ export default function CalendarListView({
                 const badge = STATUS_BADGE[s.status]
                 return (
                   <SlotPopover key={s.id} slot={s} timeLabel={timeLabel}>
-                    <li className="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition hover:bg-muted/30">
+                    <li className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 transition hover:bg-muted/30 ${s.conflictReason ? 'bg-amber-50/40' : ''}`}>
                       <div className="w-24 font-mono text-xs text-muted-foreground">
                         {timeLabel}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium">
+                        <div className="flex items-center gap-1 truncate text-sm font-medium">
+                          {s.conflictReason && <span title={s.conflictReason}>⚠</span>}
                           {s.serviceName ?? '時段'}
                         </div>
                         {(showMemberLabel || s.customerName) && (

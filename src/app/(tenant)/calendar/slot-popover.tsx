@@ -37,6 +37,7 @@ export default function SlotPopover({
     bookingId: string | null
     memberLabel: string
     isOwn: boolean
+    conflictReason: string | null
   }
   timeLabel: string
   children: React.ReactNode
@@ -90,6 +91,11 @@ export default function SlotPopover({
           {!slot.isOwn && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
               這是其他成員的時段，您只能檢視。
+            </div>
+          )}
+          {slot.conflictReason && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+              ⚠ 此時段與「不可用事件」衝突（{slot.conflictReason}）。學員端不會看到新預約落進此時段，但既有預約仍會保留 — 請自行決定是否取消。
             </div>
           )}
           {(slot.status === 'pending' || slot.status === 'booked') && (
