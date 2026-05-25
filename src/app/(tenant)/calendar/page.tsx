@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import {
   addWeeks,
@@ -209,14 +210,16 @@ export default async function CalendarPage({
         </div>
       </div>
 
-      <CalendarPanel
-        initialView={initialView}
-        weekStart={weekStart.toISOString()}
-        initialDayAnchor={initialDayAnchor.toISOString()}
-        slots={slotDisplays}
-        tzOffsetHours={TZ_OFFSET_HOURS}
-        showMemberLabel={!viewingSelfOnly}
-      />
+      <Suspense fallback={null}>
+        <CalendarPanel
+          initialView={initialView}
+          weekStart={weekStart.toISOString()}
+          initialDayAnchor={initialDayAnchor.toISOString()}
+          slots={slotDisplays}
+          tzOffsetHours={TZ_OFFSET_HOURS}
+          showMemberLabel={!viewingSelfOnly}
+        />
+      </Suspense>
     </div>
   )
 }

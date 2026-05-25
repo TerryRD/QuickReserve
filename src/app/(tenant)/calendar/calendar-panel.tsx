@@ -40,6 +40,8 @@ export default function CalendarPanel({
   const router = useRouter()
   const searchParams = useSearchParams()
   const [view, setView] = useState<View>(initialView)
+  // setDayAnchor reserved for upcoming day-navigation within panel; intentionally unused.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dayAnchor, setDayAnchor] = useState<string>(initialDayAnchor)
   const [, startTransition] = useTransition()
 
