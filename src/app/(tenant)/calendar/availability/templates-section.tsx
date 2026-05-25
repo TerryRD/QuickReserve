@@ -8,7 +8,7 @@ export default async function TemplatesSection() {
 
   const { data: templates } = await supabase
     .from('availability_templates')
-    .select('id, name, created_at')
+    .select('id, name, created_at, updated_at')
     .eq('member_id', session.memberId)
     .order('created_at', { ascending: true })
 
@@ -48,7 +48,7 @@ export default async function TemplatesSection() {
     <div className="space-y-3">
       {(templates ?? []).map((t) => (
         <TemplateEditor
-          key={t.id}
+          key={`${t.id}-${t.updated_at}`}
           template={{
             id: t.id,
             name: t.name,

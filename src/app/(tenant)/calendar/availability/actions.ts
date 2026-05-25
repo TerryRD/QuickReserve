@@ -60,7 +60,11 @@ export const updateTemplateWindowsAction = actionClient
     await requireTenantMember()
     const supabase = await createSupabaseServerClient()
 
-    await supabase.from('availability_template_windows').delete().eq('template_id', parsedInput.templateId)
+    const { error: delErr } = await supabase
+      .from('availability_template_windows')
+      .delete()
+      .eq('template_id', parsedInput.templateId)
+    if (delErr) throw new AppError('TEMPLATE_WINDOWS_FAILED', delErr.message)
 
     if (parsedInput.windows.length > 0) {
       const rows = parsedInput.windows.map((w) => ({

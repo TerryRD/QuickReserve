@@ -38,7 +38,6 @@ export default function TemplateEditor(props: Props) {
   const [name, setName] = useState(isNew ? '' : props.template.name)
   const [windows, setWindows] = useState<Window[]>(isNew ? [] : props.template.windows)
   const today = new Date().toISOString().slice(0, 10)
-  const [effectiveFrom, setEffectiveFrom] = useState(today)
 
   const create = useAction(createTemplateAction, {
     onSuccess: () => {
@@ -47,15 +46,15 @@ export default function TemplateEditor(props: Props) {
     },
     onError: ({ error }) => toast.error(error.serverError?.message ?? '建立失敗'),
   })
+  const rename = useAction(renameTemplateAction, {
+    onError: ({ error }) => toast.error(error.serverError?.message ?? '改名失敗'),
+  })
   const updateWindows = useAction(updateTemplateWindowsAction, {
     onSuccess: () => {
       toast.success('模板已更新')
       setOpen(false)
     },
     onError: ({ error }) => toast.error(error.serverError?.message ?? '更新失敗'),
-  })
-  const rename = useAction(renameTemplateAction, {
-    onError: ({ error }) => toast.error(error.serverError?.message ?? '改名失敗'),
   })
   const del = useAction(deleteTemplateAction, {
     onSuccess: () => toast.success('模板已刪除'),
@@ -78,12 +77,14 @@ export default function TemplateEditor(props: Props) {
     setWindows((cur) => cur.map((w, i) => (i === idx ? { ...w, [field]: value } : w)))
   }
 
-  function submit() {
+  async function submit() {
     if (isNew) {
       create.execute({ name, windows })
     } else {
-      const renamed = name !== props.template.name
-      if (renamed) rename.execute({ templateId: props.template.id, name })
+      if (name !== props.template.name) {
+        const renameResult = await rename.executeAsync({ templateId: props.template.id, name })
+        if (renameResult?.serverError) return // toast already shown by onError
+      }
       updateWindows.execute({ templateId: props.template.id, windows })
     }
   }
@@ -167,21 +168,7 @@ export default function TemplateEditor(props: Props) {
             </div>
           </div>
 
-          {isNew && (
-            <div className="space-y-2">
-              <Label htmlFor="eff-from">建立後是否立即設為生效？</Label>
-              <Input
-                id="eff-from"
-                type="date"
-                value={effectiveFrom}
-                onChange={(e) => setEffectiveFrom(e.target.value)}
-                className="w-48"
-              />
-              <p className="text-xs text-muted-foreground">
-                建立模板後請至列表點「切換為生效」；此處設定生效日期僅紀錄、不自動套用。
-              </p>
-            </div>
-          )}
+
         </div>
 
         <DialogFooter>
