@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Calendar,
+  CalendarClock,
   ClipboardList,
   Contact,
   LayoutDashboard,
@@ -27,6 +28,7 @@ export default function SidebarNav({
   const items: Item[] = [
     { href: '/dashboard', label: '儀表板', icon: LayoutDashboard },
     { href: '/calendar', label: '行事曆', icon: Calendar },
+    { href: '/calendar/availability', label: '可用時段', icon: CalendarClock },
     { href: '/bookings', label: '預約管理', icon: ClipboardList },
     { href: '/customers', label: '學員', icon: Contact },
     { href: '/services', label: '服務項目', icon: Package },
@@ -38,7 +40,9 @@ export default function SidebarNav({
   return (
     <nav className="flex flex-col gap-0.5">
       {items.map((it) => {
-        const active = pathname === it.href || pathname.startsWith(it.href + '/')
+        const active = it.href === '/calendar'
+          ? pathname === '/calendar'
+          : pathname === it.href || pathname.startsWith(it.href + '/')
         return (
           <Link
             key={it.href}
