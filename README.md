@@ -50,6 +50,7 @@
   /dashboard                   儀表板
   /calendar                    行事曆週檢視
   /calendar?member=<id>        Owner 檢視他人行事曆
+  /calendar/availability       作息模板 + 不可用事件管理（S3）
   /services                    服務項目管理
   /bookings                    預約管理（確認 / 取消）
   /staff                       助教管理（Owner 限定）
@@ -208,6 +209,45 @@ async function HeavyDataTable() {
 - 目標 viewport：375 × 667（iPhone SE）為下限；768 × 1024（iPad mini）為平板分界。
 - 行事曆週視圖在 ≤ 640px 自動切換為日視圖（`CalendarPanel` mount effect）。
 - 詳細 audit 表：`docs/s2-rwd-audit.md`。
+
+---
+
+## 可用時段（Availability）
+
+教練可選擇性地設定：
+
+### 作息模板（templates）
+
+- 每位 member 可有多個命名模板（「日常作息」「夏季作息」…）
+- 每模板含 7 天 × 任意段數的 `start_time`–`end_time`
+- 同一時刻只有一個模板「生效」（透過 `availability_template_assignments` 表的 `effective_from` 排序）
+- 切換生效 = insert 新一筆 assignment，**不**刪歷史
+
+### 不可用事件（unavailable_events）
+
+- 每位 member 可任意時間區段標記為不可用（看醫生、休假、隨機）
+- 與作息模板正交：模板給「日常可上課時段」，event 是「臨時打洞」
+
+### Effective availability
+
+`src/lib/availability.ts` 的 `effectiveAvailability` 純函式：
+
+```
+effectiveAvailability(date, template, events) =
+  template.windowsFor(weekday)  // 該日 windows
+  - events overlapping that day // 集合減法
+```
+
+- 無 template → 不限制（current behavior）
+- Server actions (`createSlotAction` / `createRecurringRuleAction`) 與 cron `materialize-recurring` 都用此函式過濾
+- 公開頁 `/api/public/slots` 不用：slot 是已過濾結果
+
+### 撞 event 的既有 slot
+
+教練建立 event 撞到既有 slot（含 pending/booked）時：
+- Event 直接建立、不動 slot
+- /calendar 主畫面該 slot 顯示 ⚠ 徽章；SlotPopover 紅黃提示
+- 教練自行決定是否取消那些既有預約
 
 ---
 

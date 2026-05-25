@@ -1,7 +1,7 @@
 # QuickReserve 重新架構設計文件
 
 **建立日期**: 2026-05-21
-**最後更新**: 2026-05-25（S2 perf+RWD：FR-115~119 — loading.tsx 普及、行事曆 client-state、公開頁 CDN cache、Suspense 切塊、RWD audit）；2026-05-23（S1 bug triage：FR-110~114 — 邀請流程、Server Component crash、通知設定 route、loading skeleton、digest runbook）；2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
+**最後更新**: 2026-05-25（S3 availability：FR-120~124 — 作息模板 schema+UI、不可用事件 schema+UI、effectiveAvailability 純函式+server/cron 過濾、/calendar 衝突 badge、林教練 seed enrichment）；2026-05-25（S2 perf+RWD：FR-115~119 — loading.tsx 普及、行事曆 client-state、公開頁 CDN cache、Suspense 切塊、RWD audit）；2026-05-23（S1 bug triage：FR-110~114 — 邀請流程、Server Component crash、通知設定 route、loading skeleton、digest runbook）；2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
 **狀態**: MVP 已實作完成（v0.1）
 **作者**: terry@webplus.com.tw（透過 brainstorming skill 共同產出）
 
@@ -1051,5 +1051,10 @@ SENTRY_AUTH_TOKEN
 | 2026-05-25 | S2: 公開頁 client + `/api/public/slots` CDN cache + `revalidateTag` wiring | FR-117 | `be1fbc1`, `78422aa`, `074eb55` |
 | 2026-05-25 | S2: `/platform/tenants` 與 `/platform/tenants/[id]` Suspense 切塊 | FR-118 | `7f41aa1`, `109a8a4` |
 | 2026-05-25 | S2: 375 / 768 RWD audit 全站 + audit 表 + exception 清冊 + perf 量測 scaffold | FR-119 | `c4325a8`, `f179459`, `725f7aa` |
+| 2026-05-25 | 作息模板 schema + 編輯 UI | FR-120 | `b5a8f01`, `492f108`, `77058b9`, `05777f7` |
+| 2026-05-25 | 不可用事件 schema + UI | FR-121 | `b5a8f01`, `492f108`, `85b941f` |
+| 2026-05-25 | effectiveAvailability 純函式 + server / cron 過濾 | FR-122 | `0b0f0e1`, `04d6f3d`, `c79eaea`, `5fdf2c3`, `2976cf4`, `732060f` |
+| 2026-05-25 | /calendar slot vs event collision badge | FR-123 | `6100d3e` |
+| 2026-05-25 | 林教練 seed enrichment | FR-124 | `680f2c3`, `5554910` |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。
