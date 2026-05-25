@@ -32,6 +32,7 @@ export default function SidebarNav({
     { href: '/bookings', label: '預約管理', icon: ClipboardList },
     { href: '/customers', label: '學員', icon: Contact },
     { href: '/services', label: '服務項目', icon: Package },
+    { href: '/packages', label: '套裝管理', icon: Package },
     ...(isOwner ? [{ href: '/staff', label: '助教管理', icon: Users }] : []),
     ...(isOwner ? [{ href: '/settings/profile', label: '租戶資料', icon: UserCog }] : []),
     { href: '/notifications', label: '通知設定', icon: Settings },
