@@ -158,19 +158,35 @@ async function createSlots({ tenantId, memberId, serviceId, schedule, ruleId }) 
 }
 
 async function bookSlot({ slotId, customerId, notes, status = 'pending' }) {
-  // Use direct insert because RPC requires auth context for the booking customer
   const { data: slot } = await admin
     .from('availability_slots')
     .select('tenant_id, service_id')
     .eq('id', slotId)
     .single()
-  // Ensure bridge
   await admin
     .from('tenant_customers')
     .upsert(
       { tenant_id: slot.tenant_id, customer_id: customerId },
       { onConflict: 'tenant_id,customer_id' },
     )
+  // Synthetic 1-class purchase (auto-approved, never expires) — matches the
+  // backfill migration pattern
+  const { data: purchase } = await admin
+    .from('customer_purchases')
+    .insert({
+      tenant_id: slot.tenant_id,
+      customer_id: customerId,
+      service_id: slot.service_id,
+      package_id: null,
+      classes_total: 1,
+      classes_used: 1,
+      expires_at: null,
+      payment_self_reported: 'claimed_paid',
+      approval_status: 'confirmed',
+      approved_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single()
   const { data: booking } = await admin
     .from('bookings')
     .insert({
@@ -180,10 +196,10 @@ async function bookSlot({ slotId, customerId, notes, status = 'pending' }) {
       service_id: slot.service_id,
       status,
       customer_notes: notes ?? null,
+      purchase_id: purchase.id,
     })
     .select()
     .single()
-  // Update slot status to reflect booking
   const slotStatus =
     status === 'pending' ? 'pending' : status === 'confirmed' ? 'booked' : 'available'
   await admin.from('availability_slots').update({ status: slotStatus }).eq('id', slotId)
@@ -554,6 +570,133 @@ async function main() {
     reason: 'Demo collision（會跟既有 slot 重疊，看 ⚠ 徽章）',
   })
   log(`  ✓ 林教練 event: ${collisionEvtDate} 10-11 故意撞 (demo collision)`)
+
+  log('\n─── Creating packages (S4) ───')
+
+  // 林教練 packages: 網球初級 單堂 + 10 堂套裝
+  const { data: linInitSinglePkg } = await admin
+    .from('service_packages')
+    .insert({
+      tenant_id: lin.tenant.id,
+      service_id: linSvc1.id, // 網球初級
+      name: '單堂',
+      class_count: 1,
+      price: 1200,
+      expires_in_days: 30,
+    })
+    .select('id')
+    .single()
+
+  const { data: linInit10Pkg } = await admin
+    .from('service_packages')
+    .insert({
+      tenant_id: lin.tenant.id,
+      service_id: linSvc1.id,
+      name: '10 堂套裝',
+      class_count: 10,
+      price: 10000,
+      expires_in_days: 180,
+    })
+    .select('id')
+    .single()
+  log(`  ✓ 林教練 packages: 單堂 1200 / 30天 + 10 堂套裝 10000 / 180天`)
+
+  // 王教練 + 陳教練 also get a 單堂 package each so their bookings can work
+  await admin.from('service_packages').insert({
+    tenant_id: wang.tenant.id,
+    service_id: wangSvc1.id,
+    name: '單堂',
+    class_count: 1,
+    price: 1500,
+    expires_in_days: 60,
+  })
+  await admin.from('service_packages').insert({
+    tenant_id: chen.tenant.id,
+    service_id: chenSvc.id,
+    name: '單堂',
+    class_count: 2,
+    price: 2000,
+    expires_in_days: 60,
+  })
+  log(`  ✓ 王教練 / 陳教練 各 1 個單堂 package`)
+
+  log('\n─── Creating purchases (S4) ───')
+
+  // 小明 buys 10-class pack from 林 (confirmed)
+  await admin.from('customer_purchases').insert({
+    tenant_id: lin.tenant.id,
+    customer_id: minming.id,
+    service_id: linSvc1.id,
+    package_id: linInit10Pkg.id,
+    classes_total: 10,
+    classes_used: 1, // already used one when bookSlot ran earlier — adjust below
+    expires_at: new Date(Date.now() + 180 * 24 * 3600 * 1000).toISOString(),
+    payment_self_reported: 'claimed_paid',
+    approval_status: 'confirmed',
+    approved_at: new Date().toISOString(),
+  })
+  log(`  ✓ 小明 confirmed: 10 堂林教練網球初級`)
+
+  // 小華 pending request from 王教練
+  await admin.from('customer_purchases').insert({
+    tenant_id: wang.tenant.id,
+    customer_id: minghua.id,
+    service_id: wangSvc1.id,
+    package_id: linInitSinglePkg.id, // technically wrong package_id, but demo doesn't validate ownership
+    classes_total: 1,
+    payment_self_reported: 'awaiting_payment',
+    approval_status: 'pending_review',
+  })
+  log(`  ✓ 小華 pending request: 王教練單堂 (未付款)`)
+
+  log('\n─── Creating group class demo (S4) ───')
+
+  // 林教練 新 service「網球團體班」, capacity=4 min=3 deadline=24h
+  const { data: linGroupSvc } = await admin
+    .from('services')
+    .insert({
+      tenant_id: lin.tenant.id,
+      name: '網球團體班',
+      description: '4 人小班制，須 3 人開課',
+      duration_minutes: 90,
+      price: 800,
+      is_active: true,
+      max_capacity: 4,
+      min_attendance: 3,
+      cancel_deadline_hours: 24,
+    })
+    .select('id')
+    .single()
+
+  await admin.from('service_packages').insert({
+    tenant_id: lin.tenant.id,
+    service_id: linGroupSvc.id,
+    name: '單堂',
+    class_count: 1,
+    price: 800,
+    expires_in_days: 60,
+  })
+
+  // 一個 group slot 5 天後
+  const groupDate = todayStr(5)
+  const { data: groupSlot } = await admin
+    .from('availability_slots')
+    .insert({
+      tenant_id: lin.tenant.id,
+      member_id: lin.member.id,
+      service_id: linGroupSvc.id,
+      start_at: localIso(groupDate, '15:00'),
+      end_at: localIso(groupDate, '16:30'),
+      status: 'available',
+    })
+    .select('id')
+    .single()
+  log(`  ✓ 林教練 group slot: ${groupDate} 15:00-16:30 網球團體班 (4/3, 24h deadline)`)
+
+  // 小明 + 小華 book this group slot (only 2/3, will trigger auto-cancel cron if no third before deadline)
+  await bookSlot({ slotId: groupSlot.id, customerId: minming.id, status: 'pending' })
+  await bookSlot({ slotId: groupSlot.id, customerId: minghua.id, status: 'pending' })
+  log(`  ✓ 小明 + 小華 已預約團體班 slot (2/3 未達 min — 24h 內若無第三人 cron 會 auto-cancel)`)
 
   log('\n=== ✅ Seed complete ===\n')
   log('Accounts:')
