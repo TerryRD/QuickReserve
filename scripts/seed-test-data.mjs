@@ -535,8 +535,8 @@ async function main() {
 
   log('\n─── Creating unavailable events (S3) ───')
 
-  // 林：下下週四 14-15 看醫生 (將剛好撞 rule 的一個 occurrence — cron 應跳過)
-  const linEvtDate = todayStr(((4 - new Date().getDay()) + 14) % 7 + 7)
+  // 林：下下週二 14-15 看醫生 (將剛好撞 rule 的一個 occurrence — cron 應跳過)
+  const linEvtDate = todayStr(((2 - new Date().getDay()) + 14) % 7 + 7)
   await createUnavailableEvent({
     memberId: lin.member.id,
     startAt: localIso(linEvtDate, '14:00'),
