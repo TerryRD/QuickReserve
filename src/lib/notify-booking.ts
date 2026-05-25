@@ -87,3 +87,49 @@ export async function notifyBookingChange(
     console.error('[notify-booking]', err)
   }
 }
+
+export async function notifyPurchaseDecision(
+  purchaseId: string,
+  decision: 'approved' | 'rejected',
+  _triggeredByUserId: string,
+): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient()
+    const { data: p } = await admin
+      .from('customer_purchases')
+      .select(
+        'id, customer_id, classes_total, rejected_reason, services(name), service_packages(name), tenants(name, slug)',
+      )
+      .eq('id', purchaseId)
+      .maybeSingle()
+    if (!p) return
+
+    const svc = p.services as { name: string } | null
+    const pkg = p.service_packages as { name: string } | null
+    const tenant = p.tenants as { name: string; slug: string } | null
+    const title = decision === 'approved' ? '套裝已確認' : '套裝申請被拒絕'
+    const body =
+      decision === 'approved'
+        ? `${tenant?.name ?? ''} 確認您的 ${pkg?.name ?? svc?.name ?? '套裝'}（${p.classes_total} 堂），可開始預約`
+        : `${tenant?.name ?? '教練'} 拒絕了您的套裝申請：${p.rejected_reason ?? ''}`
+
+    await pushToUser(admin, {
+      userId: p.customer_id,
+      type: 'booking_status',
+      payload: {
+        title,
+        body,
+        url:
+          decision === 'approved'
+            ? '/my-bookings'
+            : tenant?.slug
+              ? `/${tenant.slug}/purchases`
+              : '/my-bookings',
+        tag: `purchase-${purchaseId}`,
+      },
+      relatedId: purchaseId,
+    })
+  } catch (err) {
+    console.error('[notify-purchase]', err)
+  }
+}
