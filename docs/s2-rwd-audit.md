@@ -15,7 +15,7 @@
 | 4 | `/[tenantSlug]`（公開） | | | | | |
 | 5 | `/book/[slotId]` | | | | | |
 | 6 | `/dashboard`（教練） | | | | | |
-| 7 | `/calendar` | ✓ | ✓ | 已強制 ≤ 640px 自動切 day view（見 commit 欄） | — | <FILLED_BY_COMMIT_AT_END> |
+| 7 | `/calendar` | ✓ | ✓ | 已強制 ≤ 640px 自動切 day view（見 commit 欄） | — | c4325a8 |
 | 8 | `/calendar/rules` | | | | | |
 | 9 | `/bookings` | | | | | |
 | 10 | `/services` | | | | | |
@@ -36,7 +36,7 @@
 
 | 路徑 | 描述 | 修法 | Commit |
 |---|---|---|---|
-| `/calendar` (週視圖) | week-grid 在 ≤ 640px 橫向爆炸（7 欄 + 時間欄共 8 欄無法閱讀） | `CalendarPanel` 加 `useEffect` 偵測 viewport，初始進站若 ≤ 640px 且 initialView === 'week' 自動切換為 'day' | <FILLED_BY_COMMIT_AT_END> |
+| `/calendar` (週視圖) | week-grid 在 ≤ 640px 橫向爆炸（7 欄 + 時間欄共 8 欄無法閱讀） | `CalendarPanel` 加 `useEffect` 偵測 viewport，初始進站若 ≤ 640px 且 initialView === 'week' 自動切換為 'day' | c4325a8 |
 
 ## P2 / P3 (留 S6)
 
