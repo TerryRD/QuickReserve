@@ -2,12 +2,14 @@
 
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
+import { revalidateTag } from 'next/cache'
 import { actionClient } from '@/lib/safe-action'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError } from '@/lib/errors'
 import type { ConflictSlot } from '@/lib/errors'
 import { computeOccurrences, type RecurringRuleInput, type Occurrence } from '@/lib/recurrence'
+import { publicSlotsTag } from '@/lib/cache-tags'
 
 const MATERIALIZE_DAYS = 90
 
@@ -169,6 +171,7 @@ export const createRecurringRuleAction = actionClient
     }
 
     revalidatePath('/calendar')
+    revalidateTag(publicSlotsTag(session.tenantId))
     return {
       ruleId: rule.id,
       created: toInsert.length,

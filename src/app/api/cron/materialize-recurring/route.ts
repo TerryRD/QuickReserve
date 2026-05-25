@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { computeOccurrences, type RecurringRuleInput } from '@/lib/recurrence'
 import { isExclusionViolation } from '@/lib/conflicts'
+import { publicSlotsTag } from '@/lib/cache-tags'
 
 const MATERIALIZE_DAYS = 90
 
@@ -34,6 +36,7 @@ export async function GET(request: Request) {
   let totalCreated = 0
   let totalSkipped = 0
   let totalConsidered = 0
+  const affectedTenants = new Set<string>()
 
   for (const rule of rules ?? []) {
     const ruleInput: RecurringRuleInput = {
@@ -84,8 +87,13 @@ export async function GET(request: Request) {
         }
       } else {
         totalCreated++
+        affectedTenants.add(rule.tenant_id)
       }
     }
+  }
+
+  for (const tenantId of affectedTenants) {
+    revalidateTag(publicSlotsTag(tenantId))
   }
 
   return NextResponse.json({

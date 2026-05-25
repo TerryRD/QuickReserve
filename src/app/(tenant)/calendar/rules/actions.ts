@@ -2,10 +2,12 @@
 
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
+import { revalidateTag } from 'next/cache'
 import { actionClient } from '@/lib/safe-action'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError, NotFoundError } from '@/lib/errors'
+import { publicSlotsTag } from '@/lib/cache-tags'
 
 const RuleIdSchema = z.object({ id: z.string().uuid() })
 
@@ -32,6 +34,7 @@ export const toggleRuleActiveAction = actionClient
     if (error) throw new AppError('TOGGLE_FAILED', error.message)
     revalidatePath('/calendar/rules')
     revalidatePath('/calendar')
+    revalidateTag(publicSlotsTag(session.tenantId))
     return { ok: true }
   })
 
@@ -79,5 +82,6 @@ export const deleteRuleAction = actionClient
 
     revalidatePath('/calendar/rules')
     revalidatePath('/calendar')
+    revalidateTag(publicSlotsTag(session.tenantId))
     return { ok: true, removedSlots }
   })

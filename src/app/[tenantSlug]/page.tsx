@@ -1,12 +1,11 @@
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { addDays, format, parseISO, startOfDay } from 'date-fns'
-import { Calendar, Clock, DollarSign, ChevronRight, Mail, Phone, MessageCircle } from 'lucide-react'
+import { format } from 'date-fns'
+import { Clock, DollarSign, Mail, Phone, MessageCircle } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getTenantBySlug } from '@/lib/auth/get-tenant-context'
-
-const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+import SlotPicker from './slot-picker'
 
 export default async function TenantPublicPage({
   params,
@@ -54,44 +53,6 @@ export default async function TenantPublicPage({
 
   const activeServiceId = selectedServiceId ?? services?.[0]?.id ?? null
   const dateStr = selectedDate ?? format(new Date(), 'yyyy-MM-dd')
-  const dayStart = startOfDay(parseISO(dateStr)).toISOString()
-  const dayEnd = addDays(startOfDay(parseISO(dateStr)), 1).toISOString()
-
-  let availableSlots: Array<{ id: string; start_at: string; end_at: string }> | null = null
-  if (activeServiceId) {
-    const { data } = await supabase
-      .from('availability_slots')
-      .select('id, start_at, end_at')
-      .eq('tenant_id', tenant.id)
-      .eq('service_id', activeServiceId)
-      .eq('status', 'available')
-      .gte('start_at', dayStart)
-      .lt('start_at', dayEnd)
-      .order('start_at')
-    availableSlots = data
-  }
-
-  const fromN = Math.max(0, parseInt(fromOffset ?? '0', 10) || 0)
-  const stripDays = 14
-  const today = startOfDay(new Date())
-  const stripStart = addDays(today, fromN)
-  const days = Array.from({ length: stripDays }, (_, i) => addDays(stripStart, i))
-  const dayCounts: Record<string, number> = {}
-  if (activeServiceId) {
-    const stripEnd = addDays(stripStart, stripDays)
-    const { data: weekSlots } = await supabase
-      .from('availability_slots')
-      .select('start_at')
-      .eq('tenant_id', tenant.id)
-      .eq('service_id', activeServiceId)
-      .eq('status', 'available')
-      .gte('start_at', stripStart.toISOString())
-      .lt('start_at', stripEnd.toISOString())
-    for (const s of weekSlots ?? []) {
-      const key = format(toLocal(s.start_at), 'yyyy-MM-dd')
-      dayCounts[key] = (dayCounts[key] ?? 0) + 1
-    }
-  }
 
   return (
     <div className="min-h-screen">
@@ -216,106 +177,19 @@ export default async function TenantPublicPage({
               </div>
             </section>
 
-            {/* Date selection */}
-            <section>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                  <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
-                    2
-                  </span>
-                  選擇日期
-                </h2>
-                <div className="flex items-center gap-1 text-xs">
-                  {fromN > 0 && (
-                    <Link
-                      href={`/${tenantSlug}?service=${activeServiceId}&from=${Math.max(0, fromN - 7)}`}
-                      className="rounded-md border bg-white px-2 py-1 hover:bg-muted"
-                    >
-                      ◄ 上週
-                    </Link>
-                  )}
-                  <Link
-                    href={`/${tenantSlug}?service=${activeServiceId}&from=${fromN + 7}`}
-                    className="rounded-md border bg-white px-2 py-1 hover:bg-muted"
-                  >
-                    再 7 天 ►
-                  </Link>
-                </div>
-              </div>
-              <div className="grid grid-cols-7 gap-1.5">
-                {days.map((d) => {
-                  const key = format(d, 'yyyy-MM-dd')
-                  const count = dayCounts[key] ?? 0
-                  const isSelected = key === dateStr
-                  const isToday = key === format(today, 'yyyy-MM-dd')
-                  return (
-                    <Link
-                      key={key}
-                      href={`/${tenantSlug}?service=${activeServiceId}&date=${key}`}
-                      className={`flex flex-col items-center gap-0.5 rounded-xl border p-2 text-center transition ${
-                        isSelected
-                          ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
-                          : count > 0
-                            ? 'border-slate-200 bg-white hover:border-slate-300'
-                            : 'border-slate-100 bg-slate-50/60 text-slate-400'
-                      }`}
-                    >
-                      <div className="text-[10px] opacity-80">{format(d, 'EEE')}</div>
-                      <div className="text-base font-semibold">{format(d, 'd')}</div>
-                      <div
-                        className={`text-[10px] ${
-                          isSelected
-                            ? 'text-white/85'
-                            : count > 0
-                              ? 'text-emerald-600'
-                              : 'text-slate-300'
-                        }`}
-                      >
-                        {count > 0 ? `${count} 個` : isToday ? '今天' : '—'}
-                      </div>
-                    </Link>
-                  )
-                })}
-              </div>
-            </section>
-
-            {/* Time selection */}
-            <section>
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
-                  3
-                </span>
-                {format(parseISO(dateStr), 'M/d (EEEEEE)')} 可選時段
-              </h2>
-              {!availableSlots || availableSlots.length === 0 ? (
-                <div className="rounded-xl border border-dashed bg-slate-50/50 p-8 text-center">
-                  <Calendar className="mx-auto h-8 w-8 text-slate-300" />
-                  <p className="mt-2 text-sm text-slate-500">當天沒有可預約時段</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {availableSlots.map((s) => {
-                    const start = toLocal(s.start_at)
-                    const end = toLocal(s.end_at)
-                    return (
-                      <Link
-                        key={s.id}
-                        href={`/book/${s.id}${rescheduleFrom ? `?reschedule=${rescheduleFrom}` : ''}`}
-                        className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 transition hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-sm"
-                      >
-                        <div>
-                          <div className="text-sm font-semibold text-slate-900">
-                            {format(start, 'HH:mm')}
-                          </div>
-                          <div className="text-[10px] text-slate-500">– {format(end, 'HH:mm')}</div>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-blue-500" />
-                      </Link>
-                    )
-                  })}
-                </div>
-              )}
-            </section>
+            {/* Date + Time selection via SlotPicker */}
+            {activeServiceId && (
+              <Suspense fallback={null}>
+                <SlotPicker
+                  tenantSlug={tenantSlug}
+                  tenantId={tenant.id}
+                  serviceId={activeServiceId}
+                  initialDate={dateStr}
+                  fromOffset={Math.max(0, parseInt(fromOffset ?? '0', 10) || 0)}
+                  rescheduleFrom={rescheduleFrom ?? null}
+                />
+              </Suspense>
+            )}
           </div>
         )}
       </main>

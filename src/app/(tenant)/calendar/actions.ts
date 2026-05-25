@@ -2,11 +2,13 @@
 
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
+import { revalidateTag } from 'next/cache'
 import { actionClient } from '@/lib/safe-action'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError, SlotConflictError } from '@/lib/errors'
 import { findConflictingSlots, isExclusionViolation } from '@/lib/conflicts'
+import { publicSlotsTag } from '@/lib/cache-tags'
 
 const CreateSlotSchema = z.object({
   serviceId: z.string().uuid(),
@@ -39,6 +41,7 @@ export const createSlotAction = actionClient
       throw new AppError('SLOT_CREATE_FAILED', error.message)
     }
     revalidatePath('/calendar')
+    revalidateTag(publicSlotsTag(session.tenantId))
     return { ok: true }
   })
 
@@ -47,10 +50,11 @@ const DeleteSlotSchema = z.object({ id: z.string().uuid() })
 export const deleteSlotAction = actionClient
   .inputSchema(DeleteSlotSchema)
   .action(async ({ parsedInput }) => {
-    await requireTenantMember()
+    const session = await requireTenantMember()
     const supabase = await createSupabaseServerClient()
     const { error } = await supabase.from('availability_slots').delete().eq('id', parsedInput.id)
     if (error) throw new AppError('SLOT_DELETE_FAILED', error.message)
     revalidatePath('/calendar')
+    revalidateTag(publicSlotsTag(session.tenantId))
     return { ok: true }
   })

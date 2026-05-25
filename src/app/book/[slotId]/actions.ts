@@ -3,11 +3,13 @@
 import { z } from 'zod'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { revalidateTag } from 'next/cache'
 import { actionClient } from '@/lib/safe-action'
 import { requireSession } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError, SlotUnavailableError } from '@/lib/errors'
 import { notifyBookingChange } from '@/lib/notify-booking'
+import { publicSlotsTag } from '@/lib/cache-tags'
 
 const CreateBookingSchema = z.object({
   slotId: z.string().uuid(),
@@ -20,6 +22,14 @@ export const createBookingAction = actionClient
   .action(async ({ parsedInput }) => {
     const session = await requireSession()
     const supabase = await createSupabaseServerClient()
+
+    // Look up tenantId for cache invalidation (customer context has no tenantId)
+    const { data: slotRow } = await supabase
+      .from('availability_slots')
+      .select('tenant_id')
+      .eq('id', parsedInput.slotId)
+      .maybeSingle()
+    const tenantId = slotRow?.tenant_id ?? null
 
     // Reschedule path: cancel old + book new atomically via RPC
     if (parsedInput.rescheduleFrom) {
@@ -39,6 +49,7 @@ export const createBookingAction = actionClient
       void notifyBookingChange(parsedInput.rescheduleFrom, 'cancelled', session.userId)
       void notifyBookingChange(newBooking.id, 'created', session.userId)
       revalidatePath('/my-bookings')
+      if (tenantId) revalidateTag(publicSlotsTag(tenantId))
       redirect(`/my-bookings?rescheduled=${newBooking.id}`)
     }
 
@@ -58,6 +69,7 @@ export const createBookingAction = actionClient
     const booking = data as { id: string }
     void notifyBookingChange(booking.id, 'created', session.userId)
     revalidatePath('/my-bookings')
+    if (tenantId) revalidateTag(publicSlotsTag(tenantId))
     redirect(`/my-bookings?booked=${booking.id}`)
   })
 
@@ -68,6 +80,15 @@ export const cancelMyBookingAction = actionClient
   .action(async ({ parsedInput }) => {
     const session = await requireSession()
     const supabase = await createSupabaseServerClient()
+
+    // Look up tenantId for cache invalidation (customer context has no tenantId)
+    const { data: bookingRow } = await supabase
+      .from('bookings')
+      .select('tenant_id')
+      .eq('id', parsedInput.bookingId)
+      .maybeSingle()
+    const tenantId = bookingRow?.tenant_id ?? null
+
     const { error } = await supabase.rpc('cancel_booking', { p_booking_id: parsedInput.bookingId })
     if (error) {
       if (error.message?.includes('INVALID_STATE'))
@@ -77,5 +98,6 @@ export const cancelMyBookingAction = actionClient
     }
     void notifyBookingChange(parsedInput.bookingId, 'cancelled', session.userId)
     revalidatePath('/my-bookings')
+    if (tenantId) revalidateTag(publicSlotsTag(tenantId))
     return { ok: true }
   })
