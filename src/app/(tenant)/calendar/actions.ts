@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError, SlotConflictError } from '@/lib/errors'
 import { findConflictingSlots, isExclusionViolation } from '@/lib/conflicts'
 import { publicSlotsTag } from '@/lib/cache-tags'
+import { validateInEffectiveRange } from '@/lib/availability-server'
 
 const CreateSlotSchema = z.object({
   serviceId: z.string().uuid(),
@@ -21,6 +22,20 @@ export const createSlotAction = actionClient
   .action(async ({ parsedInput }) => {
     const session = await requireTenantMember()
     const supabase = await createSupabaseServerClient()
+    const startAt = new Date(parsedInput.startAt)
+    const endAt = new Date(parsedInput.endAt)
+    const inRange = await validateInEffectiveRange(
+      supabase,
+      session.memberId,
+      startAt,
+      endAt,
+    )
+    if (!inRange) {
+      throw new AppError(
+        'OUT_OF_AVAILABILITY',
+        '時段超出可上課時段範圍（檢查作息模板與不可用事件）',
+      )
+    }
     const { error } = await supabase.from('availability_slots').insert({
       tenant_id: session.tenantId,
       member_id: session.memberId,

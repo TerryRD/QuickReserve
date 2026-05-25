@@ -10,6 +10,8 @@ import { AppError } from '@/lib/errors'
 import type { ConflictSlot } from '@/lib/errors'
 import { computeOccurrences, type RecurringRuleInput, type Occurrence } from '@/lib/recurrence'
 import { publicSlotsTag } from '@/lib/cache-tags'
+import { fetchActiveTemplate, fetchUnavailableEvents } from '@/lib/availability-server'
+import { effectiveAvailability } from '@/lib/availability'
 
 const MATERIALIZE_DAYS = 90
 
@@ -56,6 +58,7 @@ type CreateResult = {
   ruleId: string | null
   created: number
   skipped: number
+  skippedAvailability: number
   conflicts: ConflictSlot[]
 }
 
@@ -125,7 +128,37 @@ export const createRecurringRuleAction = actionClient
 
     // 5. If conflicts and not skipping → return conflicts without writing anything
     if (conflicts.length > 0 && !parsedInput.skipConflicts) {
-      return { ruleId: null, created: 0, skipped: 0, conflicts }
+      return { ruleId: null, created: 0, skipped: 0, skippedAvailability: 0, conflicts }
+    }
+
+    // 5.5. Filter out occurrences that fall outside effective availability
+    const template = await fetchActiveTemplate(supabase, session.memberId, startDate)
+    let availabilityFiltered: Occurrence[] = toInsert
+    let skippedAvailability = 0
+    if (template !== null && toInsert.length > 0) {
+      const events = await fetchUnavailableEvents(
+        supabase,
+        session.memberId,
+        new Date(toInsert[0]!.startAt),
+        new Date(toInsert[toInsert.length - 1]!.endAt),
+      )
+      const passed: Occurrence[] = []
+      for (const occ of toInsert) {
+        const start = new Date(occ.startAt)
+        const end = new Date(occ.endAt)
+        const dayRanges = effectiveAvailability({
+          date: start,
+          activeTemplate: template,
+          unavailableEvents: events,
+          tzOffsetHours: 8,
+        })
+        if (dayRanges.some((r) => r.start <= start && r.end >= end)) {
+          passed.push(occ)
+        } else {
+          skippedAvailability++
+        }
+      }
+      availabilityFiltered = passed
     }
 
     // 6. Insert the rule
@@ -152,8 +185,8 @@ export const createRecurringRuleAction = actionClient
       throw new AppError('RULE_CREATE_FAILED', ruleErr?.message ?? '建立規則失敗')
 
     // 7. Batch insert the non-conflicting slots
-    if (toInsert.length > 0) {
-      const rows = toInsert.map((o) => ({
+    if (availabilityFiltered.length > 0) {
+      const rows = availabilityFiltered.map((o) => ({
         tenant_id: session.tenantId,
         member_id: session.memberId,
         service_id: parsedInput.serviceId,
@@ -174,8 +207,9 @@ export const createRecurringRuleAction = actionClient
     revalidateTag(publicSlotsTag(session.tenantId))
     return {
       ruleId: rule.id,
-      created: toInsert.length,
+      created: availabilityFiltered.length,
       skipped: conflicts.length,
+      skippedAvailability,
       conflicts: parsedInput.skipConflicts ? conflicts : [],
     }
   })

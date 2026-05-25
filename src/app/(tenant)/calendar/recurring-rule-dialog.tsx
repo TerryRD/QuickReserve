@@ -67,9 +67,11 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
         setConflicts(data.conflicts)
         toast.error(`有 ${data.conflicts.length} 個時段衝突`)
       } else {
-        toast.success(
-          `已建立 ${data.created} 個時段${data.skipped > 0 ? `（略過 ${data.skipped} 個衝突）` : ''}`,
-        )
+        const parts = [`已建立 ${data.created} 個時段`]
+        if (data.skipped > 0) parts.push(`略過 ${data.skipped} 個衝突`)
+        if (data.skippedAvailability > 0)
+          parts.push(`略過 ${data.skippedAvailability} 個不在作息時段內`)
+        toast.success(parts.length > 1 ? `${parts[0]}（${parts.slice(1).join('、')}）` : parts[0]!)
         setConflicts([])
         setSkipMode(false)
         setOpen(false)
