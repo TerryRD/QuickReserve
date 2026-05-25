@@ -190,6 +190,39 @@ async function bookSlot({ slotId, customerId, notes, status = 'pending' }) {
   return booking
 }
 
+async function createTemplate({ memberId, name, windows }) {
+  const { data: tmpl, error } = await admin
+    .from('availability_templates')
+    .insert({ member_id: memberId, name })
+    .select('id')
+    .single()
+  if (error) fail(`template ${name}: ${error.message}`)
+  if (windows.length > 0) {
+    const { error: wErr } = await admin
+      .from('availability_template_windows')
+      .insert(windows.map((w) => ({ template_id: tmpl.id, ...w })))
+    if (wErr) fail(`template windows: ${wErr.message}`)
+  }
+  return tmpl
+}
+
+async function assignTemplate({ memberId, templateId, effectiveFrom }) {
+  const { error } = await admin
+    .from('availability_template_assignments')
+    .insert({ member_id: memberId, template_id: templateId, effective_from: effectiveFrom })
+  if (error) fail(`assignment: ${error.message}`)
+}
+
+async function createUnavailableEvent({ memberId, startAt, endAt, reason }) {
+  const { data, error } = await admin
+    .from('unavailable_events')
+    .insert({ member_id: memberId, start_at: startAt, end_at: endAt, reason })
+    .select('id')
+    .single()
+  if (error) fail(`event: ${error.message}`)
+  return data
+}
+
 async function main() {
   log(`\n=== QuickReserve test data seed ===`)
   log(`Password for all accounts: ${PASSWORD}\n`)
@@ -428,6 +461,99 @@ async function main() {
     status: 'confirmed',
   })
   log(`  ✓ 小明 → 林教練 (confirmed)`)
+
+  log('\n─── Creating availability templates (S3) ───')
+
+  // 林教練「日常作息」: per S3 spec
+  const linDaily = await createTemplate({
+    memberId: lin.member.id,
+    name: '日常作息',
+    windows: [
+      { weekday: 1, start_time: '09:00', end_time: '12:00' },
+      { weekday: 1, start_time: '14:00', end_time: '17:00' },
+      { weekday: 2, start_time: '14:00', end_time: '20:00' },
+      { weekday: 3, start_time: '09:00', end_time: '12:00' },
+      { weekday: 3, start_time: '14:00', end_time: '17:00' },
+      { weekday: 4, start_time: '14:00', end_time: '20:00' },
+      { weekday: 5, start_time: '09:00', end_time: '17:00' },
+    ],
+  })
+  await assignTemplate({
+    memberId: lin.member.id,
+    templateId: linDaily.id,
+    effectiveFrom: todayStr(),
+  })
+  log(`  ✓ 林教練 模板「日常作息」+ 生效中`)
+
+  // 林教練「假期作息」: 不生效（demo 有多模板）
+  await createTemplate({
+    memberId: lin.member.id,
+    name: '假期作息',
+    windows: [
+      { weekday: 6, start_time: '09:00', end_time: '12:00' },
+      { weekday: 7, start_time: '09:00', end_time: '12:00' },
+    ],
+  })
+  log(`  ✓ 林教練 模板「假期作息」（未生效）`)
+
+  // 阿明助教「週末班」
+  const mingTmpl = await createTemplate({
+    memberId: ming.member.id,
+    name: '週末班',
+    windows: [
+      { weekday: 6, start_time: '09:00', end_time: '17:00' },
+      { weekday: 7, start_time: '09:00', end_time: '12:00' },
+    ],
+  })
+  await assignTemplate({
+    memberId: ming.member.id,
+    templateId: mingTmpl.id,
+    effectiveFrom: todayStr(),
+  })
+  log(`  ✓ 阿明助教 模板「週末班」+ 生效中`)
+
+  log('\n─── Creating 林教練 recurring rule (S3) ───')
+  const { data: linRule } = await admin
+    .from('recurring_rules')
+    .insert({
+      tenant_id: lin.tenant.id,
+      member_id: lin.member.id,
+      service_id: linSvc2.id, // 網球進階班
+      freq: 'weekly',
+      interval_n: 1,
+      by_weekday: [2], // 週二
+      start_time: '14:00:00',
+      end_time: '15:00:00',
+      start_date: todayStr(),
+      end_condition: 'count',
+      end_count: 12,
+      is_active: true,
+    })
+    .select()
+    .single()
+  log(`  ✓ 林教練 rule: 每週二 14:00-15:00 網球進階班 共 12 次 (rule id: ${linRule.id})`)
+
+  log('\n─── Creating unavailable events (S3) ───')
+
+  // 林：下下週四 14-15 看醫生 (將剛好撞 rule 的一個 occurrence — cron 應跳過)
+  const linEvtDate = todayStr(((4 - new Date().getDay()) + 14) % 7 + 7)
+  await createUnavailableEvent({
+    memberId: lin.member.id,
+    startAt: localIso(linEvtDate, '14:00'),
+    endAt: localIso(linEvtDate, '15:00'),
+    reason: '看醫生',
+  })
+  log(`  ✓ 林教練 event: ${linEvtDate} 14-15 看醫生`)
+
+  // 林：建立一個故意撞 既有 slot 的 event (demo collision)
+  const collisionEvtDate = todayStr(5)
+  await createUnavailableEvent({
+    memberId: lin.member.id,
+    startAt: localIso(collisionEvtDate, '10:00'),
+    endAt: localIso(collisionEvtDate, '11:00'),
+    reason: 'Demo collision（會跟既有 slot 重疊，看 ⚠ 徽章）',
+  })
+  log(`  ✓ 林教練 event: ${collisionEvtDate} 10-11 故意撞 (demo collision)`)
 
   log('\n=== ✅ Seed complete ===\n')
   log('Accounts:')
