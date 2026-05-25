@@ -149,6 +149,68 @@ npm run db:reset         # 重置 cloud DB（小心！）
 
 ---
 
+## 效能 playbook
+
+### `loading.tsx` 慣例
+
+- 每個 segment 都該有 `loading.tsx`，除非該 segment 是 static prerender（如 `/login`、`/signup`）。
+- 一般 dashboard / 列表頁用共用 `<PageSkeleton rows={N} />`，row 數依該頁主視覺區塊抓最像的（dashboard 4、bookings 8 等）。
+- 公開頁 `/[tenantSlug]` 用客製 `<PublicPageSkeleton>`，因為版型差異大（hero + service grid + date strip + slot grid）。
+
+### Suspense 切塊使用時機
+
+當下列任一條件成立，把 heavy server query 包進 `<Suspense fallback={...}>`：
+
+- query ≥ 2 表 join 或 limit > 50 筆
+- 量測 warm 中位數 > 300ms
+- 該區塊可獨立於其他內容渲染（例如：邀請表單不依賴租戶列表）
+
+切塊 pattern（page.tsx）：
+
+```tsx
+export default function Page() {
+  return (
+    <div>
+      <Header />  {/* 立即送 */}
+      <Suspense fallback={<TableSkeleton rows={5} />}>
+        <HeavyDataTable />  {/* async server component */}
+      </Suspense>
+    </div>
+  )
+}
+
+async function HeavyDataTable() {
+  const data = await heavyQuery()
+  return <Table rows={data} />
+}
+```
+
+### 公開時段 API + 快取邊界
+
+- 公開頁時段查詢透過 `/api/public/slots` Route Handler 拉取，伺服端用 `unstable_cache` 包覆並 tag = `publicSlotsTag(tenantId)`（位於 `src/lib/cache-tags.ts`）。
+- Response 帶 `Cache-Control: public, s-maxage=60, stale-while-revalidate=300`，Vercel CDN edge cache 一份。
+- 任何寫入 `availability_slots` 的 server action / cron 都必須呼叫 `revalidateTag(publicSlotsTag(tenantId))` 主動失效。
+- 教練端 publish 後，學員端最遲 60 秒看到變化（CDN s-maxage 上限）。
+
+### 量測流程
+
+1. production URL，台灣 / Chrome 最新版
+2. 連續操作 5 次，第 3、4、5 次中位為 warm hit
+3. 寫進 `docs/s2-perf-measurements.md`
+4. 超標路徑進 exception 清冊（含原因 + 處理時機）
+
+### useSearchParams 邊界
+
+凡是 client component 用 `useSearchParams()`，呼叫端必須包在 `<Suspense fallback={...}>` 內 — 否則 Next.js 15 PPR / 部分預渲染會悄悄退化。範例：`/[tenantSlug]/page.tsx` 包 `<SlotPicker>`、`/calendar/page.tsx` 包 `<CalendarPanel>`。
+
+### RWD 慣例
+
+- 目標 viewport：375 × 667（iPhone SE）為下限；768 × 1024（iPad mini）為平板分界。
+- 行事曆週視圖在 ≤ 640px 自動切換為日視圖（`CalendarPanel` mount effect）。
+- 詳細 audit 表：`docs/s2-rwd-audit.md`。
+
+---
+
 ## 部署
 
 - **Production**：push 到 `master` → Vercel 自動部署到 production 域名

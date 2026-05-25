@@ -1,7 +1,7 @@
 # QuickReserve 重新架構設計文件
 
 **建立日期**: 2026-05-21
-**最後更新**: 2026-05-23（S1 bug triage：FR-110~114 — 邀請流程、Server Component crash、通知設定 route、loading skeleton、digest runbook）；2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
+**最後更新**: 2026-05-25（S2 perf+RWD：FR-115~119 — loading.tsx 普及、行事曆 client-state、公開頁 CDN cache、Suspense 切塊、RWD audit）；2026-05-23（S1 bug triage：FR-110~114 — 邀請流程、Server Component crash、通知設定 route、loading skeleton、digest runbook）；2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
 **狀態**: MVP 已實作完成（v0.1）
 **作者**: terry@webplus.com.tw（透過 brainstorming skill 共同產出）
 
@@ -1046,5 +1046,10 @@ SENTRY_AUTH_TOKEN
 | 2026-05-24 | S1: 通知設定 route 群組分離（教練端 `/notifications`、客戶端 `/settings/notifications`，共用 `NotificationPreferences` server block）+ middleware 補 `/notifications` 為保護路徑 | FR-112 | `da07ee3`, `cbde4f9`, `c7081a9`, `5dc2065` |
 | 2026-05-23 | S1: 平台群組 `loading.tsx` 4 個 + `PageSkeleton` 共用元件 + tenants 空清單 short-circuit | FR-113 | `5fa1f0c`, `0d1e7f6`, `d101236` |
 | 2026-05-23 | S1: README 加入 `error.digest` runbook | FR-114 | `b610f68` |
+| 2026-05-25 | S2: 全站 `loading.tsx` 普及（14 routes）+ `<PublicPageSkeleton>` 共用元件 | FR-115 | `1bc0dad`, `58e00f3`, `52ac4c1` |
+| 2026-05-25 | S2: 行事曆視圖切換改 client-side state + Suspense fix + 行動端自動切日視圖 | FR-116 | `f2ccff0`, `7282372`, `c4325a8` |
+| 2026-05-25 | S2: 公開頁 client + `/api/public/slots` CDN cache + `revalidateTag` wiring | FR-117 | `be1fbc1`, `78422aa`, `074eb55` |
+| 2026-05-25 | S2: `/platform/tenants` 與 `/platform/tenants/[id]` Suspense 切塊 | FR-118 | `7f41aa1`, `109a8a4` |
+| 2026-05-25 | S2: 375 / 768 RWD audit 全站 + audit 表 + exception 清冊 + perf 量測 scaffold | FR-119 | `c4325a8`, `f179459`, `725f7aa` |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。
