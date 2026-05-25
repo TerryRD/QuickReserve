@@ -222,6 +222,7 @@ export type Database = {
           customer_notes: string | null
           extended_properties: Json | null
           id: string
+          purchase_id: string
           service_id: string
           slot_id: string
           status: string
@@ -237,6 +238,7 @@ export type Database = {
           customer_notes?: string | null
           extended_properties?: Json | null
           id?: string
+          purchase_id: string
           service_id: string
           slot_id: string
           status?: string
@@ -252,6 +254,7 @@ export type Database = {
           customer_notes?: string | null
           extended_properties?: Json | null
           id?: string
+          purchase_id?: string
           service_id?: string
           slot_id?: string
           status?: string
@@ -265,6 +268,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "customer_purchases"
             referencedColumns: ["id"]
           },
           {
@@ -283,6 +293,86 @@ export type Database = {
           },
           {
             foreignKeyName: "bookings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_purchases: {
+        Row: {
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
+          classes_total: number
+          classes_used: number
+          created_at: string
+          customer_id: string
+          expires_at: string | null
+          id: string
+          package_id: string | null
+          payment_self_reported: string
+          rejected_reason: string | null
+          service_id: string
+          tenant_id: string
+        }
+        Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          classes_total: number
+          classes_used?: number
+          created_at?: string
+          customer_id: string
+          expires_at?: string | null
+          id?: string
+          package_id?: string | null
+          payment_self_reported: string
+          rejected_reason?: string | null
+          service_id: string
+          tenant_id: string
+        }
+        Update: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          classes_total?: number
+          classes_used?: number
+          created_at?: string
+          customer_id?: string
+          expires_at?: string | null
+          id?: string
+          package_id?: string | null
+          payment_self_reported?: string
+          rejected_reason?: string | null
+          service_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_purchases_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_purchases_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_purchases_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_purchases_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -507,38 +597,101 @@ export type Database = {
           },
         ]
       }
+      service_packages: {
+        Row: {
+          class_count: number
+          created_at: string
+          expires_in_days: number | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          service_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_count: number
+          created_at?: string
+          expires_in_days?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+          service_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_count?: number
+          created_at?: string
+          expires_in_days?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          service_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_packages_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_packages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
+          cancel_deadline_hours: number
           created_at: string
           description: string | null
           duration_minutes: number
           extended_properties: Json | null
           id: string
           is_active: boolean
+          max_capacity: number
+          min_attendance: number
           name: string
           price: number | null
           tenant_id: string
           updated_at: string
         }
         Insert: {
+          cancel_deadline_hours?: number
           created_at?: string
           description?: string | null
           duration_minutes: number
           extended_properties?: Json | null
           id?: string
           is_active?: boolean
+          max_capacity?: number
+          min_attendance?: number
           name: string
           price?: number | null
           tenant_id: string
           updated_at?: string
         }
         Update: {
+          cancel_deadline_hours?: number
           created_at?: string
           description?: string | null
           duration_minutes?: number
           extended_properties?: Json | null
           id?: string
           is_active?: boolean
+          max_capacity?: number
+          min_attendance?: number
           name?: string
           price?: number | null
           tenant_id?: string
@@ -735,6 +888,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_cancel_group_slot: {
+        Args: { p_slot_id: string }
+        Returns: {
+          affected_customer_id: string
+          affected_member_user_id: string
+          service_name: string
+          slot_start_at: string
+        }[]
+      }
       book_slot_atomic: {
         Args: {
           p_customer_id: string
@@ -749,6 +911,7 @@ export type Database = {
           customer_notes: string | null
           extended_properties: Json | null
           id: string
+          purchase_id: string
           service_id: string
           slot_id: string
           status: string
@@ -763,6 +926,17 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      book_with_purchase: {
+        Args: {
+          p_customer_id: string
+          p_customer_notes?: string
+          p_slot_id: string
+        }
+        Returns: {
+          auto_confirmed: boolean
+          booking_id: string
+        }[]
+      }
       cancel_booking: {
         Args: { p_booking_id: string }
         Returns: {
@@ -773,6 +947,7 @@ export type Database = {
           customer_notes: string | null
           extended_properties: Json | null
           id: string
+          purchase_id: string
           service_id: string
           slot_id: string
           status: string
@@ -797,6 +972,7 @@ export type Database = {
           customer_notes: string | null
           extended_properties: Json | null
           id: string
+          purchase_id: string
           service_id: string
           slot_id: string
           status: string
@@ -824,6 +1000,7 @@ export type Database = {
           customer_notes: string | null
           extended_properties: Json | null
           id: string
+          purchase_id: string
           service_id: string
           slot_id: string
           status: string
