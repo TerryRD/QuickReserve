@@ -23,6 +23,9 @@ type Service = {
   duration_minutes: number
   price: number | null
   is_active: boolean
+  max_capacity?: number
+  min_attendance?: number
+  cancel_deadline_hours?: number
 }
 
 type Props = { mode: 'create'; service?: undefined } | { mode: 'edit'; service: Service }
@@ -38,6 +41,11 @@ export default function ServiceFormDialog(props: Props) {
     initial?.price !== undefined && initial?.price !== null ? String(initial.price) : '',
   )
   const [isActive, setIsActive] = useState(initial?.is_active ?? true)
+  const [maxCapacity, setMaxCapacity] = useState(String(initial?.max_capacity ?? 1))
+  const [minAttendance, setMinAttendance] = useState(String(initial?.min_attendance ?? 1))
+  const [cancelDeadlineHours, setCancelDeadlineHours] = useState(
+    String(initial?.cancel_deadline_hours ?? 24),
+  )
 
   const onSuccess = () => {
     toast.success(isEdit ? '已更新' : '已新增')
@@ -56,6 +64,9 @@ export default function ServiceFormDialog(props: Props) {
       description: description || null,
       durationMinutes,
       price: price === '' ? null : price,
+      maxCapacity,
+      minAttendance,
+      cancelDeadlineHours,
     }
     if (isEdit) updateMut.execute({ ...payload, id: initial!.id, isActive })
     else createMut.execute(payload)
@@ -109,6 +120,50 @@ export default function ServiceFormDialog(props: Props) {
                 onChange={(e) => setPrice(e.target.value)}
               />
             </div>
+          </div>
+          <div className="space-y-2 rounded border border-dashed p-3">
+            <Label className="text-sm font-medium">團班設定（預設 1 對 1）</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="svc-capacity" className="text-xs">
+                  最大人數
+                </Label>
+                <Input
+                  id="svc-capacity"
+                  type="number"
+                  min={1}
+                  value={maxCapacity}
+                  onChange={(e) => setMaxCapacity(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="svc-min" className="text-xs">
+                  最少人數
+                </Label>
+                <Input
+                  id="svc-min"
+                  type="number"
+                  min={1}
+                  value={minAttendance}
+                  onChange={(e) => setMinAttendance(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="svc-deadline" className="text-xs">
+                  取消截止 (小時)
+                </Label>
+                <Input
+                  id="svc-deadline"
+                  type="number"
+                  min={1}
+                  value={cancelDeadlineHours}
+                  onChange={(e) => setCancelDeadlineHours(e.target.value)}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              達最少人數時自動確認；過取消截止 (slot 開始前 N 小時) 仍不足、自動取消並退課數。
+            </p>
           </div>
           {isEdit && (
             <label className="flex cursor-pointer items-start gap-3 rounded-lg border bg-muted/30 p-3">

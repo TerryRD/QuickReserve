@@ -14,10 +14,18 @@ const CreateServiceSchema = z.object({
   description: z.string().max(500).optional().nullable(),
   durationMinutes: z.coerce.number().int().positive().max(600),
   price: PriceSchema,
+  maxCapacity: z.coerce.number().int().positive().default(1),
+  minAttendance: z.coerce.number().int().positive().default(1),
+  cancelDeadlineHours: z.coerce.number().int().min(1).default(24),
 })
 
+const CreateServiceSchemaRefined = CreateServiceSchema.refine(
+  (v) => v.minAttendance <= v.maxCapacity,
+  { message: '最少人數不能大於最大人數', path: ['minAttendance'] },
+)
+
 export const createServiceAction = actionClient
-  .inputSchema(CreateServiceSchema)
+  .inputSchema(CreateServiceSchemaRefined)
   .action(async ({ parsedInput }) => {
     const session = await requireTenantOwner()
     const supabase = await createSupabaseServerClient()
@@ -30,6 +38,9 @@ export const createServiceAction = actionClient
         duration_minutes: parsedInput.durationMinutes,
         price: parsedInput.price,
         is_active: true,
+        max_capacity: parsedInput.maxCapacity,
+        min_attendance: parsedInput.minAttendance,
+        cancel_deadline_hours: parsedInput.cancelDeadlineHours,
       })
       .select('id')
       .single()
@@ -41,6 +52,9 @@ export const createServiceAction = actionClient
 const UpdateServiceSchema = CreateServiceSchema.extend({
   id: z.string().uuid(),
   isActive: z.boolean().optional(),
+}).refine((v) => v.minAttendance <= v.maxCapacity, {
+  message: '最少人數不能大於最大人數',
+  path: ['minAttendance'],
 })
 
 export const updateServiceAction = actionClient
@@ -64,6 +78,9 @@ export const updateServiceAction = actionClient
         duration_minutes: parsedInput.durationMinutes,
         price: parsedInput.price,
         is_active: parsedInput.isActive ?? true,
+        max_capacity: parsedInput.maxCapacity,
+        min_attendance: parsedInput.minAttendance,
+        cancel_deadline_hours: parsedInput.cancelDeadlineHours,
       })
       .eq('id', parsedInput.id)
     if (error) throw new AppError('SERVICE_UPDATE_FAILED', error.message)
@@ -73,7 +90,7 @@ export const updateServiceAction = actionClient
 
 const DeactivateSchema = z.object({ id: z.string().uuid() })
 
-export const deactivateServiceAction = actionClient
+export const softDeleteServiceAction = actionClient
   .inputSchema(DeactivateSchema)
   .action(async ({ parsedInput }) => {
     await requireTenantOwner()
@@ -82,7 +99,21 @@ export const deactivateServiceAction = actionClient
       .from('services')
       .update({ is_active: false })
       .eq('id', parsedInput.id)
-    if (error) throw new AppError('SERVICE_DEACTIVATE_FAILED', error.message)
+    if (error) throw new AppError('SERVICE_DELETE_FAILED', error.message)
+    revalidatePath('/services')
+    return { ok: true }
+  })
+
+export const restoreServiceAction = actionClient
+  .inputSchema(DeactivateSchema)
+  .action(async ({ parsedInput }) => {
+    await requireTenantOwner()
+    const supabase = await createSupabaseServerClient()
+    const { error } = await supabase
+      .from('services')
+      .update({ is_active: true })
+      .eq('id', parsedInput.id)
+    if (error) throw new AppError('SERVICE_RESTORE_FAILED', error.message)
     revalidatePath('/services')
     return { ok: true }
   })
