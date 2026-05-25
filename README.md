@@ -56,6 +56,8 @@
   /staff                       助教管理（Owner 限定）
   /notifications               通知偏好（教練 / 助教，留在 tenant 後台 chrome）
   /settings/profile            租戶資料（Owner 限定）
+  /packages                    套裝管理（每服務的 N 堂方案 CRUD、軟刪除）（S4）
+  /packages/pending            待審核購買申請佇列（S4）
 
 (customer) — 學員後台
   /my-bookings                 我的預約
@@ -63,12 +65,15 @@
 [tenantSlug] — 公開預約頁
   /[slug]                      教練介紹 + 服務列表 + 日期/時間挑選
   /book/[slotId]               預約確認頁
+  /[slug]/packages             可購方案瀏覽 + 申請（S4）
+  /[slug]/purchases            學員看自己的餘額（S4）
 
 API
   /api/cron/materialize-recurring    每日 00:30 UTC+8（90 天滑動視窗）
   /api/cron/weekly-summary           每週日 20:00 UTC+8
   /api/cron/daily-reminder           每小時 06-12 UTC+8（hourly cron）
   /api/cron/pre-event-reminder       每分鐘（需 Vercel Pro）
+  /api/cron/auto-cancel-group-class  每小時 xx:00（團班人數不足 auto cancel + 退課數）
   /api/push/subscribe                Web Push 訂閱
 ```
 
@@ -248,6 +253,49 @@ effectiveAvailability(date, template, events) =
 - Event 直接建立、不動 slot
 - /calendar 主畫面該 slot 顯示 ⚠ 徽章；SlotPopover 紅黃提示
 - 教練自行決定是否取消那些既有預約
+
+---
+
+## 套裝 / 課數模型（S4）
+
+QuickReserve 把「單堂課」與「套裝」用同一張表（`customer_purchases`）表達：
+
+- **單堂課** = `classes_total = 1` 的 purchase（class_count=1 package）
+- **套裝** = `classes_total > 1` 的 purchase（class_count>1 package）
+
+**購買流程：**
+1. 學員瀏覽 `/[slug]/packages` 看可購方案
+2. 提交申請（自報已付/未付）→ `customer_purchases` row, `approval_status='pending_review'`
+3. 教練於 `/packages/pending` 審核：
+   - 確認 → status 變 `confirmed`，`expires_at` = approved_at + `package.expires_in_days * 24h`
+   - 拒絕 → status 變 `rejected`，留下 `rejected_reason`
+4. 預約消費：`book_with_purchase` RPC 自動找最快過期的 active purchase，increment `classes_used`，attach 到 booking 的 `purchase_id`
+
+**取消：**
+- 學員 / 教練取消 booking → purchase.classes_used--（退一堂）
+- 團班 auto-cancel → 同上、所有 booking 學員一起退
+
+**過期：**
+- `expires_at` 為 null = 永久；非 null = 該時間後不可用於新預約
+- 已扣的 classes_used 不退
+
+## 團班（Group Class, S4）
+
+`services` 表有三個欄位控制團班行為：
+
+| 欄位 | 預設 | 意義 |
+|---|---|---|
+| `max_capacity` | 1 | 此 slot 最多多少人 |
+| `min_attendance` | 1 | 要 N 人才開課；達 min 自動 confirm |
+| `cancel_deadline_hours` | 24 | 開課前 N 小時若仍不足 min 就 auto-cancel |
+
+**1-on-1（預設）：** capacity=1 min=1 deadline 任意值（無 group 邏輯觸發）
+
+**團班：** capacity=4 min=3 deadline=24h
+- 第 3 個學員 book 後 → 所有 pending bookings auto-confirmed
+- 開課前 24h 仍 < 3 人 → cron 取消 slot、退課數、通知所有人
+
+Cron 每小時跑一次，最小 `cancel_deadline_hours = 1`。
 
 ---
 

@@ -1,7 +1,7 @@
 # QuickReserve 重新架構設計文件
 
 **建立日期**: 2026-05-21
-**最後更新**: 2026-05-25（S3 availability：FR-120~124 — 作息模板 schema+UI、不可用事件 schema+UI、effectiveAvailability 純函式+server/cron 過濾、/calendar 衝突 badge、林教練 seed enrichment）；2026-05-25（S2 perf+RWD：FR-115~119 — loading.tsx 普及、行事曆 client-state、公開頁 CDN cache、Suspense 切塊、RWD audit）；2026-05-23（S1 bug triage：FR-110~114 — 邀請流程、Server Component crash、通知設定 route、loading skeleton、digest runbook）；2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
+**最後更新**: 2026-05-26（S4 services model：FR-125~130 — service_packages schema+CRUD+軟刪除、customer_purchases 學員申請+教練審核+通知、book_with_purchase RPC、services 加 group class 欄位、團班 auto-confirm+auto-cancel cron、is_active 軟刪除 UX 統一）；2026-05-25（S3 availability：FR-120~124 — 作息模板 schema+UI、不可用事件 schema+UI、effectiveAvailability 純函式+server/cron 過濾、/calendar 衝突 badge、林教練 seed enrichment）；2026-05-25（S2 perf+RWD：FR-115~119 — loading.tsx 普及、行事曆 client-state、公開頁 CDN cache、Suspense 切塊、RWD audit）；2026-05-23（S1 bug triage：FR-110~114 — 邀請流程、Server Component crash、通知設定 route、loading skeleton、digest runbook）；2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
 **狀態**: MVP 已實作完成（v0.1）
 **作者**: terry@webplus.com.tw（透過 brainstorming skill 共同產出）
 
@@ -1056,5 +1056,11 @@ SENTRY_AUTH_TOKEN
 | 2026-05-25 | effectiveAvailability 純函式 + server / cron 過濾 | FR-122 | `0b0f0e1`, `04d6f3d`, `c79eaea`, `5fdf2c3`, `2976cf4`, `732060f` |
 | 2026-05-25 | /calendar slot vs event collision badge | FR-123 | `6100d3e` |
 | 2026-05-25 | 林教練 seed enrichment | FR-124 | `680f2c3`, `5554910` |
+| 2026-05-25 | service_packages schema + CRUD UI + 軟刪除 | FR-125 | `343bb98`, `c70a376` |
+| 2026-05-25 | customer_purchases schema + 學員申請 + 教練審核 + 通知 | FR-126 | `4a5d6e9`, `ce27aeb`, `c362905` |
+| 2026-05-25 | 預約強制經過 purchase + book_with_purchase RPC | FR-127 | `e6823f8`, `23fad28`, `579e713`, `b3ad9e8` |
+| 2026-05-25 | services 加 max_capacity/min_attendance/cancel_deadline_hours | FR-128 | `cb40fed`, `c797597`, `199b133` |
+| 2026-05-25 | 團班 auto-confirm + auto-cancel cron + 雙向通知 | FR-129 | `579e713`, `d299937` |
+| 2026-05-25 | is_active 軟刪除 UX 統一（刪除/重新啟用 + 已刪除分頁） | FR-130 | `c70a376`, `c797597` |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。
