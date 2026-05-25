@@ -1,20 +1,40 @@
+import { Suspense } from 'react'
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import InviteCoachForm from './invite-coach-form'
 import TenantsTable from './tenants-table'
 
-export default async function TenantsListPage() {
-  // Use admin client so we can join tenant_members.invite_email for owners
-  // even when status='invited' (RLS would otherwise hide pre-acceptance rows
-  // from cross-table joins).
+export default function TenantsListPage() {
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="font-display text-3xl tracking-tight">
+          <span className="italic">租戶管理</span>
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          邀請、暫停、重發邀請、重設密碼
+        </p>
+      </header>
+
+      <InviteCoachForm />
+
+      <section>
+        <h2 className="mb-2 font-display text-xl">租戶列表</h2>
+        <Suspense fallback={<TenantsListSkeleton />}>
+          <TenantsList />
+        </Suspense>
+      </section>
+    </div>
+  )
+}
+
+async function TenantsList() {
   const supabase = createSupabaseAdminClient()
 
-  // Step 1: fetch tenants
   const { data: tenants } = await supabase
     .from('tenants')
     .select('id, slug, name, status, created_at')
     .order('created_at', { ascending: false })
 
-  // Step 2: fetch owners (depends on tenantIds, so must follow tenants)
   const tenantIds = (tenants ?? []).map((t) => t.id)
   const { data: owners } =
     tenantIds.length === 0
@@ -56,21 +76,19 @@ export default async function TenantsListPage() {
     ownerMember: ownerByTenant[t.id] ?? null,
   }))
 
+  return <TenantsTable tenants={enriched} />
+}
+
+function TenantsListSkeleton() {
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl tracking-tight">
-          <span className="italic">租戶管理</span>
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">邀請、暫停、重發邀請、重設密碼</p>
-      </header>
-
-      <InviteCoachForm />
-
-      <section>
-        <h2 className="mb-2 font-display text-xl">租戶列表</h2>
-        <TenantsTable tenants={enriched} />
-      </section>
+    <div className="space-y-2 rounded-lg border bg-card p-4">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div
+          key={i}
+          className="h-12 animate-pulse rounded-md bg-muted/50"
+          style={{ animationDelay: `${i * 60}ms` }}
+        />
+      ))}
     </div>
   )
 }
