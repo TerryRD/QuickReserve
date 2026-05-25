@@ -4,6 +4,8 @@ import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { computeOccurrences, type RecurringRuleInput } from '@/lib/recurrence'
 import { isExclusionViolation } from '@/lib/conflicts'
 import { publicSlotsTag } from '@/lib/cache-tags'
+import { fetchActiveTemplate, fetchUnavailableEvents } from '@/lib/availability-server'
+import { effectiveAvailability } from '@/lib/availability'
 
 const MATERIALIZE_DAYS = 90
 
@@ -36,6 +38,7 @@ export async function GET(request: Request) {
   let totalCreated = 0
   let totalSkipped = 0
   let totalConsidered = 0
+  let totalOutOfAvailability = 0
   const affectedTenants = new Set<string>()
 
   for (const rule of rules ?? []) {
@@ -68,8 +71,40 @@ export async function GET(request: Request) {
     const toTry = occurrences.filter((o) => !existingSet.has(o.startAt))
     if (toTry.length === 0) continue
 
+    // S3: filter out occurrences outside the member's active template / inside events
+    let outOfAvailabilityCount = 0
+    let filtered: typeof toTry = toTry
+    const template = await fetchActiveTemplate(admin, rule.member_id, windowStart)
+    if (template !== null) {
+      const events = await fetchUnavailableEvents(
+        admin,
+        rule.member_id,
+        windowStart,
+        windowEnd,
+      )
+      const passed: typeof toTry = []
+      for (const occ of toTry) {
+        const start = new Date(occ.startAt)
+        const end = new Date(occ.endAt)
+        const dayRanges = effectiveAvailability({
+          date: start,
+          activeTemplate: template,
+          unavailableEvents: events,
+          tzOffsetHours: 8,
+        })
+        if (dayRanges.some((r) => r.start <= start && r.end >= end)) {
+          passed.push(occ)
+        } else {
+          outOfAvailabilityCount++
+        }
+      }
+      filtered = passed
+    }
+    totalOutOfAvailability += outOfAvailabilityCount
+    if (filtered.length === 0) continue
+
     // Insert one at a time; silently skip slot conflicts (overlap with other slots)
-    for (const occ of toTry) {
+    for (const occ of filtered) {
       const { error: insertErr } = await admin.from('availability_slots').insert({
         tenant_id: rule.tenant_id,
         member_id: rule.member_id,
@@ -101,6 +136,7 @@ export async function GET(request: Request) {
     considered: totalConsidered,
     created: totalCreated,
     skipped: totalSkipped,
+    out_of_availability: totalOutOfAvailability,
     timestamp: now.toISOString(),
   })
 }
