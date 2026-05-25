@@ -8,7 +8,7 @@ import { actionClient } from '@/lib/safe-action'
 import { requireSession } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError, SlotUnavailableError } from '@/lib/errors'
-import { notifyBookingChange } from '@/lib/notify-booking'
+import { notifyBookingChange, notifyGroupAutoConfirm } from '@/lib/notify-booking'
 import { publicSlotsTag } from '@/lib/cache-tags'
 
 const CreateBookingSchema = z.object({
@@ -75,6 +75,9 @@ export const createBookingAction = actionClient
     const result = (data as Array<{ booking_id: string; auto_confirmed: boolean }>)[0]
     if (!result) throw new AppError('BOOKING_FAILED', 'unexpected empty result')
     const booking = { id: result.booking_id }
+    if (result.auto_confirmed) {
+      void notifyGroupAutoConfirm(parsedInput.slotId)
+    }
     void notifyBookingChange(booking.id, 'created', session.userId)
     revalidatePath('/my-bookings')
     if (tenantId) revalidateTag(publicSlotsTag(tenantId))

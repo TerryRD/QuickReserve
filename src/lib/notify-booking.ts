@@ -134,6 +134,42 @@ export async function notifyPurchaseDecision(
   }
 }
 
+export async function notifyGroupAutoConfirm(slotId: string): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient()
+    const { data: bookings } = await admin
+      .from('bookings')
+      .select(
+        'id, customer_id, services(name), availability_slots(start_at), tenants(name)',
+      )
+      .eq('slot_id', slotId)
+      .eq('status', 'confirmed')
+    if (!bookings) return
+
+    for (const b of bookings) {
+      const svc = b.services as { name: string } | null
+      const slot = b.availability_slots as { start_at: string } | null
+      const tenant = b.tenants as { name: string } | null
+      const startLabel = slot?.start_at
+        ? new Date(new Date(slot.start_at).getTime() + 8 * 3600 * 1000).toLocaleString('zh-TW')
+        : ''
+      await pushToUser(admin, {
+        userId: b.customer_id,
+        type: 'booking_status',
+        payload: {
+          title: '團班已開課',
+          body: `${tenant?.name ?? ''} ${svc?.name ?? '課程'} (${startLabel}) 已達開課人數，課程確認`,
+          url: '/my-bookings',
+          tag: `group-confirm-${b.id}`,
+        },
+        relatedId: b.id,
+      })
+    }
+  } catch (err) {
+    console.error('[notify-group-confirm]', err)
+  }
+}
+
 export async function notifyGroupAutoCancel(
   customerId: string,
   memberUserId: string | null,
