@@ -13,6 +13,8 @@ type SlotDisplay = {
   customerName: string | null
   bookingId: string | null
   conflictReason: string | null
+  bookingCount: number
+  maxCapacity: number
 }
 
 const STATUS_BADGE: Record<SlotDisplay['status'], { label: string; cls: string }> = {
@@ -83,6 +85,11 @@ export default function CalendarListView({
                         <div className="flex items-center gap-1 truncate text-sm font-medium">
                           {s.conflictReason && <span title={s.conflictReason}>⚠</span>}
                           {s.serviceName ?? '時段'}
+                          {s.maxCapacity > 1 && (
+                            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                              {s.bookingCount}/{s.maxCapacity}
+                            </span>
+                          )}
                         </div>
                         {(showMemberLabel || s.customerName) && (
                           <div className="mt-0.5 truncate text-xs text-muted-foreground">

@@ -75,17 +75,18 @@ export default async function CalendarPage({
 
   const { data: slots } = await supabase
     .from('availability_slots')
-    .select('id, start_at, end_at, status, member_id, service_id, services(name)')
+    .select('id, start_at, end_at, status, member_id, service_id, services(name, max_capacity)')
     .in('member_id', effectiveIds)
     .gte('start_at', weekStart.toISOString())
     .lte('start_at', weekEnd.toISOString())
     .order('start_at')
 
-  const slotIds = (slots ?? []).filter((s) => s.status !== 'available').map((s) => s.id)
+  const slotIds = (slots ?? []).map((s) => s.id)
   const bookingsBySlot: Record<
     string,
     { id: string; status: string; customerName: string | null } | undefined
   > = {}
+  const slotBookingCounts: Record<string, number> = {}
   if (slotIds.length) {
     const { data: bks } = await supabase
       .from('bookings')
@@ -93,6 +94,7 @@ export default async function CalendarPage({
       .in('slot_id', slotIds)
       .neq('status', 'cancelled')
     for (const b of bks ?? []) {
+      slotBookingCounts[b.slot_id] = (slotBookingCounts[b.slot_id] ?? 0) + 1
       const c = b.customers as { display_name: string | null } | null
       bookingsBySlot[b.slot_id] = {
         id: b.id,
@@ -154,13 +156,15 @@ export default async function CalendarPage({
       startAt: s.start_at,
       endAt: s.end_at,
       status: s.status as 'available' | 'pending' | 'booked' | 'cancelled',
-      serviceName: (s.services as { name: string } | null)?.name ?? null,
+      serviceName: (s.services as { name: string; max_capacity: number } | null)?.name ?? null,
       memberLabel: member?.label ?? '',
       memberId: s.member_id,
       isOwn: s.member_id === session.memberId,
       customerName: booking?.customerName ?? null,
       bookingId: booking?.id ?? null,
       conflictReason: conflict?.reason ?? (conflict ? '不可用事件' : null),
+      bookingCount: slotBookingCounts[s.id] ?? 0,
+      maxCapacity: (s.services as { name: string; max_capacity: number } | null)?.max_capacity ?? 1,
     }
   })
 

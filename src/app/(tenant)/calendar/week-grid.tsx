@@ -13,6 +13,8 @@ type SlotDisplay = {
   customerName: string | null
   bookingId: string | null
   conflictReason: string | null
+  bookingCount: number
+  maxCapacity: number
 }
 
 const STATUS_BG: Record<SlotDisplay['status'], string> = {
@@ -132,6 +134,11 @@ function Row({
                       <span className="truncate">{s.serviceName ?? '時段'}</span>
                     </div>
                     <div className="opacity-70">{format(ls, 'HH:mm')}</div>
+                    {s.maxCapacity > 1 && (
+                      <div className="opacity-70 text-[9px]">
+                        {s.bookingCount}/{s.maxCapacity}
+                      </div>
+                    )}
                   </button>
                 </SlotPopover>
               )

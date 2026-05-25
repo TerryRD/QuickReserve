@@ -21,6 +21,8 @@ type SlotDisplay = {
   customerName: string | null
   bookingId: string | null
   conflictReason: string | null
+  bookingCount: number
+  maxCapacity: number
 }
 
 export default function CalendarPanel({

@@ -38,6 +38,8 @@ export default function SlotPopover({
     memberLabel: string
     isOwn: boolean
     conflictReason: string | null
+    bookingCount: number
+    maxCapacity: number
   }
   timeLabel: string
   children: React.ReactNode
@@ -80,6 +82,14 @@ export default function SlotPopover({
               {status.label}
             </span>
           </div>
+          {slot.maxCapacity > 1 && (
+            <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2">
+              <span className="text-sm text-muted-foreground">已預約人數</span>
+              <span className="text-sm font-medium">
+                {slot.bookingCount} / {slot.maxCapacity}
+              </span>
+            </div>
+          )}
           {slot.customerName && (
             <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2">
               <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
