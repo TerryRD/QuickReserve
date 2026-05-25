@@ -16,7 +16,7 @@ export async function fetchActiveTemplate(
     .toISOString()
     .slice(0, 10)
 
-  const { data: assignment } = await supabase
+  const { data: assignment, error: aErr } = await supabase
     .from('availability_template_assignments')
     .select('template_id')
     .eq('member_id', memberId)
@@ -24,13 +24,15 @@ export async function fetchActiveTemplate(
     .order('effective_from', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (aErr) throw aErr
 
   if (!assignment) return null
 
-  const { data: windows } = await supabase
+  const { data: windows, error: wErr } = await supabase
     .from('availability_template_windows')
     .select('weekday, start_time, end_time')
     .eq('template_id', assignment.template_id)
+  if (wErr) throw wErr
 
   return { windows: (windows ?? []) as TemplateWindow[] }
 }
@@ -41,12 +43,13 @@ export async function fetchUnavailableEvents(
   rangeStart: Date,
   rangeEnd: Date,
 ): Promise<Range[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('unavailable_events')
     .select('start_at, end_at')
     .eq('member_id', memberId)
     .lt('start_at', rangeEnd.toISOString())
     .gt('end_at', rangeStart.toISOString())
+  if (error) throw error
 
   return (data ?? []).map((e) => ({
     start: new Date(e.start_at),
