@@ -133,3 +133,45 @@ export async function notifyPurchaseDecision(
     console.error('[notify-purchase]', err)
   }
 }
+
+export async function notifyGroupAutoCancel(
+  customerId: string,
+  memberUserId: string | null,
+  serviceName: string,
+  slotStartAt: string,
+): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient()
+    const startLabel = new Date(
+      new Date(slotStartAt).getTime() + 8 * 3600 * 1000,
+    ).toLocaleString('zh-TW')
+    // Customer notification
+    await pushToUser(admin, {
+      userId: customerId,
+      type: 'booking_status',
+      payload: {
+        title: '課程取消',
+        body: `${serviceName} (${startLabel}) 因人數不足取消。已退還 1 堂課數。`,
+        url: '/my-bookings',
+        tag: `auto-cancel-${slotStartAt}-${customerId}`,
+      },
+      relatedId: customerId,
+    })
+    // Coach notification
+    if (memberUserId) {
+      await pushToUser(admin, {
+        userId: memberUserId,
+        type: 'booking_status',
+        payload: {
+          title: '團班取消',
+          body: `${serviceName} (${startLabel}) 因人數不足，系統已自動取消並退還學員課數。`,
+          url: '/calendar',
+          tag: `auto-cancel-${slotStartAt}`,
+        },
+        relatedId: customerId,
+      })
+    }
+  } catch (err) {
+    console.error('[notify-group-auto-cancel]', err)
+  }
+}
