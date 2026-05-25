@@ -53,7 +53,7 @@ export const createBookingAction = actionClient
       redirect(`/my-bookings?rescheduled=${newBooking.id}`)
     }
 
-    const { data, error } = await supabase.rpc('book_slot_atomic', {
+    const { data, error } = await supabase.rpc('book_with_purchase', {
       p_slot_id: parsedInput.slotId,
       p_customer_id: session.userId,
       p_customer_notes: parsedInput.customerNotes ?? undefined,
@@ -62,11 +62,19 @@ export const createBookingAction = actionClient
       if (error.message?.includes('SLOT_UNAVAILABLE')) throw new SlotUnavailableError()
       if (error.message?.includes('SLOT_NOT_FOUND'))
         throw new AppError('SLOT_NOT_FOUND', '時段不存在')
+      if (error.message?.includes('SLOT_FULL'))
+        throw new AppError('SLOT_FULL', '此時段名額已滿')
+      if (error.message?.includes('SLOT_PAST'))
+        throw new AppError('SLOT_PAST', '此時段已過')
+      if (error.message?.includes('NO_BALANCE'))
+        throw new AppError('NO_BALANCE', '需先購買套裝才能預約')
       if (error.message?.includes('CUSTOMER_BLOCKED'))
         throw new AppError('CUSTOMER_BLOCKED', '此教練已封鎖您的預約')
       throw new AppError('BOOKING_FAILED', error.message)
     }
-    const booking = data as { id: string }
+    const result = (data as Array<{ booking_id: string; auto_confirmed: boolean }>)[0]
+    if (!result) throw new AppError('BOOKING_FAILED', 'unexpected empty result')
+    const booking = { id: result.booking_id }
     void notifyBookingChange(booking.id, 'created', session.userId)
     revalidatePath('/my-bookings')
     if (tenantId) revalidateTag(publicSlotsTag(tenantId))

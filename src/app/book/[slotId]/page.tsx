@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { Calendar, Clock, DollarSign, ArrowLeft } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/get-session'
+import { findActivePurchaseForBooking } from '@/lib/purchases-server'
 import { Card, CardContent } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
 import BookForm from './book-form'
@@ -25,7 +26,7 @@ export default async function BookConfirmPage({
   const { data: slot } = await supabase
     .from('availability_slots')
     .select(
-      'id, start_at, end_at, status, tenants(name, slug), services(name, duration_minutes, price)',
+      'id, start_at, end_at, status, service_id, tenants(name, slug), services(name, duration_minutes, price)',
     )
     .eq('id', slotId)
     .maybeSingle()
@@ -58,6 +59,55 @@ export default async function BookConfirmPage({
   const session = await getSession()
   if (!session) {
     redirect(`/login?redirect=/book/${slotId}`)
+  }
+
+  const activePurchase = await findActivePurchaseForBooking(
+    supabase,
+    session.userId,
+    slot.service_id,
+  )
+
+  if (!activePurchase) {
+    const { data: packages } = await supabase
+      .from('service_packages')
+      .select('id, name, class_count, price, expires_in_days')
+      .eq('service_id', slot.service_id)
+      .eq('is_active', true)
+      .order('class_count', { ascending: true })
+
+    const serviceName = (slot.services as { name: string } | null)?.name ?? '此服務'
+    const tenantSlug = (slot.tenants as { slug: string } | null)?.slug ?? ''
+
+    return (
+      <main className="mx-auto max-w-2xl p-6">
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-6">
+          <h2 className="font-display text-2xl italic text-amber-900">需先購買套裝</h2>
+          <p className="mt-2 text-sm text-amber-800">
+            您尚未持有 {serviceName} 的有效課數。
+            請先選擇方案、送出申請、待教練確認後即可預約。
+          </p>
+          {packages && packages.length > 0 ? (
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {packages.map((p) => (
+                <div key={p.id} className="rounded border bg-white p-3 text-sm">
+                  <div className="font-semibold">{p.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {p.class_count} 堂 · ${Number(p.price).toLocaleString()} ·{' '}
+                    {p.expires_in_days ? `${p.expires_in_days} 天內` : '永久'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <Link
+            href={`/${tenantSlug}/packages`}
+            className="mt-4 inline-block rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+          >
+            前往購買 →
+          </Link>
+        </div>
+      </main>
+    )
   }
 
   const tenant = slot.tenants as { name: string; slug: string } | null
