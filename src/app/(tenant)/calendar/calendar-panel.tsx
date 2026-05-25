@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { format, parseISO, startOfDay } from 'date-fns'
 import WeekGrid from './week-grid'
@@ -44,6 +44,15 @@ export default function CalendarPanel({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dayAnchor, setDayAnchor] = useState<string>(initialDayAnchor)
   const [, startTransition] = useTransition()
+
+  // FR-119: on small viewports, week view is unreadable — auto-switch to day view on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (window.matchMedia('(max-width: 640px)').matches && view === 'week') {
+      setView('day')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function syncUrl(nextView: View, nextDate: string) {
     const usp = new URLSearchParams(searchParams.toString())
