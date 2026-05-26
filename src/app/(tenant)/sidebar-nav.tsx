@@ -39,24 +39,25 @@ export default function SidebarNav({
   ]
 
   return (
-    <nav className="flex flex-col gap-0.5">
+    <nav className="flex flex-col gap-1">
       {items.map((it) => {
-        const active = it.href === '/calendar'
-          ? pathname === '/calendar'
-          : pathname === it.href || pathname.startsWith(it.href + '/')
+        const active =
+          it.href === '/calendar'
+            ? pathname === '/calendar'
+            : pathname === it.href || pathname.startsWith(it.href + '/')
         return (
           <Link
             key={it.href}
             href={it.href}
             onClick={onNavigate}
-            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+            className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
               active
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground'
+                ? 'bg-sidebar-primary text-sidebar-primary-foreground font-semibold'
+                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
             }`}
           >
-            <it.icon className="h-4 w-4 shrink-0" />
-            <span>{it.label}</span>
+            <it.icon className="size-4 shrink-0" />
+            <span className="font-cjk">{it.label}</span>
           </Link>
         )
       })}
