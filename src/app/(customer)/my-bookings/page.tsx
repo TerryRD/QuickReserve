@@ -1,11 +1,10 @@
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Calendar, Settings, ExternalLink } from 'lucide-react'
+import { Calendar, Settings, ExternalLink, Filter, X } from 'lucide-react'
 import { requireSession } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Badge, StatusBadge, type StatusType } from '@/components/ui/badge'
-import { SectionHead } from '@/components/ui/section-head'
 import PushOptIn from '@/components/push-opt-in'
 import CancelMyBookingButton from './cancel-button'
 
@@ -28,6 +27,8 @@ type BookingRow = {
   availability_slots: { start_at: string; end_at: string } | null
 }
 
+const WEEKDAY = ['日', '一', '二', '三', '四', '五', '六'] as const
+
 function groupKey(slotStart: string | undefined, status: string, now: Date): string {
   if (status === 'cancelled' || status === 'completed') return '已過'
   if (!slotStart) return '其他'
@@ -41,6 +42,118 @@ function groupKey(slotStart: string | undefined, status: string, now: Date): str
 }
 
 const GROUP_ORDER = ['今日', '本週', '之後', '已過', '其他']
+
+function BookingCard({ b }: { b: BookingRow }) {
+  const tenant = b.tenants
+  const service = b.services
+  const slot = b.availability_slots
+  const isCancelledOrCompleted = b.status === 'cancelled' || b.status === 'completed'
+  const canCancel =
+    (b.status === 'pending' || b.status === 'confirmed') &&
+    slot &&
+    new Date(slot.start_at) > new Date()
+
+  const start = slot ? toLocal(slot.start_at) : null
+  const day = start?.getDate()
+  const month = start ? String(start.getMonth() + 1).padStart(2, '0') : ''
+  const year = start?.getFullYear()
+  const weekday = start ? WEEKDAY[start.getDay()] : ''
+  const time = start ? format(start, 'HH:mm') : ''
+
+  return (
+    <div
+      className={`flex flex-col overflow-hidden rounded-2xl border border-border bg-card sm:flex-row ${
+        isCancelledOrCompleted ? 'opacity-70' : ''
+      }`}
+    >
+      {/* Date strip */}
+      <div className="flex w-full shrink-0 flex-row items-center gap-3.5 border-b border-border bg-muted px-5 py-4 sm:w-[132px] sm:flex-col sm:items-start sm:gap-1.5 sm:border-b-0 sm:border-r sm:px-[18px] sm:py-6">
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-display text-[32px] font-normal leading-none sm:text-[44px]">
+            {day ?? '—'}
+          </span>
+          <span className="font-mono text-[11px] tracking-[0.1em] text-muted-foreground">
+            /{month}
+          </span>
+        </div>
+        {start && (
+          <>
+            <div className="font-cjk text-[11px] tracking-[0.05em] text-muted-foreground">
+              {year} · 週{weekday}
+            </div>
+            <div className="font-display text-[18px] font-normal tracking-[0.02em] sm:mt-auto sm:text-[22px]">
+              {time}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5 px-5 py-4 sm:px-6 sm:py-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="font-mono mb-1 text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground">
+              {tenant?.name ?? '—'}
+              {service?.duration_minutes != null && (
+                <> · {service.duration_minutes} MIN</>
+              )}
+            </div>
+            <h3 className="font-display font-cjk text-lg font-black leading-tight sm:text-[22px]">
+              {service?.name ?? '—'}
+            </h3>
+          </div>
+          <StatusBadge status={asStatus(b.status)} />
+        </div>
+
+        {b.customer_notes && (
+          <div className="font-cjk rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+            <span className="font-mono mr-1 uppercase tracking-wider text-foreground/70">
+              NOTE ·
+            </span>
+            {b.customer_notes}
+          </div>
+        )}
+
+        {canCancel ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {tenant && b.service_id && (
+              <Button
+                variant="secondary"
+                size="sm"
+                render={
+                  <Link
+                    href={`/${tenant.slug}?service=${b.service_id}&reschedule=${b.id}`}
+                  />
+                }
+              >
+                <Calendar className="size-3" /> 改期
+              </Button>
+            )}
+            <CancelMyBookingButton bookingId={b.id} />
+            {tenant && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto text-muted-foreground"
+                render={<Link href={`/${tenant.slug}`} />}
+              >
+                查看詳情
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="font-mono mt-2 text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
+            {b.status === 'completed'
+              ? '已完成 · 期待下次見面'
+              : b.status === 'cancelled'
+                ? '已取消 · 不會佔用套裝堂數'
+                : ''}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default async function MyBookingsPage() {
   const session = await requireSession()
@@ -57,30 +170,6 @@ export default async function MyBookingsPage() {
   const now = new Date()
   const isFuture = (iso: string) => new Date(iso) > now
 
-  const coachStats: Record<
-    string,
-    { name: string; slug: string; total: number; upcoming: number; latestAt: string }
-  > = {}
-  for (const b of bookings) {
-    const t = b.tenants
-    if (!t) continue
-    const slot = b.availability_slots
-    const entry = coachStats[t.slug] ?? {
-      name: t.name,
-      slug: t.slug,
-      total: 0,
-      upcoming: 0,
-      latestAt: b.created_at,
-    }
-    entry.total += 1
-    if (slot && isFuture(slot.start_at) && (b.status === 'pending' || b.status === 'confirmed')) {
-      entry.upcoming += 1
-    }
-    if (b.created_at > entry.latestAt) entry.latestAt = b.created_at
-    coachStats[t.slug] = entry
-  }
-  const coaches = Object.values(coachStats).sort((a, b) => b.total - a.total)
-
   const grouped: Record<string, BookingRow[]> = {}
   for (const b of bookings) {
     const key = groupKey(b.availability_slots?.start_at, b.status, now)
@@ -88,147 +177,117 @@ export default async function MyBookingsPage() {
     grouped[key].push(b)
   }
 
+  // KPI stats
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const bookedThisMonth = bookings.filter(
+    (b) =>
+      b.availability_slots &&
+      new Date(b.availability_slots.start_at) >= monthStart &&
+      (b.status === 'confirmed' || b.status === 'completed' || b.status === 'pending'),
+  ).length
+  const pendingCount = bookings.filter((b) => b.status === 'pending').length
+  const upcomingNearest = bookings
+    .filter(
+      (b) =>
+        b.availability_slots &&
+        isFuture(b.availability_slots.start_at) &&
+        (b.status === 'pending' || b.status === 'confirmed'),
+    )
+    .sort((a, b) =>
+      a.availability_slots!.start_at.localeCompare(b.availability_slots!.start_at),
+    )[0]
+  const upcomingLabel = upcomingNearest?.availability_slots
+    ? format(toLocal(upcomingNearest.availability_slots.start_at), 'M/d HH:mm')
+    : '—'
+
   return (
-    <div className="space-y-10">
-      <SectionHead
-        kicker="MY BOOKINGS · 我的預約"
-        title="我的預約"
-        eng="BOOKINGS"
-        hint={`目前有 ${bookings.length} 筆預約紀錄`}
-        right={
-          <Button variant="pill-outline" size="pill" render={<Link href="/settings/notifications" />}>
-            <Settings className="size-3.5" />
-            <span className="font-cjk">通知設定</span>
-          </Button>
-        }
-      />
-
-      <PushOptIn />
-
-      {coaches.length > 0 && (
-        <section>
-          <div className="mb-3 flex flex-wrap items-baseline gap-3">
-            <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              MY COACHES · 我的教練（共 {coaches.length} 位）
+    <div className="min-h-screen bg-background">
+      <main className="mx-auto max-w-[1200px] px-5 py-10 sm:px-10 sm:py-12 lg:px-[72px] lg:py-14">
+        {/* Page hero */}
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="font-mono mb-2.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              MY BOOKINGS · 我的預約
             </div>
+            <h1 className="font-display font-cjk text-[56px] font-normal uppercase leading-[0.9] tracking-tight sm:text-[88px]">
+              我的預約
+            </h1>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {coaches.map((c) => (
-              <Link
-                key={c.slug}
-                href={`/${c.slug}`}
-                className="group flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-foreground/40 hover:shadow-[0_8px_24px_-18px_rgba(0,0,0,0.25)]"
-              >
-                <div className="min-w-0">
-                  <div className="font-cjk truncate text-sm font-semibold">{c.name}</div>
-                  <div className="font-mono mt-1 flex items-center gap-2 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
-                    <span>{c.total} 次</span>
-                    {c.upcoming > 0 && (
-                      <Badge variant="yellow" className="px-2 py-0.5 text-[9px]">
-                        {c.upcoming} 即將
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <ExternalLink className="size-3.5 shrink-0 text-muted-foreground transition group-hover:text-foreground" />
-              </Link>
-            ))}
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" icon={<Filter className="size-3" />}>
+              狀態 · 全部
+            </Badge>
+            <Badge variant="outline" icon={<Calendar className="size-3" />}>
+              本月 · {now.getMonth() + 1} 月
+            </Badge>
+            <Button
+              variant="pill-outline"
+              size="sm"
+              render={<Link href="/settings/notifications" />}
+            >
+              <Settings className="size-3" /> 通知
+            </Button>
           </div>
-        </section>
-      )}
-
-      {bookings.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-16 text-center">
-          <Calendar className="mx-auto size-10 text-muted-foreground" />
-          <div className="font-mono mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            NO BOOKINGS
-          </div>
-          <p className="font-cjk mt-2 text-sm text-muted-foreground">
-            尚無預約紀錄。透過教練的專屬連結即可預約。
-          </p>
         </div>
-      ) : (
-        <div className="space-y-8">
-          {GROUP_ORDER.filter((g) => grouped[g] && grouped[g].length > 0).map((g) => (
-            <section key={g}>
-              <div className="mb-3 flex items-baseline gap-3">
-                <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  {g}
-                </div>
-                <div className="font-mono text-[10px] tracking-wider text-muted-foreground">
-                  {String(grouped[g]!.length).padStart(2, '0')} ITEMS
-                </div>
+
+        {/* KPI quick stats */}
+        <div className="mb-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4">
+          {[
+            { label: '本月已預約', value: String(bookedThisMonth), unit: '堂' },
+            { label: '待確認', value: String(pendingCount), unit: '堂' },
+            { label: '預約總數', value: String(bookings.length), unit: '筆' },
+            { label: '最近一次', value: upcomingLabel, unit: '' },
+          ].map((s) => (
+            <div key={s.label} className="bg-card px-5 py-4">
+              <div className="font-mono text-[10.5px] uppercase tracking-[0.15em] text-muted-foreground">
+                {s.label}
               </div>
-              <div className="space-y-3">
-                {grouped[g]!.map((b) => {
-                  const tenant = b.tenants
-                  const service = b.services
-                  const slot = b.availability_slots
-                  const canCancel =
-                    (b.status === 'pending' || b.status === 'confirmed') &&
-                    slot &&
-                    isFuture(slot.start_at)
-                  return (
-                    <div
-                      key={b.id}
-                      className="rounded-2xl border border-border bg-card p-5 shadow-[0_1px_0_var(--border),0_8px_24px_-18px_rgba(0,0,0,0.18)]"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-display font-cjk text-lg font-black">
-                              {tenant?.name ?? ''}
-                            </h3>
-                            <StatusBadge status={asStatus(b.status)} />
-                          </div>
-                          <div className="font-cjk mt-2 text-sm font-medium">
-                            {service?.name}
-                            <span className="ml-2 text-muted-foreground">
-                              {service?.duration_minutes} 分
-                            </span>
-                          </div>
-                          {slot && (
-                            <div className="font-mono mt-1.5 text-xs tracking-wider text-muted-foreground">
-                              {format(toLocal(slot.start_at), 'yyyy/MM/dd (EEE) HH:mm')}–
-                              {format(toLocal(slot.end_at), 'HH:mm')}
-                            </div>
-                          )}
-                          {b.customer_notes && (
-                            <div className="font-cjk mt-3 rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
-                              <span className="font-mono uppercase tracking-wider text-foreground/70">
-                                NOTE ·{' '}
-                              </span>
-                              {b.customer_notes}
-                            </div>
-                          )}
-                        </div>
-                        {canCancel && (
-                          <div className="flex shrink-0 flex-col gap-2">
-                            {tenant && b.service_id && (
-                              <Button
-                                variant="pill-outline"
-                                size="sm"
-                                render={
-                                  <Link
-                                    href={`/${tenant.slug}?service=${b.service_id}&reschedule=${b.id}`}
-                                  />
-                                }
-                              >
-                                改時間
-                              </Button>
-                            )}
-                            <CancelMyBookingButton bookingId={b.id} />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+              <div className="mt-1.5 flex items-baseline gap-1">
+                <span className="font-display text-[26px] font-normal">{s.value}</span>
+                {s.unit && (
+                  <span className="font-cjk text-xs text-muted-foreground">{s.unit}</span>
+                )}
               </div>
-            </section>
+            </div>
           ))}
         </div>
-      )}
+
+        <PushOptIn />
+
+        {bookings.length === 0 ? (
+          <div className="mt-8 rounded-2xl border border-dashed border-border bg-muted/40 p-16 text-center">
+            <Calendar className="mx-auto size-10 text-muted-foreground" />
+            <div className="font-mono mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              NO BOOKINGS
+            </div>
+            <p className="font-cjk mt-2 text-sm text-muted-foreground">
+              尚無預約紀錄。透過教練的專屬連結即可預約。
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-10">
+            {GROUP_ORDER.filter((g) => grouped[g] && grouped[g].length > 0).map((g) => (
+              <section key={g}>
+                {/* Section divider with title + count + hr */}
+                <div className="mb-3.5 flex items-baseline gap-3.5">
+                  <h2 className="font-display font-cjk text-[22px] font-black sm:text-[26px]">
+                    {g}
+                  </h2>
+                  <span className="font-mono text-[11px] tracking-[0.1em] text-muted-foreground">
+                    {grouped[g]!.length} 筆
+                  </span>
+                  <span aria-hidden className="h-px flex-1 bg-border" />
+                </div>
+                <div className="flex flex-col gap-3">
+                  {grouped[g]!.map((b) => (
+                    <BookingCard key={b.id} b={b} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   )
 }

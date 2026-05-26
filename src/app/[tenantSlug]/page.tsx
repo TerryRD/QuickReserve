@@ -14,6 +14,11 @@ import { SectionHead } from '@/components/ui/section-head'
 import { VideoEmbed } from '@/components/public-page/video-embed'
 import SlotPicker from './slot-picker'
 
+function deriveEngTitle(slug: string): string {
+  // Use the slug as the English display title — uppercase, hyphens to spaces
+  return slug.toUpperCase().replace(/-/g, ' ')
+}
+
 export default async function TenantPublicPage({
   params,
   searchParams,
@@ -78,6 +83,7 @@ export default async function TenantPublicPage({
       <main className="mx-auto max-w-[1200px]">
         {/* HERO */}
         <section className="px-5 py-12 sm:px-10 sm:py-16 lg:px-[72px] lg:py-20">
+          {/* Badge + meta */}
           <div className="mb-6 flex flex-wrap items-center gap-2 sm:mb-8">
             <Badge variant="yellow" icon={<Star className="size-3" />}>
               COACH
@@ -86,35 +92,51 @@ export default async function TenantPublicPage({
               /{tenant.slug}
             </span>
           </div>
+
+          {/* Big English display title (derived from slug) + accent dot */}
           <h1 className="font-display text-[60px] uppercase leading-[0.9] tracking-tight sm:text-[92px] lg:text-[128px]">
-            <span className="font-cjk">{tenant.name}</span>
+            {deriveEngTitle(tenant.slug)}
             <span
               aria-hidden
               className="ml-3 inline-block size-3 rounded-full bg-accent align-baseline sm:size-4"
             />
           </h1>
-          <div className="mt-6 flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-7">
+
+          {/* 中文 display secondary title + mono COACH label */}
+          <div className="mt-3 flex flex-wrap items-baseline gap-3.5 sm:mt-4">
+            <span className="font-display font-cjk text-[22px] font-black sm:text-[28px]">
+              {tenant.name}
+            </span>
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground sm:text-[13px]">
+              —— 教練 / COACH
+            </span>
+          </div>
+
+          {/* Avatar + subtitle */}
+          <div className="mt-7 flex max-w-[880px] flex-col items-start gap-5 sm:mt-10 sm:flex-row sm:items-center sm:gap-7">
             {tenant.avatar_url ? (
               <img
                 src={tenant.avatar_url}
                 alt={tenant.name}
-                className="size-[76px] rounded-full border border-border object-cover sm:size-[104px]"
+                className="size-[76px] shrink-0 rounded-full border border-border object-cover sm:size-[104px]"
               />
             ) : (
-              <div className="grid size-[76px] place-items-center rounded-full border border-border bg-secondary font-display text-2xl sm:size-[104px] sm:text-3xl">
+              <div className="font-display grid size-[76px] shrink-0 place-items-center rounded-full border border-border bg-secondary text-2xl sm:size-[104px] sm:text-3xl">
                 {tenant.name.slice(0, 1)}
               </div>
             )}
-            <p className="font-cjk max-w-xl text-base font-medium leading-relaxed sm:text-lg">
+            <p className="font-cjk text-base font-medium leading-relaxed sm:text-lg">
               {tenant.description?.trim() ||
                 '在下方選擇您想預訂的服務、日期與時段。送出後狀態為「待確認」，教練確認後即正式成立。'}
             </p>
           </div>
+
+          {/* Contact pills */}
           {(tenant.contact_email ||
             tenant.contact_phone ||
             tenant.contact_line_id ||
             tenant.contact_note) && (
-            <div className="mt-7 flex flex-wrap gap-2">
+            <div className="mt-7 flex flex-wrap gap-2 sm:mt-8">
               {tenant.contact_email && (
                 <a
                   href={`mailto:${tenant.contact_email}`}
@@ -147,6 +169,8 @@ export default async function TenantPublicPage({
               )}
             </div>
           )}
+
+          {/* Auth CTA — only for visitors */}
           {!session && (
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <PrimaryCtaLink href={`/login?redirect=${encodeURIComponent(returnPath)}`} size="lg">
