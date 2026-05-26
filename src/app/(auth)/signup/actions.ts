@@ -16,8 +16,10 @@ const SignupSchema = z.object({
 
 function safePath(path: string | undefined | null): string {
   if (!path) return '/'
-  // Must be an internal absolute path; block protocol-relative URLs ("//evil.com")
-  if (!path.startsWith('/') || path.startsWith('//')) return '/'
+  // Must be an internal absolute path. Block:
+  //   - protocol-relative URLs (//evil.com)
+  //   - backslash bypass (/\evil.com → browsers normalize to //evil.com)
+  if (!path.startsWith('/') || path.startsWith('//') || path.startsWith('/\\')) return '/'
   return path
 }
 
