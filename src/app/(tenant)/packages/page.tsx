@@ -3,7 +3,8 @@ import { Package } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { buttonVariants } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { SectionHead } from '@/components/ui/section-head'
 import PackageFormDialog from './package-form-dialog'
 import PackageActionsRow from './package-actions-row'
 
@@ -35,52 +36,44 @@ export default async function PackagesPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl tracking-tight">
-            <span className="italic">套裝管理</span>
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            為每個服務定義可購買的方案（單堂、N 堂套裝等）
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={showArchived ? '/packages' : '/packages?archived=1'}
-            className={buttonVariants({ variant: 'outline', size: 'sm' })}
-          >
-            {showArchived ? '看使用中' : '看已刪除'}
-          </Link>
-          <Link href="/packages/pending" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-            審核佇列
-          </Link>
-          {canEdit && !showArchived && (services?.length ?? 0) > 0 && (
-            <PackageFormDialog mode="create" services={services ?? []} />
-          )}
-        </div>
-      </header>
+      <SectionHead
+        kicker="PACKAGES · 套裝管理"
+        title="套裝管理"
+        eng="PACKAGES"
+        hint="為每個服務定義可購買的方案（單堂、N 堂套裝等）"
+        right={
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={showArchived ? '/packages' : '/packages?archived=1'}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              {showArchived ? '看使用中' : '看已刪除'}
+            </Link>
+            <Link href="/packages/pending" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+              審核佇列
+            </Link>
+            {canEdit && !showArchived && (services?.length ?? 0) > 0 && (
+              <PackageFormDialog mode="create" services={services ?? []} />
+            )}
+          </div>
+        }
+      />
 
       {!packages || packages.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Package className="mx-auto h-10 w-10 text-slate-300" />
-            <p className="mt-3 font-medium text-slate-700">
-              {showArchived ? '無已刪除的套裝' : '尚無套裝'}
-            </p>
-            {!showArchived && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {(services?.length ?? 0) === 0 ? '請先建立服務' : '為服務建立套裝以開放販售'}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-16 text-center">
+          <Package className="mx-auto size-10 text-muted-foreground" />
+          <div className="font-mono mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">NO PACKAGES</div>
+          <p className="font-cjk mt-2 text-sm text-muted-foreground">
+            {showArchived ? '無已刪除的套裝' : (services?.length ?? 0) === 0 ? '請先建立服務' : '為服務建立套裝以開放販售'}
+          </p>
+        </div>
       ) : (
         <div className="space-y-3">
           {packages.map((p) => {
             const svc = p.services as { name: string } | null
             return (
-              <Card key={p.id}>
-                <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
+              <div key={p.id} className="rounded-2xl border border-border bg-card p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-display text-xl italic">{p.name}</h3>
@@ -88,9 +81,7 @@ export default async function PackagesPage({
                         {svc?.name ?? '—'}
                       </span>
                       {!p.is_active && (
-                        <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] text-slate-700">
-                          已刪除
-                        </span>
+                        <Badge variant="outline">已刪除</Badge>
                       )}
                     </div>
                     <div className="mt-2 grid gap-x-4 gap-y-1 text-sm text-foreground/80 sm:grid-cols-3">
@@ -127,8 +118,8 @@ export default async function PackagesPage({
                       <PackageActionsRow id={p.id} isActive={p.is_active} />
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )
           })}
         </div>
