@@ -803,9 +803,45 @@ export type Database = {
           },
         ]
       }
+      tenant_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          display_order: number
+          id: string
+          storage_path: string
+          tenant_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          storage_path: string
+          tenant_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          storage_path?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_photos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           avatar_url: string | null
+          bio_html: string | null
           contact_email: string | null
           contact_line_id: string | null
           contact_note: string | null
@@ -813,6 +849,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          intro_video_url: string | null
           name: string
           slug: string
           status: string
@@ -820,6 +857,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio_html?: string | null
           contact_email?: string | null
           contact_line_id?: string | null
           contact_note?: string | null
@@ -827,6 +865,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          intro_video_url?: string | null
           name: string
           slug: string
           status?: string
@@ -834,6 +873,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio_html?: string | null
           contact_email?: string | null
           contact_line_id?: string | null
           contact_note?: string | null
@@ -841,6 +881,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          intro_video_url?: string | null
           name?: string
           slug?: string
           status?: string

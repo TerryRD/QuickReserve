@@ -14,6 +14,9 @@ export type PublicTenant = TenantContext & {
   contact_phone: string | null
   contact_line_id: string | null
   contact_note: string | null
+  avatar_url: string | null
+  bio_html: string | null
+  intro_video_url: string | null
 }
 
 export async function getTenantContext(tenantId: string): Promise<TenantContext> {
@@ -38,7 +41,7 @@ export async function getTenantBySlug(slug: string): Promise<PublicTenant | null
   const { data } = await admin
     .from('tenants')
     .select(
-      'id, slug, name, status, description, contact_email, contact_phone, contact_line_id, contact_note',
+      'id, slug, name, status, description, contact_email, contact_phone, contact_line_id, contact_note, avatar_url, bio_html, intro_video_url',
     )
     .eq('slug', slug)
     .maybeSingle()
