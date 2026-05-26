@@ -6,6 +6,12 @@ import { Clock, DollarSign, Mail, Phone, MessageCircle } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getTenantBySlug } from '@/lib/auth/get-tenant-context'
 import SlotPicker from './slot-picker'
+import { getSession } from '@/lib/auth/get-session'
+import { getCoachMediaPublicUrl } from '@/lib/storage'
+import { VideoEmbed } from '@/components/public-page/video-embed'
+import BioBlock from '@/components/public-page/bio-block'
+import PhotoGallery from '@/components/public-page/photo-gallery'
+import AuthCta from '@/components/public-page/auth-cta'
 
 export default async function TenantPublicPage({
   params,
@@ -44,12 +50,29 @@ export default async function TenantPublicPage({
   }
 
   const supabase = await createSupabaseServerClient()
-  const { data: services } = await supabase
-    .from('services')
-    .select('id, name, description, duration_minutes, price')
-    .eq('tenant_id', tenant.id)
-    .eq('is_active', true)
-    .order('name')
+  const [{ data: services }, { data: photoRows }, session] = await Promise.all([
+    supabase
+      .from('services')
+      .select('id, name, description, duration_minutes, price')
+      .eq('tenant_id', tenant.id)
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('tenant_photos')
+      .select('id, storage_path, caption')
+      .eq('tenant_id', tenant.id)
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: true }),
+    getSession(),
+  ])
+
+  const photos = (photoRows ?? []).map((p) => ({
+    id: p.id,
+    public_url: getCoachMediaPublicUrl(p.storage_path),
+    caption: p.caption,
+  }))
+  const isStudentVisitor = !session || session.role === 'customer' || session.role === 'anonymous'
+  const returnPath = `/${tenantSlug}`
 
   const activeServiceId = selectedServiceId ?? services?.[0]?.id ?? null
   const dateStr = selectedDate ?? format(new Date(), 'yyyy-MM-dd')
@@ -71,6 +94,13 @@ export default async function TenantPublicPage({
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-60">
               預約 · /{tenant.slug}
             </div>
+            {tenant.avatar_url && (
+              <img
+                src={tenant.avatar_url}
+                alt=""
+                className="mt-4 h-20 w-20 rounded-full object-cover ring-2 ring-background/40"
+              />
+            )}
             <h1 className="mt-4 font-display text-5xl leading-[0.95] tracking-tight sm:text-6xl">
               <span className="italic">{tenant.name}</span>
             </h1>
@@ -114,8 +144,20 @@ export default async function TenantPublicPage({
                 )}
               </div>
             )}
+            {isStudentVisitor && !session && <AuthCta returnPath={returnPath} />}
           </div>
         </header>
+
+        <BioBlock html={tenant.bio_html} />
+
+        {tenant.intro_video_url && (
+          <section className="mt-8">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">介紹影片</h2>
+            <VideoEmbed url={tenant.intro_video_url} />
+          </section>
+        )}
+
+        <PhotoGallery photos={photos} />
 
         {rescheduleFrom && (
           <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
