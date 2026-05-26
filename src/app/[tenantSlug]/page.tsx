@@ -71,7 +71,6 @@ export default async function TenantPublicPage({
     public_url: getCoachMediaPublicUrl(p.storage_path),
     caption: p.caption,
   }))
-  const isStudentVisitor = !session || session.role === 'customer' || session.role === 'anonymous'
   const returnPath = `/${tenantSlug}`
 
   const activeServiceId = selectedServiceId ?? services?.[0]?.id ?? null
@@ -97,7 +96,7 @@ export default async function TenantPublicPage({
             {tenant.avatar_url && (
               <img
                 src={tenant.avatar_url}
-                alt=""
+                alt={tenant.name}
                 className="mt-4 h-20 w-20 rounded-full object-cover ring-2 ring-background/40"
               />
             )}
@@ -144,7 +143,7 @@ export default async function TenantPublicPage({
                 )}
               </div>
             )}
-            {isStudentVisitor && !session && <AuthCta returnPath={returnPath} />}
+            {!session && <AuthCta returnPath={returnPath} />}
           </div>
         </header>
 
