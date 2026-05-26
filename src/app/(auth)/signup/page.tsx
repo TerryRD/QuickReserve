@@ -5,9 +5,11 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
+import { Star } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PrimaryCta } from '@/components/ui/primary-cta'
+import { SidePanel } from '../side-panel'
 import { signupAction } from './actions'
 
 function SignupForm() {
@@ -26,19 +28,39 @@ function SignupForm() {
   })
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-8 shadow-[0_1px_0_var(--border),0_8px_24px_-18px_rgba(0,0,0,0.18)]">
-      <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-        CREATE ACCOUNT
+    <div className="flex w-full flex-col gap-6 self-center sm:max-w-[480px]">
+      {inviteToken && (
+        <div className="flex items-start gap-3 rounded-2xl bg-accent px-4 py-3 text-accent-foreground">
+          <Star className="mt-0.5 size-4 shrink-0" />
+          <div>
+            <div className="font-cjk text-sm font-bold">您正在接受教練邀請</div>
+            <div className="font-cjk mt-0.5 text-xs opacity-90">
+              完成註冊後將自動接受邀請、可立即購買該教練的套裝。
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div>
+        <div className="font-mono mb-3 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+          STEP 01 · SIGN UP
+        </div>
+        <h1 className="font-display font-cjk text-[56px] font-normal uppercase leading-[0.95] tracking-tight">
+          建立帳號
+        </h1>
+        <p className="font-cjk mt-3.5 text-sm leading-relaxed text-muted-foreground">
+          已有帳號？{' '}
+          <Link
+            href="/login"
+            className="font-semibold text-foreground underline-offset-4 hover:underline"
+          >
+            登入
+          </Link>
+        </p>
       </div>
-      <h2 className="font-display mb-2 text-3xl uppercase leading-none tracking-tight">
-        建立<span className="font-cjk">帳號</span>
-      </h2>
-      <p className="font-cjk mb-6 text-sm text-muted-foreground">
-        {inviteToken ? '完成註冊後將自動接受邀請' : '註冊後即可預約教練的課程'}
-      </p>
 
       <form
-        className="space-y-5"
+        className="flex flex-col gap-[18px]"
         onSubmit={(e) => {
           e.preventDefault()
           execute({
@@ -51,66 +73,81 @@ function SignupForm() {
         }}
       >
         <div className="space-y-2">
-          <Label htmlFor="displayName" className="font-mono text-[11px] uppercase tracking-wider">
-            姓名 NAME
+          <Label htmlFor="displayName" className="font-cjk text-[13px] font-semibold">
+            姓名
           </Label>
           <Input
             id="displayName"
             required
-            className="font-cjk h-12 rounded-xl border-2 border-border bg-background px-4 text-sm"
-            placeholder="您的名字"
+            placeholder="王小明"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
+            className="font-cjk h-12 rounded-xl border-[1.5px] border-border bg-background px-4 text-sm"
           />
         </div>
+
         <div className="space-y-2">
-          <Label htmlFor="email" className="font-mono text-[11px] uppercase tracking-wider">
-            EMAIL
+          <Label htmlFor="email" className="font-cjk text-[13px] font-semibold">
+            Email
           </Label>
+          <p className="font-cjk text-[11.5px] text-muted-foreground">教練會以此 Email 寄送預約通知</p>
           <Input
             id="email"
             type="email"
             required
-            className="font-cjk h-12 rounded-xl border-2 border-border bg-background px-4 text-sm"
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            className="font-cjk h-12 rounded-xl border-[1.5px] border-border bg-background px-4 text-sm"
           />
         </div>
+
         <div className="space-y-2">
-          <Label htmlFor="password" className="font-mono text-[11px] uppercase tracking-wider">
-            PASSWORD
+          <Label htmlFor="password" className="font-cjk text-[13px] font-semibold">
+            密碼
           </Label>
+          <p className="font-cjk text-[11.5px] text-muted-foreground">至少 8 個字元、包含英文與數字</p>
           <Input
             id="password"
             type="password"
             required
             minLength={8}
-            className="font-cjk h-12 rounded-xl border-2 border-border bg-background px-4 text-sm"
             placeholder="至少 8 個字元"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className="font-cjk h-12 rounded-xl border-[1.5px] border-border bg-background px-4 text-sm"
           />
         </div>
-        <PrimaryCta type="submit" disabled={isPending} className="w-full justify-between">
-          {isPending ? '建立中...' : '建立帳號'}
-        </PrimaryCta>
-      </form>
 
-      <p className="mt-8 border-t border-border pt-6 text-center font-cjk text-sm text-muted-foreground">
-        已有帳號？{' '}
-        <Link href="/login" className="font-semibold text-foreground underline-offset-4 hover:underline">
-          登入
-        </Link>
-      </p>
+        <div className="mt-1">
+          <PrimaryCta type="submit" disabled={isPending} className="justify-between">
+            {isPending ? '建立中...' : inviteToken ? '建立帳號並接受邀請' : '建立帳號'}
+          </PrimaryCta>
+        </div>
+        <div className="font-mono mt-1 text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
+          建立帳號即同意服務條款與隱私權政策
+        </div>
+      </form>
     </div>
   )
 }
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={null}>
-      <SignupForm />
-    </Suspense>
+    <div className="grid flex-1 grid-cols-1 lg:grid-cols-2">
+      <div className="flex w-full flex-col px-6 py-10 sm:px-12 sm:py-14 lg:px-[88px] lg:py-[72px]">
+        <Suspense fallback={null}>
+          <SignupForm />
+        </Suspense>
+      </div>
+      <SidePanel
+        title="建立帳號　JOIN"
+        lines={[
+          '免費註冊，第一次預約教練前必需。',
+          '註冊後可在不同教練之間共用同一個帳號。',
+          '若是被教練邀請、請使用邀請信件裡的連結。',
+        ]}
+      />
+    </div>
   )
 }
