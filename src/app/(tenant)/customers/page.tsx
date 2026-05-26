@@ -3,7 +3,8 @@ import { format } from 'date-fns'
 import { Users, ClipboardList, Ban } from 'lucide-react'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { Card, CardContent } from '@/components/ui/card'
+import { SectionHead } from '@/components/ui/section-head'
+import { Badge } from '@/components/ui/badge'
 import BlockButton from './block-button'
 
 export default async function CustomersPage() {
@@ -43,25 +44,23 @@ export default async function CustomersPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl tracking-tight">
-          <span className="italic">學員</span>
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          有預約紀錄的所有客戶 · 共 {rows?.length ?? 0} 位
-        </p>
-      </header>
+      <SectionHead
+        kicker="CUSTOMERS · 學員管理"
+        title="學員"
+        eng="CUSTOMERS"
+        hint={`有預約紀錄的所有客戶 · 共 ${rows?.length ?? 0} 位`}
+      />
 
       {!rows || rows.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Users className="mx-auto h-10 w-10 text-muted-foreground/40" />
-            <p className="mt-3 font-medium">尚無學員</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              學員透過您的公開連結預約後會顯示在此
-            </p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-16 text-center">
+          <Users className="mx-auto size-10 text-muted-foreground" />
+          <div className="font-mono mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            NO CUSTOMERS
+          </div>
+          <p className="font-cjk mt-2 text-sm text-muted-foreground">
+            學員透過您的公開連結預約後會顯示在此
+          </p>
+        </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {rows.map((r) => {
@@ -73,50 +72,51 @@ export default async function CustomersPage() {
             if (!c) return null
             const s = stats[c.id]
             return (
-              <Card key={c.id} className={r.is_blocked ? 'border-red-300 bg-red-50/30' : ''}>
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-base font-bold ${
-                        r.is_blocked ? 'bg-red-200 text-red-900' : 'bg-foreground text-background'
-                      }`}
-                    >
-                      {(c.display_name ?? '?').slice(0, 1)}
+              <div
+                key={c.id}
+                className={`rounded-2xl border border-border bg-card p-5 ${r.is_blocked ? 'border-red-300 bg-red-50/30' : ''}`}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-base font-bold ${
+                      r.is_blocked ? 'bg-red-200 text-red-900' : 'bg-foreground text-background'
+                    }`}
+                  >
+                    {(c.display_name ?? '?').slice(0, 1)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate font-semibold">
+                        {c.display_name ?? '匿名學員'}
+                      </span>
+                      {r.is_blocked && (
+                        <Badge variant="outline" className="shrink-0">
+                          <Ban className="h-2.5 w-2.5" />
+                          已封鎖
+                        </Badge>
+                      )}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate font-semibold">
-                          {c.display_name ?? '匿名學員'}
-                        </span>
-                        {r.is_blocked && (
-                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] text-red-800">
-                            <Ban className="h-2.5 w-2.5" />
-                            已封鎖
-                          </span>
-                        )}
+                    {c.phone && (
+                      <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {c.phone}
                       </div>
-                      {c.phone && (
-                        <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                          {c.phone}
-                        </div>
-                      )}
-                      <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                        <Stat label="總計" value={s?.total ?? 0} />
-                        <Stat label="待確認" value={s?.pending ?? 0} accent="amber" />
-                        <Stat label="已完成" value={s?.confirmed ?? 0} accent="emerald" />
+                    )}
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                      <Stat label="總計" value={s?.total ?? 0} />
+                      <Stat label="待確認" value={s?.pending ?? 0} accent="amber" />
+                      <Stat label="已完成" value={s?.confirmed ?? 0} accent="emerald" />
+                    </div>
+                    {s?.latest && (
+                      <div className="mt-2 text-[10px] text-muted-foreground">
+                        最近預約：{format(new Date(s.latest), 'yyyy/MM/dd')}
                       </div>
-                      {s?.latest && (
-                        <div className="mt-2 text-[10px] text-muted-foreground">
-                          最近預約：{format(new Date(s.latest), 'yyyy/MM/dd')}
-                        </div>
-                      )}
-                      <div className="mt-3 flex justify-end">
-                        <BlockButton customerId={c.id} isBlocked={r.is_blocked ?? false} />
-                      </div>
+                    )}
+                    <div className="mt-3 flex justify-end">
+                      <BlockButton customerId={c.id} isBlocked={r.is_blocked ?? false} />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )
           })}
         </div>
