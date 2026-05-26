@@ -297,6 +297,44 @@ QuickReserve 把「單堂課」與「套裝」用同一張表（`customer_purcha
 
 Cron 每小時跑一次，最小 `cancel_deadline_hours = 1`。
 
+## 教練介紹頁（S5）
+
+教練在 `/settings/profile` 可以維護：
+- **Hero 大頭照**（`tenants.avatar_url`）— 公開頁 hero 顯示成圓形 inset
+- **完整 Bio**：TipTap 編輯器（粗體 / 斜體 / 標題 / 清單 / 連結），儲存前 server-side 用 `sanitize-html` 過濾白名單以外的標籤
+- **介紹影片**：貼 YouTube / Vimeo URL，公開頁以 iframe 嵌入；解析只接受 youtube.com、youtu.be、vimeo.com 三個 host
+- **照片 gallery**：最多 10 張（JPEG/PNG/WebP，單檔 ≤ 5 MB），存 `coach-media` Storage bucket，公開頁 grid 呈現
+
+公開頁 `/<slug>` 自動讀取以上欄位 + 公開 photos。資料表：`tenants.{avatar_url, bio_html, intro_video_url}` + 新表 `tenant_photos`。
+
+## Storage bucket `coach-media`（S5）
+
+由 migration `20260526100004_storage_coach_media_bucket.sql` 建立：
+- `public: true`（公開讀取，URL 無需 auth token）
+- File size limit: 5 MB
+- 允許 MIME: `image/jpeg`, `image/png`, `image/webp`
+
+Storage RLS（policies on `storage.objects`）：
+- SELECT：任何人可讀 `coach-media` bucket（公開瀏覽）
+- INSERT / UPDATE / DELETE：路徑第一段必須是 caller 所擁有的 tenant id（用 `current_user_owner_tenant_ids()` helper）
+- UPDATE 同時有 USING 與 WITH CHECK，防止 owner 把路徑改成別人租戶
+
+照片上傳路徑：`<tenant_id>/photo-<uuid>.<ext>`；avatar 路徑：`<tenant_id>/avatar.<ext>`（覆寫式，最多遺留 1 個 orphan 跨副檔名）。
+
+## Auth flow — `?redirect=` 處理（S5）
+
+- `/login` 與 `/signup` 都接受 `?redirect=<path>` 參數
+- **open-redirect 防護**：兩個 server action 內各自有 `safePath()` helper，只放行：
+  - 必須以 `/` 開頭
+  - 不可以 `//` 開頭（protocol-relative bypass）
+  - 不可以 `/\\` 開頭（WHATWG URL 反斜線 bypass —— 部分瀏覽器會把 `\` 正規化成 `/`，導致 `/\evil.com` 被解析為 `//evil.com`）
+- 未通過 safePath 的值會被 fallback 到 `/`
+- 學員未登入點 slot → /book/X 被 layout 擋下 → redirect 到 `/login?redirect=/book/X`
+- /signup 註冊成功後：
+  - 若 Supabase 專案未啟用 email 確認（auto-signin），直接 redirect 到 `safePath(redirectTo)` target
+  - 若啟用 email 確認（`data.session` 為 null），redirect 到 `/login?signedup=1&redirect=<encoded target>`，使用者登入後自動到 target
+- 公開頁 `/<slug>` 與 `/<slug>/packages` 未登入時顯示 `AuthCta`（黃色 banner + 登入/註冊按鈕），按鈕帶 `redirect=current_url`
+
 ---
 
 ## 部署
