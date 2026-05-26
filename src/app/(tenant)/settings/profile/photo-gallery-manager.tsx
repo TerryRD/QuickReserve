@@ -8,6 +8,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import ConfirmDialog from '@/components/confirm-dialog'
 import { addPhotoAction, updatePhotoCaptionAction, deletePhotoAction } from './photo-actions'
 
 const PHOTO_LIMIT = 10
@@ -70,7 +71,7 @@ export default function PhotoGalleryManager({ tenantId, photos }: Props) {
           toast.error(`${file.name}: ${error.message}`)
           continue
         }
-        addAct.execute({ storagePath: path, caption: null })
+        await addAct.executeAsync({ storagePath: path, caption: null })
       }
     })
   }
@@ -100,14 +101,18 @@ export default function PhotoGalleryManager({ tenantId, photos }: Props) {
                   }
                 }}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={() => deleteAct.execute({ id: p.id })}
-              >
-                刪除
-              </Button>
+              <ConfirmDialog
+                trigger={
+                  <Button variant="outline" size="sm" className="w-full">
+                    刪除
+                  </Button>
+                }
+                title="刪除此照片？"
+                description="照片將從相簿及儲存空間永久移除，無法復原。"
+                confirmLabel="刪除"
+                variant="destructive"
+                onConfirm={() => deleteAct.execute({ id: p.id })}
+              />
             </div>
           ))}
         </div>
