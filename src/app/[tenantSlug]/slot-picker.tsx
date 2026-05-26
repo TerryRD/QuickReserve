@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { addDays, format, parseISO, startOfDay } from 'date-fns'
-import { Calendar, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 type Slot = { id: string; start_at: string; end_at: string }
 
 const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) =>
-  new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+
+const WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六']
 
 export default function SlotPicker({
   tenantSlug,
@@ -23,7 +24,7 @@ export default function SlotPicker({
   tenantSlug: string
   tenantId: string
   serviceId: string
-  initialDate: string // 'yyyy-MM-dd'
+  initialDate: string
   fromOffset: number
   rescheduleFrom: string | null
 }) {
@@ -71,94 +72,141 @@ export default function SlotPicker({
     router.replace(`/${tenantSlug}?${usp.toString()}`, { scroll: false })
   }
 
+  const selectedFmt = format(parseISO(date), 'M/d')
+  const selectedDow = WEEKDAY_LABELS[parseISO(date).getDay()]
+
   return (
-    <>
-      {/* Date strip */}
+    <div className="space-y-8">
+      {/* Date strip nav */}
       <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
-              2
-            </span>
-            選擇日期
-          </h2>
-          <div className="flex items-center gap-1 text-xs">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            日期 · DATE — {format(stripStart, 'M/d')} — {format(addDays(stripStart, 13), 'M/d')}
+          </div>
+          <div className="flex items-center gap-1.5">
             {fromOffset > 0 && (
               <Link
                 href={`/${tenantSlug}?service=${serviceId}&from=${Math.max(0, fromOffset - 7)}`}
-                className="rounded-md border bg-white px-2 py-1 hover:bg-muted"
+                className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-card px-3 text-xs font-medium hover:bg-muted"
               >
-                ◄ 上週
+                <ChevronLeft className="size-3" />
+                上週
               </Link>
             )}
             <Link
-              href={`/${tenantSlug}?service=${serviceId}&from=${fromOffset + 7}`}
-              className="rounded-md border bg-white px-2 py-1 hover:bg-muted"
+              href={`/${tenantSlug}?service=${serviceId}&from=0`}
+              className="inline-flex h-8 items-center rounded-full border border-border bg-card px-3 text-xs font-medium hover:bg-muted"
             >
-              再 7 天 ►
+              今天
+            </Link>
+            <Link
+              href={`/${tenantSlug}?service=${serviceId}&from=${fromOffset + 7}`}
+              className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-card px-3 text-xs font-medium hover:bg-muted"
+            >
+              再 7 天
+              <ChevronRight className="size-3" />
             </Link>
           </div>
         </div>
-        <div className="grid grid-cols-7 gap-1.5">
+
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
           {days.map((d) => {
             const key = format(d, 'yyyy-MM-dd')
             const isSelected = key === date
             const isToday = key === format(today, 'yyyy-MM-dd')
+            const dayNum = format(d, 'd')
+            const dow = WEEKDAY_LABELS[d.getDay()]
+            const isWeekend = d.getDay() === 0 || d.getDay() === 6
             return (
               <button
                 type="button"
                 key={key}
                 onClick={() => selectDate(key)}
-                className={`flex flex-col items-center gap-0.5 rounded-xl border p-2 text-center transition ${
+                className={`relative flex h-[70px] flex-col items-stretch justify-between rounded-xl border p-2 text-left transition sm:h-[84px] sm:p-3 ${
                   isSelected
-                    ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
-                    : 'border-slate-200 bg-white hover:border-slate-300'
+                    ? 'border-foreground bg-foreground text-background'
+                    : 'border-border bg-card hover:border-foreground/40'
                 }`}
+                aria-pressed={isSelected}
               >
-                <div className="text-[10px] opacity-80">{format(d, 'EEE')}</div>
-                <div className="text-base font-semibold">{format(d, 'd')}</div>
-                <div
-                  className={`text-[10px] ${
-                    isSelected ? 'text-white/85' : 'text-slate-400'
-                  }`}
-                >
-                  {isToday ? '今天' : ''}
+                <div className="flex items-center justify-between">
+                  {isToday ? (
+                    <span
+                      className="grid size-6 place-items-center rounded-full bg-accent text-accent-foreground sm:size-7"
+                      aria-label="今天"
+                    >
+                      <span className="font-display text-sm font-bold sm:text-base">{dayNum}</span>
+                    </span>
+                  ) : (
+                    <span
+                      className={`font-display text-base font-normal sm:text-lg ${
+                        isWeekend && !isSelected ? 'text-muted-foreground' : ''
+                      }`}
+                    >
+                      {dayNum}
+                    </span>
+                  )}
                 </div>
+                <div className="flex items-baseline justify-between">
+                  <span
+                    className={`font-mono text-[9px] tracking-[0.08em] sm:text-[10px] ${
+                      isSelected ? 'text-background/80' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {dow}
+                  </span>
+                </div>
+                {isSelected && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-0 bottom-0 h-[3px] bg-accent"
+                  />
+                )}
               </button>
             )
           })}
         </div>
       </section>
 
-      {/* Time selection */}
+      {/* Slot chip grid */}
       <section>
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-          <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
-            3
-          </span>
-          {format(parseISO(date), 'M/d (EEEEEE)')} 可選時段
-        </h2>
+        <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
+          <h4 className="font-display text-2xl uppercase leading-none tracking-tight sm:text-3xl">
+            {selectedFmt}
+            <span className="font-cjk ml-2 text-base text-muted-foreground sm:text-lg">
+              · 週{selectedDow}
+            </span>
+          </h4>
+          {slots && slots.length > 0 && (
+            <span className="rounded-full bg-accent px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-accent-foreground">
+              {slots.length} SLOTS
+            </span>
+          )}
+        </div>
+
         {loading ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                className="h-14 animate-pulse rounded-xl border bg-card"
+                className="h-16 animate-pulse rounded-xl border border-border bg-muted"
                 style={{ animationDelay: `${i * 50}ms` }}
               />
             ))}
           </div>
         ) : error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 font-cjk text-sm text-destructive">
             載入時段失敗：{error}
           </div>
         ) : !slots || slots.length === 0 ? (
-          <div className="rounded-xl border border-dashed bg-slate-50/50 p-8 text-center">
-            <Calendar className="mx-auto h-8 w-8 text-slate-300" />
-            <p className="mt-2 text-sm text-slate-500">當天沒有可預約時段</p>
+          <div className="rounded-xl border border-dashed border-border bg-muted/50 p-8 text-center">
+            <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              NO SLOTS
+            </div>
+            <p className="font-cjk mt-2 text-sm text-muted-foreground">當天沒有可預約時段</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
             {slots.map((s) => {
               const start = toLocal(s.start_at)
               const end = toLocal(s.end_at)
@@ -166,23 +214,20 @@ export default function SlotPicker({
                 <Link
                   key={s.id}
                   href={`/book/${s.id}${rescheduleFrom ? `?reschedule=${rescheduleFrom}` : ''}`}
-                  className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 transition hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-sm"
+                  className="group flex h-16 flex-col items-start justify-center gap-0.5 rounded-xl border border-border bg-card px-3.5 transition hover:border-foreground/60 hover:bg-muted"
                 >
-                  <div>
-                    <div className="text-sm font-semibold text-slate-900">
-                      {format(start, 'HH:mm')}
-                    </div>
-                    <div className="text-[10px] text-slate-500">
-                      – {format(end, 'HH:mm')}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-blue-500" />
+                  <span className="font-display text-lg font-normal leading-none tracking-tight">
+                    {format(start, 'HH:mm')}
+                  </span>
+                  <span className="font-mono text-[9px] tracking-[0.06em] text-muted-foreground">
+                    – {format(end, 'HH:mm')}
+                  </span>
                 </Link>
               )
             })}
           </div>
         )}
       </section>
-    </>
+    </div>
   )
 }
