@@ -1068,12 +1068,12 @@ SENTRY_AUTH_TOKEN
 | 2026-05-26 | Bio rich text（TipTap + sanitize-html server-side filter） | FR-134 | `df61f35` |
 | 2026-05-26 | Signup `?redirect=` + 自動登入 + open-redirect safePath 防護 | FR-135 | `df61f35` |
 | 2026-05-26 | 公開頁未登入 AuthCta（/<slug> + /<slug>/packages） | FR-136 | `df61f35` |
-| 2026-05-27 | CJK 字型導入（Noto Sans TC）+ next/font 4 套整合（Anton/SpaceGrotesk/SpaceMono/NotoSansTC） | FR-137 | `<FILL>` |
-| 2026-05-27 | 主題色重組（Direction C · Bold Stripe，B&W + 鮮黃 accent，OKLCH） | FR-138 | `<FILL>` |
-| 2026-05-27 | next-themes wire + ThemeToggle（light/dark/system 三態 pill） | FR-139 | `<FILL>` |
-| 2026-05-27 | 跨頁 UI primitive（QRMark / PrimaryCta / SectionHead / Badge / StatusBadge） | FR-140 | `<FILL>` |
-| 2026-05-27 | RWD 三斷點完備（公開頁 + 學員流程 + 教練後台 + 設定頁通過 mobile/tablet/desktop） | FR-141 | `<FILL>` |
-| 2026-05-27 | micro-interaction polish（hover/focus/skeleton 配 Direction C tokens） | FR-142 | `<FILL>` |
-| 2026-05-27 | a11y 基線（AA 對比 / focus ring / suppressHydrationWarning / 44×44 點擊區） | FR-143 | `<FILL>` |
+| 2026-05-27 | CJK 字型導入（Noto Sans TC）+ next/font 4 套整合（Anton/SpaceGrotesk/SpaceMono/NotoSansTC） | FR-137 | `533218f` |
+| 2026-05-27 | 主題色重組（Direction C · Bold Stripe，B&W + 鮮黃 accent，OKLCH） | FR-138 | `533218f` |
+| 2026-05-27 | next-themes wire + ThemeToggle（light/dark/system 三態 pill） | FR-139 | `533218f` |
+| 2026-05-27 | 跨頁 UI primitive（QRMark / PrimaryCta / SectionHead / Badge / StatusBadge） | FR-140 | `533218f` |
+| 2026-05-27 | RWD 三斷點完備（公開頁 + 學員流程 + 教練後台 + 設定頁通過 mobile/tablet/desktop） | FR-141 | `533218f` |
+| 2026-05-27 | micro-interaction polish（hover/focus/skeleton 配 Direction C tokens） | FR-142 | `533218f` |
+| 2026-05-27 | a11y 基線（AA 對比 / focus ring / suppressHydrationWarning / 44×44 點擊區） | FR-143 | `533218f` |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。
