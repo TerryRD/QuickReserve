@@ -12,6 +12,12 @@ const LoginSchema = z.object({
   redirectTo: z.string().optional(),
 })
 
+function safePath(path: string | undefined | null): string {
+  if (!path) return '/'
+  if (!path.startsWith('/') || path.startsWith('//')) return '/'
+  return path
+}
+
 export const loginAction = actionClient.inputSchema(LoginSchema).action(async ({ parsedInput }) => {
   const supabase = await createSupabaseServerClient()
   const { error } = await supabase.auth.signInWithPassword({
@@ -19,5 +25,5 @@ export const loginAction = actionClient.inputSchema(LoginSchema).action(async ({
     password: parsedInput.password,
   })
   if (error) throw new AppError('AUTH_FAILED', '帳號或密碼錯誤')
-  redirect(parsedInput.redirectTo || '/')
+  redirect(safePath(parsedInput.redirectTo))
 })

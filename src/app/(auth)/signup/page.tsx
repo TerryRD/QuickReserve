@@ -13,6 +13,7 @@ import { signupAction } from './actions'
 function SignupForm() {
   const params = useSearchParams()
   const inviteToken = params.get('invite')
+  const redirectTo = params.get('redirect')
   const presetEmail = params.get('email') ?? ''
   const [email, setEmail] = useState(presetEmail)
   const [password, setPassword] = useState('')
@@ -39,7 +40,13 @@ function SignupForm() {
         className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault()
-          execute({ email, password, displayName, inviteToken: inviteToken ?? undefined })
+          execute({
+              email,
+              password,
+              displayName,
+              inviteToken: inviteToken ?? undefined,
+              redirectTo: redirectTo ?? undefined,
+            })
         }}
       >
         <div className="space-y-2">
