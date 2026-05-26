@@ -32,7 +32,7 @@ export default function AvatarUploader({ tenantId, initialUrl, onUploaded, onCle
       return
     }
     const ext = file.type === 'image/jpeg' ? 'jpg' : file.type === 'image/png' ? 'png' : 'webp'
-    const path = `${tenantId}/avatar-${Date.now()}.${ext}`
+    const path = `${tenantId}/avatar.${ext}`
     start(async () => {
       const sb = createSupabaseBrowserClient()
       const { error } = await sb.storage.from('coach-media').upload(path, file, {
@@ -57,8 +57,14 @@ export default function AvatarUploader({ tenantId, initialUrl, onUploaded, onCle
         <div className="flex items-center gap-4">
           <img src={url} alt="" className="h-20 w-20 rounded-full object-cover ring-2 ring-border" />
           <div className="flex flex-col gap-2">
-            <label className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'cursor-pointer')}>
-              更換
+            <label
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'sm' }),
+                'cursor-pointer',
+                pending && 'pointer-events-none opacity-50',
+              )}
+            >
+              {pending ? '上傳中...' : '更換'}
               <input
                 type="file"
                 accept={ACCEPT}
@@ -69,6 +75,7 @@ export default function AvatarUploader({ tenantId, initialUrl, onUploaded, onCle
             <Button
               variant="ghost"
               size="sm"
+              disabled={pending}
               onClick={() => {
                 setUrl(null)
                 onCleared()
