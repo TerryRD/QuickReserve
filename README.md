@@ -337,6 +337,44 @@ Storage RLS（policies on `storage.objects`）：
 
 ---
 
+## 主題與字型（S6）
+
+- **設計方向：** Direction C · Bold Stripe — B&W + 鮮黃 accent，運動健身房氣質
+- **字型：**
+  - Display: Anton（uppercase, condensed bold）
+  - Sans: Space Grotesk
+  - CJK: Noto Sans TC（中文混排，font-cjk class）
+  - Mono: Space Mono（kicker / 標籤）
+  - 全部由 `next/font/google` 載入、subsetted、`display: swap`；CJK 用 `preload: false` 避免首屏重 bundle
+- **Token：** OKLCH light + dark 兩套，全程保留 shadcn token 名（`--primary`, `--accent`, `--secondary`, `--muted`, `--card`, `--border`, `--sidebar-*`）；`--radius: 0.75rem`
+- **顏色搭配：**
+  - Light: 白底 + 接近黑 primary + 鮮黃 accent（`oklch(0.91 0.19 102)`）
+  - Dark: 深黑底 + 鮮黃 primary（accent 同色）+ 灰階階層
+
+## Dark mode（S6）
+
+- 使用 `next-themes@0.4.6`，`<html class="dark">` 控制
+- 切換 UI：`<ThemeToggle>` 三態（日 / 夜 / 系統），位於：
+  - 後台 sidebar 底部
+  - Auth 頁 header 右側
+- `prefers-color-scheme` 由 `enableSystem` 支援
+- root layout `suppressHydrationWarning` 防 SSR hydration mismatch
+
+## Design language（S6）
+
+新增可重用 primitive：
+
+- `<SectionHead kicker title eng hint right>` — 雙語標題（mono kicker / 中文 / 英文 + accent 底線）；統一所有 section 開頭
+- `<PrimaryCta>` 與 `<PrimaryCtaLink>` — 黑底 + 鮮黃箭頭圈 CTA（主要行動點）
+- `<Badge variant>` — 5 variant（yellow / black / outline / mutedOutline / neutral）+ `<StatusBadge status>` 4 狀態（pending → yellow / confirmed → black / cancelled → outline / completed → mutedOutline）
+- `<QRMark>` — 自訂 logo SVG（鮮黃扇形 + 白圈）
+- `<ThemeToggle>` — 三態 pill toggle
+
+字型 className（globals.css 定義）：
+- `font-display` 大標 Anton + CJK fallback
+- `font-cjk` 中文段落 Noto Sans TC + Sans fallback
+- `font-mono` 標籤 Space Mono + monospace fallback
+
 ## 部署
 
 - **Production**：push 到 `master` → Vercel 自動部署到 production 域名

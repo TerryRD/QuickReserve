@@ -1,7 +1,7 @@
 # QuickReserve 重新架構設計文件
 
 **建立日期**: 2026-05-21
-**最後更新**: 2026-05-26（S5 教練介紹頁 + 學員登入：FR-131~136 — wire avatar_url、tenant_photos + coach-media bucket、parseVideoUrl YouTube/Vimeo embed、TipTap bio + sanitize-html、signup redirect + open-redirect safePath、公開頁未登入 AuthCta）；2026-05-26（S4 services model：FR-125~130 — service_packages schema+CRUD+軟刪除、customer_purchases 學員申請+教練審核+通知、book_with_purchase RPC、services 加 group class 欄位、團班 auto-confirm+auto-cancel cron、is_active 軟刪除 UX 統一）；2026-05-25（S3 availability：FR-120~124 — 作息模板 schema+UI、不可用事件 schema+UI、effectiveAvailability 純函式+server/cron 過濾、/calendar 衝突 badge、林教練 seed enrichment）；2026-05-25（S2 perf+RWD：FR-115~119 — loading.tsx 普及、行事曆 client-state、公開頁 CDN cache、Suspense 切塊、RWD audit）；2026-05-23（S1 bug triage：FR-110~114 — 邀請流程、Server Component crash、通知設定 route、loading skeleton、digest runbook）；2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
+**最後更新**: 2026-05-27（S6 設計重整：FR-137~143 — Direction C tokens (B&W + 鮮黃)、CJK 字型 (Noto Sans TC + Anton + Space Grotesk + Space Mono)、Dark mode toggle、跨頁 primitive、RWD 三斷點、a11y 基線）；2026-05-26（S5 教練介紹頁 + 學員登入：FR-131~136 — wire avatar_url、tenant_photos + coach-media bucket、parseVideoUrl YouTube/Vimeo embed、TipTap bio + sanitize-html、signup redirect + open-redirect safePath、公開頁未登入 AuthCta）；2026-05-26（S4 services model：FR-125~130 — service_packages schema+CRUD+軟刪除、customer_purchases 學員申請+教練審核+通知、book_with_purchase RPC、services 加 group class 欄位、團班 auto-confirm+auto-cancel cron、is_active 軟刪除 UX 統一）；2026-05-25（S3 availability：FR-120~124 — 作息模板 schema+UI、不可用事件 schema+UI、effectiveAvailability 純函式+server/cron 過濾、/calendar 衝突 badge、林教練 seed enrichment）；2026-05-25（S2 perf+RWD：FR-115~119 — loading.tsx 普及、行事曆 client-state、公開頁 CDN cache、Suspense 切塊、RWD audit）；2026-05-23（S1 bug triage：FR-110~114 — 邀請流程、Server Component crash、通知設定 route、loading skeleton、digest runbook）；2026-05-21（第三輪 UX 收尾 + hotfix：FR-100~107 — 租戶聯絡資料、行事曆視圖切換、行動側欄、全面替換 native confirm、error boundary 不洩漏 React internals、補 (platform)/error.tsx、icon map fallback）
 **狀態**: MVP 已實作完成（v0.1）
 **作者**: terry@webplus.com.tw（透過 brainstorming skill 共同產出）
 
@@ -1068,5 +1068,12 @@ SENTRY_AUTH_TOKEN
 | 2026-05-26 | Bio rich text（TipTap + sanitize-html server-side filter） | FR-134 | `df61f35` |
 | 2026-05-26 | Signup `?redirect=` + 自動登入 + open-redirect safePath 防護 | FR-135 | `df61f35` |
 | 2026-05-26 | 公開頁未登入 AuthCta（/<slug> + /<slug>/packages） | FR-136 | `df61f35` |
+| 2026-05-27 | CJK 字型導入（Noto Sans TC）+ next/font 4 套整合（Anton/SpaceGrotesk/SpaceMono/NotoSansTC） | FR-137 | `<FILL>` |
+| 2026-05-27 | 主題色重組（Direction C · Bold Stripe，B&W + 鮮黃 accent，OKLCH） | FR-138 | `<FILL>` |
+| 2026-05-27 | next-themes wire + ThemeToggle（light/dark/system 三態 pill） | FR-139 | `<FILL>` |
+| 2026-05-27 | 跨頁 UI primitive（QRMark / PrimaryCta / SectionHead / Badge / StatusBadge） | FR-140 | `<FILL>` |
+| 2026-05-27 | RWD 三斷點完備（公開頁 + 學員流程 + 教練後台 + 設定頁通過 mobile/tablet/desktop） | FR-141 | `<FILL>` |
+| 2026-05-27 | micro-interaction polish（hover/focus/skeleton 配 Direction C tokens） | FR-142 | `<FILL>` |
+| 2026-05-27 | a11y 基線（AA 對比 / focus ring / suppressHydrationWarning / 44×44 點擊區） | FR-143 | `<FILL>` |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。
