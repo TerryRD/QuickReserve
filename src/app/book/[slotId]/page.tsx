@@ -1,12 +1,13 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Calendar, Clock, DollarSign, ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Calendar } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/get-session'
 import { findActivePurchaseForBooking } from '@/lib/purchases-server'
-import { Card, CardContent } from '@/components/ui/card'
-import { buttonVariants } from '@/components/ui/button'
+import { SectionHead } from '@/components/ui/section-head'
+import { Badge } from '@/components/ui/badge'
+import { PrimaryCtaLink } from '@/components/ui/primary-cta'
 import BookForm from './book-form'
 
 const TZ_OFFSET_HOURS = 8
@@ -31,27 +32,28 @@ export default async function BookConfirmPage({
     .eq('id', slotId)
     .maybeSingle()
   if (!slot) notFound()
+
   if (slot.status !== 'available') {
     const tenant = slot.tenants as { slug: string } | null
     return (
-      <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
-        <Card className="max-w-md">
-          <CardContent className="p-8 text-center">
-            <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-amber-50 text-2xl">
-              ⚠️
-            </div>
-            <h2 className="mt-4 text-lg font-semibold">此時段已不可預約</h2>
-            <p className="mt-1 text-sm text-muted-foreground">該時段可能已被其他學員預約或取消。</p>
-            {tenant && (
-              <Link
-                href={`/${tenant.slug}`}
-                className={buttonVariants({ variant: 'outline', size: 'sm' }) + ' mt-6 inline-flex'}
-              >
-                <ArrowLeft className="mr-1 h-3.5 w-3.5" /> 回教練頁
-              </Link>
-            )}
-          </CardContent>
-        </Card>
+      <main className="grid min-h-screen place-items-center bg-background p-6">
+        <div className="max-w-md rounded-2xl border border-border bg-card p-10 text-center">
+          <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            UNAVAILABLE
+          </div>
+          <h2 className="font-display mt-4 text-2xl uppercase">時段已不可預約</h2>
+          <p className="font-cjk mt-2 text-sm text-muted-foreground">
+            該時段可能已被其他學員預約或取消。
+          </p>
+          {tenant && (
+            <Link
+              href={`/${tenant.slug}`}
+              className="font-mono mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs uppercase tracking-wider hover:bg-muted"
+            >
+              <ArrowLeft className="size-3" /> 回教練頁
+            </Link>
+          )}
+        </div>
       </main>
     )
   }
@@ -79,34 +81,45 @@ export default async function BookConfirmPage({
     const tenantSlug = (slot.tenants as { slug: string } | null)?.slug ?? ''
 
     return (
-      <main className="mx-auto max-w-2xl p-6">
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-6">
-          <h2 className="font-display text-2xl italic text-amber-900">需先購買套裝</h2>
-          <p className="mt-2 text-sm text-amber-800">
-            您尚未持有 {serviceName} 的有效課數。
-            請先選擇方案、送出申請、待教練確認後即可預約。
-          </p>
-          {packages && packages.length > 0 ? (
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <div className="min-h-screen bg-background">
+        <main className="mx-auto max-w-2xl px-5 py-10 sm:px-10 sm:py-14">
+          <SectionHead
+            kicker="NEED PACKAGE · 需先購買套裝"
+            title="需先購買套裝"
+            eng="STOP"
+            hint={`您尚未持有 ${serviceName} 的有效課數。請先選擇方案、送出申請、待教練確認後即可預約。`}
+          />
+          {packages && packages.length > 0 && (
+            <div className="grid gap-3 sm:grid-cols-2">
               {packages.map((p) => (
-                <div key={p.id} className="rounded border bg-white p-3 text-sm">
-                  <div className="font-semibold">{p.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {p.class_count} 堂 · ${Number(p.price).toLocaleString()} ·{' '}
-                    {p.expires_in_days ? `${p.expires_in_days} 天內` : '永久'}
+                <div key={p.id} className="rounded-2xl border border-border bg-card p-5">
+                  <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground">
+                    PACKAGE
+                  </div>
+                  <div className="font-display font-cjk mt-1 text-lg font-black">{p.name}</div>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="font-display text-3xl leading-none">{p.class_count}</span>
+                    <span className="font-cjk text-xs text-muted-foreground">堂</span>
+                  </div>
+                  <div className="font-cjk mt-2 text-xs text-muted-foreground">
+                    {p.expires_in_days ? `${p.expires_in_days} 天內上完` : '永久有效'}
+                  </div>
+                  <div className="mt-3 border-t border-dashed border-border pt-3">
+                    <span className="font-display border-b-[3px] border-accent pb-px text-lg">
+                      NT$ {Number(p.price).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
-          ) : null}
-          <Link
-            href={`/${tenantSlug}/packages`}
-            className="mt-4 inline-block rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
-          >
-            前往購買 →
-          </Link>
-        </div>
-      </main>
+          )}
+          <div className="mt-8">
+            <PrimaryCtaLink href={`/${tenantSlug}/packages`} size="lg">
+              前往購買套裝
+            </PrimaryCtaLink>
+          </div>
+        </main>
+      </div>
     )
   }
 
@@ -120,66 +133,86 @@ export default async function BookConfirmPage({
   const end = toLocal(slot.end_at)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <main className="mx-auto max-w-md px-4 py-8">
+    <div className="min-h-screen bg-background">
+      <main className="mx-auto max-w-md px-5 py-10 sm:py-14">
         {tenant && (
           <Link
             href={`/${tenant.slug}`}
-            className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="font-mono mb-6 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="size-3" />
             {tenant.name}
           </Link>
         )}
 
-        <h1 className="text-2xl font-bold tracking-tight">
-          {rescheduleFrom ? '確認改期' : '確認預約'}
+        <div className="font-mono mb-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          {rescheduleFrom ? 'RESCHEDULE · 確認改期' : 'BOOKING · 確認預約'}
+        </div>
+        <h1 className="font-display text-4xl uppercase leading-none tracking-tight">
+          {rescheduleFrom ? (
+            <>
+              確認<span className="font-cjk">改期</span>
+            </>
+          ) : (
+            <>
+              確認<span className="font-cjk">預約</span>
+            </>
+          )}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {rescheduleFrom ? '送出後將自動取消原預約並改為此時段' : '確認資訊後送出預約申請'}
+        <p className="font-cjk mt-3 text-sm text-muted-foreground">
+          {rescheduleFrom ? '送出後將自動取消原預約並改為此時段。' : '確認資訊後送出預約申請。'}
         </p>
+
         {rescheduleFrom && (
-          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          <div className="mt-5 rounded-2xl bg-accent px-4 py-3 font-cjk text-xs text-accent-foreground">
             ⓘ 您正在改期。原預約將被取消，重新建立的新預約狀態為「待確認」。
           </div>
         )}
 
-        <Card className="mt-6 border-2 border-blue-500/20 bg-blue-50/30">
-          <CardContent className="space-y-3 p-5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-blue-500 text-white">
-                <Calendar className="h-5 w-5" />
+        <div className="mt-7 rounded-2xl border border-border bg-card p-5 shadow-[0_1px_0_var(--border),0_8px_24px_-18px_rgba(0,0,0,0.18)]">
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 place-items-center rounded-full bg-foreground text-background">
+              <Calendar className="size-5" />
+            </div>
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                DATE / TIME
               </div>
-              <div>
-                <div className="text-xs text-muted-foreground">日期時間</div>
-                <div className="font-semibold">
-                  {format(start, 'yyyy/MM/dd (EEE)')} {format(start, 'HH:mm')}–
-                  {format(end, 'HH:mm')}
-                </div>
+              <div className="font-display mt-0.5 text-lg leading-none">
+                {format(start, 'yyyy/MM/dd')} · {format(start, 'HH:mm')}–{format(end, 'HH:mm')}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 border-t border-blue-500/10 pt-3 text-sm">
-              <div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" /> 服務
-                </div>
-                <div className="mt-0.5 font-medium">
-                  {service?.name} ({service?.duration_minutes} 分)
-                </div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 border-t border-dashed border-border pt-4">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                SERVICE
               </div>
-              <div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <DollarSign className="h-3 w-3" /> 價格
-                </div>
-                <div className="mt-0.5 font-medium">
-                  {service?.price ? `$${Number(service.price).toLocaleString()}` : '洽詢'}
-                </div>
+              <div className="font-cjk mt-0.5 text-sm font-semibold">
+                {service?.name} <span className="text-muted-foreground">({service?.duration_minutes} 分)</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                PRICE
+              </div>
+              <div className="font-display mt-0.5 text-base">
+                {service?.price ? `NT$ ${Number(service.price).toLocaleString()}` : '洽詢'}
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <div className="mt-6">
+        <div className="mt-5 rounded-2xl border border-border bg-muted/40 p-4">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            ACTIVE PACKAGE · 套裝餘額
+          </div>
+          <div className="font-cjk mt-1.5 text-sm font-medium">
+            預約成立後將從現有套裝扣除 1 堂。
+          </div>
+        </div>
+
+        <div className="mt-7">
           <BookForm slotId={slotId} rescheduleFrom={rescheduleFrom ?? null} />
         </div>
       </main>
