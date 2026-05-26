@@ -11,6 +11,8 @@ import {
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { buttonVariants } from '@/components/ui/button'
+import { SectionHead } from '@/components/ui/section-head'
+import { Badge } from '@/components/ui/badge'
 import NewSlotDialog from './new-slot-dialog'
 import RecurringRuleDialog from './recurring-rule-dialog'
 import MemberFilter from './member-filter'
@@ -170,14 +172,12 @@ export default async function CalendarPage({
 
   return (
     <div className="space-y-5">
-      <header>
-        <h1 className="font-display text-3xl tracking-tight">
-          <span className="italic">行事曆</span>
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {viewingSelfOnly ? '檢視您的時段' : `檢視 ${effectiveIds.length} 位成員的時段`}
-        </p>
-      </header>
+      <SectionHead
+        kicker="CALENDAR · 行事曆"
+        title="行事曆"
+        eng="CALENDAR"
+        hint={viewingSelfOnly ? '檢視您的時段' : `檢視 ${effectiveIds.length} 位成員的時段`}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -195,7 +195,7 @@ export default async function CalendarPage({
             >
               ◄
             </Link>
-            <div className="min-w-44 text-center font-medium">{navLabel}</div>
+            <div className="font-mono min-w-44 text-center text-sm tracking-wider">{navLabel}</div>
             <Link
               href={navTodayHref}
               className={buttonVariants({ variant: 'ghost', size: 'sm' })}
@@ -227,9 +227,9 @@ export default async function CalendarPage({
             </>
           )}
           {!viewingSelfOnly && (
-            <span className="self-center rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+            <Badge variant="yellow" className="self-center">
               多成員視圖（只能編輯自己的時段）
-            </span>
+            </Badge>
           )}
         </div>
       </div>

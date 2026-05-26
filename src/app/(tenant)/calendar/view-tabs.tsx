@@ -9,13 +9,13 @@ export default function ViewTabs({
   current: View
   onChange: (next: View) => void
 }) {
-  const items: Array<{ value: View; label: string }> = [
-    { value: 'week', label: '週' },
-    { value: 'day', label: '日' },
-    { value: 'list', label: '列表' },
+  const items: Array<{ value: View; label: string; eng: string }> = [
+    { value: 'week', label: '週', eng: 'WEEK' },
+    { value: 'day', label: '日', eng: 'DAY' },
+    { value: 'list', label: '列表', eng: 'LIST' },
   ]
   return (
-    <div className="inline-flex rounded-lg border bg-card p-0.5 text-sm">
+    <div className="inline-flex items-center gap-0.5 rounded-full border border-border bg-card p-1">
       {items.map((it) => {
         const active = current === it.value
         return (
@@ -23,13 +23,15 @@ export default function ViewTabs({
             type="button"
             key={it.value}
             onClick={() => onChange(it.value)}
-            className={`rounded-md px-3 py-1 transition ${
+            className={`group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition ${
               active
-                ? 'bg-primary text-primary-foreground shadow-sm'
+                ? 'bg-foreground text-background font-semibold'
                 : 'text-muted-foreground hover:bg-muted'
             }`}
+            aria-pressed={active}
           >
-            {it.label}
+            <span className="font-cjk">{it.label}</span>
+            <span className="font-mono text-[9px] uppercase tracking-wider opacity-70">{it.eng}</span>
           </button>
         )
       })}
