@@ -3,8 +3,10 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, Package } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getTenantBySlug } from '@/lib/auth/get-tenant-context'
+import { getSession } from '@/lib/auth/get-session'
 import { Card, CardContent } from '@/components/ui/card'
 import PurchaseRequestForm from './purchase-request-form'
+import AuthCta from '@/components/public-page/auth-cta'
 
 export default async function PublicPackagesPage({
   params,
@@ -17,12 +19,15 @@ export default async function PublicPackagesPage({
 
   const supabase = await createSupabaseServerClient()
 
-  const { data: services } = await supabase
-    .from('services')
-    .select('id, name, description, duration_minutes')
-    .eq('tenant_id', tenant.id)
-    .eq('is_active', true)
-    .order('name')
+  const [{ data: services }, session] = await Promise.all([
+    supabase
+      .from('services')
+      .select('id, name, description, duration_minutes')
+      .eq('tenant_id', tenant.id)
+      .eq('is_active', true)
+      .order('name'),
+    getSession(),
+  ])
 
   const serviceIds = (services ?? []).map((s) => s.id)
   const { data: packages } =
@@ -70,6 +75,7 @@ export default async function PublicPackagesPage({
           <span className="italic">{tenant.name} 的方案</span>
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">選擇方案、自報付款狀態後送出申請。教練確認後即可開始預約。</p>
+        {!session && <AuthCta returnPath={`/${tenantSlug}/packages`} />}
       </div>
 
       {(services ?? []).map((svc) => {
