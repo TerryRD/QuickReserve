@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -28,18 +29,28 @@ type Props = {
 }
 
 export default function PhotoGalleryManager({ tenantId, photos }: Props) {
+  const router = useRouter()
   const [pending, start] = useTransition()
   const addAct = useAction(addPhotoAction, {
     onError: ({ error }) => toast.error(error.serverError?.message ?? '加入失敗'),
-    onSuccess: () => toast.success('已加入照片'),
+    onSuccess: () => {
+      toast.success('已加入照片')
+      router.refresh()
+    },
   })
   const captionAct = useAction(updatePhotoCaptionAction, {
     onError: ({ error }) => toast.error(error.serverError?.message ?? '更新失敗'),
-    onSuccess: () => toast.success('已儲存說明'),
+    onSuccess: () => {
+      toast.success('已儲存說明')
+      router.refresh()
+    },
   })
   const deleteAct = useAction(deletePhotoAction, {
     onError: ({ error }) => toast.error(error.serverError?.message ?? '刪除失敗'),
-    onSuccess: () => toast.success('已刪除照片'),
+    onSuccess: () => {
+      toast.success('已刪除照片')
+      router.refresh()
+    },
   })
 
   function uploadFiles(files: FileList | null) {
