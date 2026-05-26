@@ -4,9 +4,10 @@ import { ArrowLeft, Package } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getTenantBySlug } from '@/lib/auth/get-tenant-context'
 import { getSession } from '@/lib/auth/get-session'
-import { Card, CardContent } from '@/components/ui/card'
+import { SectionHead } from '@/components/ui/section-head'
+import { Badge } from '@/components/ui/badge'
+import { PrimaryCtaLink } from '@/components/ui/primary-cta'
 import PurchaseRequestForm from './purchase-request-form'
-import AuthCta from '@/components/public-page/auth-cta'
 
 export default async function PublicPackagesPage({
   params,
@@ -61,63 +62,112 @@ export default async function PublicPackagesPage({
     })
   }
 
+  const hasAnyPackage = (services ?? []).some((s) => (pkgsByService[s.id] ?? []).length > 0)
+  const returnPath = `/${tenantSlug}/packages`
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-6">
-      <div>
+    <div className="min-h-screen bg-background">
+      <main className="mx-auto max-w-[1200px] px-5 py-10 sm:px-10 sm:py-14 lg:px-[72px] lg:py-16">
         <Link
           href={`/${tenantSlug}`}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="font-mono mb-6 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="size-3" />
           回 {tenant.name}
         </Link>
-        <h1 className="font-display text-3xl tracking-tight">
-          <span className="italic">{tenant.name} 的方案</span>
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">選擇方案、自報付款狀態後送出申請。教練確認後即可開始預約。</p>
-        {!session && <AuthCta returnPath={`/${tenantSlug}/packages`} />}
-      </div>
 
-      {(services ?? []).map((svc) => {
-        const list = pkgsByService[svc.id] ?? []
-        if (list.length === 0) return null
-        return (
-          <section key={svc.id}>
-            <h2 className="mb-2 font-display text-xl">{svc.name}</h2>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {list.map((p) => (
-                <Card key={p.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="font-semibold">{p.name}</div>
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          {p.class_count} 堂 · {p.expires_in_days ? `${p.expires_in_days} 天內上完` : '永久有效'}
+        <SectionHead
+          kicker={`/${tenantSlug}/packages · 教練套裝`}
+          title={`${tenant.name} 套裝`}
+          eng="PACKAGES"
+          hint="選擇方案、自報付款狀態後送出申請。教練確認後即可開始預約。"
+        />
+
+        {!session && (
+          <div className="mb-8 flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-5">
+            <div className="flex-1 min-w-0">
+              <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                SIGN IN
+              </div>
+              <p className="font-cjk mt-1 text-sm font-medium">登入後即可送出套裝申請。</p>
+            </div>
+            <PrimaryCtaLink href={`/login?redirect=${encodeURIComponent(returnPath)}`} size="md">
+              登入
+            </PrimaryCtaLink>
+          </div>
+        )}
+
+        <div className="space-y-12">
+          {(services ?? []).map((svc, svcIdx) => {
+            const list = pkgsByService[svc.id] ?? []
+            if (list.length === 0) return null
+            return (
+              <section key={svc.id}>
+                <div className="mb-4 flex flex-wrap items-baseline gap-3">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                    SERVICE / 0{svcIdx + 1}
+                  </span>
+                  <h2 className="font-display font-cjk text-2xl font-black leading-tight sm:text-3xl">
+                    {svc.name}
+                  </h2>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {list.map((p, i) => {
+                    const perLesson = Math.round(p.price / p.class_count)
+                    const popular = i === 1 && list.length >= 2
+                    return (
+                      <div
+                        key={p.id}
+                        className="relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-6 shadow-[0_1px_0_var(--border),0_8px_24px_-18px_rgba(0,0,0,0.18)]"
+                      >
+                        {popular && (
+                          <Badge variant="yellow" className="absolute right-4 top-4">
+                            熱門
+                          </Badge>
+                        )}
+                        <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground">
+                          PACKAGE
+                        </div>
+                        <h3 className="font-display font-cjk text-[20px] font-black leading-tight">
+                          {p.name}
+                        </h3>
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-display text-5xl leading-none">{p.class_count}</span>
+                          <span className="font-cjk text-base text-muted-foreground">堂</span>
+                        </div>
+                        <div className="font-cjk text-xs text-muted-foreground">
+                          {p.expires_in_days ? `${p.expires_in_days} 天內上完` : '永久有效'}
+                        </div>
+                        <div className="mt-auto flex items-baseline justify-between border-t border-dashed border-border pt-4">
+                          <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+                            PER · NT$ {perLesson.toLocaleString()}
+                          </span>
+                          <span className="font-display border-b-[3px] border-accent pb-px text-[22px] leading-none">
+                            NT$ {p.price.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="mt-2">
+                          <PurchaseRequestForm packageId={p.id} />
                         </div>
                       </div>
-                      <div className="shrink-0 text-right">
-                        <div className="font-display text-xl italic">${p.price.toLocaleString()}</div>
-                      </div>
-                    </div>
-                    <div className="mt-3">
-                      <PurchaseRequestForm packageId={p.id} />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
-        )
-      })}
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })}
+        </div>
 
-      {(services ?? []).every((s) => (pkgsByService[s.id] ?? []).length === 0) && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Package className="mx-auto h-10 w-10 text-slate-300" />
-            <p className="mt-3 font-medium text-slate-700">此教練尚未開放套裝</p>
-          </CardContent>
-        </Card>
-      )}
+        {!hasAnyPackage && (
+          <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-16 text-center">
+            <Package className="mx-auto size-10 text-muted-foreground" />
+            <div className="font-mono mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              NO PACKAGES
+            </div>
+            <p className="font-cjk mt-2 text-sm text-muted-foreground">此教練尚未開放套裝</p>
+          </div>
+        )}
+      </main>
     </div>
   )
 }

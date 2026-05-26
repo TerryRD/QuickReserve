@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { PrimaryCta } from '@/components/ui/primary-cta'
 import {
   Dialog,
   DialogContent,
@@ -28,44 +29,65 @@ export default function PurchaseRequestForm({ packageId }: { packageId: string }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button className="w-full">申請購買</Button>} />
+      <DialogTrigger
+        render={
+          <Button variant="accent" size="pill" className="w-full">
+            申請購買
+          </Button>
+        }
+      />
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>確認購買申請</DialogTitle>
+          <DialogTitle className="font-display text-xl uppercase">確認購買申請</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
+        <div className="space-y-4">
+          <p className="font-cjk text-sm text-muted-foreground">
             送出後教練會在審核佇列看到此申請。請選擇您的付款狀態：
           </p>
           <div className="space-y-2">
-            <label className="flex items-center gap-2 rounded border p-2 text-sm">
+            <label
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3 font-cjk text-sm transition ${
+                paid === 'claimed_paid'
+                  ? 'border-foreground bg-muted'
+                  : 'border-border hover:border-foreground/40'
+              }`}
+            >
               <input
                 type="radio"
                 checked={paid === 'claimed_paid'}
                 onChange={() => setPaid('claimed_paid')}
+                className="size-4 accent-current"
               />
               <span>已付款（現金 / 轉帳已完成）</span>
             </label>
-            <label className="flex items-center gap-2 rounded border p-2 text-sm">
+            <label
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3 font-cjk text-sm transition ${
+                paid === 'awaiting_payment'
+                  ? 'border-foreground bg-muted'
+                  : 'border-border hover:border-foreground/40'
+              }`}
+            >
               <input
                 type="radio"
                 checked={paid === 'awaiting_payment'}
                 onChange={() => setPaid('awaiting_payment')}
+                className="size-4 accent-current"
               />
               <span>未付款（會在後續支付）</span>
             </label>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="ghost" size="pill" onClick={() => setOpen(false)}>
             取消
           </Button>
-          <Button
+          <PrimaryCta
+            size="md"
             onClick={() => execute({ packageId, paymentSelfReported: paid })}
             disabled={isPending}
           >
             {isPending ? '送出中...' : '送出申請'}
-          </Button>
+          </PrimaryCta>
         </DialogFooter>
       </DialogContent>
     </Dialog>
