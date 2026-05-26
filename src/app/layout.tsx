@@ -1,26 +1,36 @@
 import type { Metadata } from 'next'
-import { Instrument_Serif, Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google'
+import { Anton, Space_Grotesk, Space_Mono, Noto_Sans_TC } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
-const displaySerif = Instrument_Serif({
+const display = Anton({
   variable: '--font-display',
   subsets: ['latin'],
   weight: ['400'],
-  style: ['normal', 'italic'],
   display: 'swap',
 })
 
-const bodySans = Plus_Jakarta_Sans({
+const sans = Space_Grotesk({
   variable: '--font-sans',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
 })
 
-const mono = Geist_Mono({
+const mono = Space_Mono({
   variable: '--font-mono',
   subsets: ['latin'],
+  weight: ['400', '700'],
   display: 'swap',
+})
+
+const cjk = Noto_Sans_TC({
+  variable: '--font-cjk',
+  subsets: ['latin'],
+  weight: ['400', '500', '700', '900'],
+  display: 'swap',
+  preload: false,
 })
 
 export const metadata: Metadata = {
@@ -30,12 +40,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-Hant">
+    <html lang="zh-Hant" suppressHydrationWarning>
       <body
-        className={`${displaySerif.variable} ${bodySans.variable} ${mono.variable} antialiased`}
+        className={`${display.variable} ${sans.variable} ${mono.variable} ${cjk.variable} antialiased`}
       >
-        {children}
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
