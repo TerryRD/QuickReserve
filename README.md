@@ -295,7 +295,7 @@ QuickReserve 把「單堂課」與「套裝」用同一張表（`customer_purcha
 - 第 3 個學員 book 後 → 所有 pending bookings auto-confirmed
 - 開課前 24h 仍 < 3 人 → cron 取消 slot、退課數、通知所有人
 
-Cron 每小時跑一次，最小 `cancel_deadline_hours = 1`。
+Cron 排程：**Vercel Hobby plan 只支援 daily**（`0 0 * * *`），所以 auto-cancel 最多 24h 延遲。若需更短粒度（例如 hourly 對 `cancel_deadline_hours = 1` 才即時）必須升級 Pro 後改 `0 * * * *`。
 
 ## 教練介紹頁（S5）
 
