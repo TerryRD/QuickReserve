@@ -2,28 +2,24 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Clock, DollarSign, Mail, Phone, MessageCircle } from 'lucide-react'
+import { Mail, Phone, MessageCircle, MapPin, Star } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getTenantBySlug } from '@/lib/auth/get-tenant-context'
-import SlotPicker from './slot-picker'
 import { getSession } from '@/lib/auth/get-session'
 import { getCoachMediaPublicUrl } from '@/lib/storage'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { PrimaryCtaLink } from '@/components/ui/primary-cta'
+import { SectionHead } from '@/components/ui/section-head'
 import { VideoEmbed } from '@/components/public-page/video-embed'
-import BioBlock from '@/components/public-page/bio-block'
-import PhotoGallery from '@/components/public-page/photo-gallery'
-import AuthCta from '@/components/public-page/auth-cta'
+import SlotPicker from './slot-picker'
 
 export default async function TenantPublicPage({
   params,
   searchParams,
 }: {
   params: Promise<{ tenantSlug: string }>
-  searchParams: Promise<{
-    service?: string
-    date?: string
-    from?: string
-    reschedule?: string
-  }>
+  searchParams: Promise<{ service?: string; date?: string; from?: string; reschedule?: string }>
 }) {
   const { tenantSlug } = await params
   const {
@@ -37,13 +33,15 @@ export default async function TenantPublicPage({
 
   if (tenant.status === 'suspended') {
     return (
-      <main className="grid min-h-screen place-items-center bg-slate-50 p-8">
-        <div className="max-w-md rounded-xl border bg-white p-10 text-center shadow-sm">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-2xl">
-            ⏸️
+      <main className="grid min-h-screen place-items-center bg-background p-8">
+        <div className="max-w-md rounded-2xl border border-border bg-card p-10 text-center">
+          <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            SUSPENDED
           </div>
-          <h2 className="mt-4 text-xl font-semibold text-slate-900">服務暫停中</h2>
-          <p className="mt-2 text-sm text-slate-600">此教練目前不開放預約，請稍後再試。</p>
+          <h2 className="font-display mt-4 text-2xl uppercase">服務暫停中</h2>
+          <p className="font-cjk mt-2 text-sm text-muted-foreground">
+            此教練目前不開放預約，請稍後再試。
+          </p>
         </div>
       </main>
     )
@@ -72,154 +70,236 @@ export default async function TenantPublicPage({
     caption: p.caption,
   }))
   const returnPath = `/${tenantSlug}`
-
   const activeServiceId = selectedServiceId ?? services?.[0]?.id ?? null
   const dateStr = selectedDate ?? format(new Date(), 'yyyy-MM-dd')
 
   return (
-    <div className="min-h-screen">
-      <main className="mx-auto max-w-3xl px-4 pb-16">
-        {/* Editorial hero */}
-        <header className="relative -mx-4 mb-2 overflow-hidden bg-foreground px-6 pb-12 pt-14 text-background sm:mx-0 sm:mt-8 sm:rounded-3xl sm:px-10">
-          <div
-            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-foreground via-foreground to-[oklch(0.28_0.12_270)]"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent/40 blur-3xl"
-            aria-hidden
-          />
-          <div className="relative">
-            <div className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-60">
-              預約 · /{tenant.slug}
-            </div>
-            {tenant.avatar_url && (
+    <div className="min-h-screen bg-background">
+      <main className="mx-auto max-w-[1200px]">
+        {/* HERO */}
+        <section className="px-5 py-12 sm:px-10 sm:py-16 lg:px-[72px] lg:py-20">
+          <div className="mb-6 flex flex-wrap items-center gap-2 sm:mb-8">
+            <Badge variant="yellow" icon={<Star className="size-3" />}>
+              COACH
+            </Badge>
+            <span className="font-mono text-[11px] tracking-[0.12em] text-muted-foreground">
+              /{tenant.slug}
+            </span>
+          </div>
+          <h1 className="font-display text-[60px] uppercase leading-[0.9] tracking-tight sm:text-[92px] lg:text-[128px]">
+            <span className="font-cjk">{tenant.name}</span>
+            <span
+              aria-hidden
+              className="ml-3 inline-block size-3 rounded-full bg-accent align-baseline sm:size-4"
+            />
+          </h1>
+          <div className="mt-6 flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-7">
+            {tenant.avatar_url ? (
               <img
                 src={tenant.avatar_url}
                 alt={tenant.name}
-                className="mt-4 h-20 w-20 rounded-full object-cover ring-2 ring-background/40"
+                className="size-[76px] rounded-full border border-border object-cover sm:size-[104px]"
               />
+            ) : (
+              <div className="grid size-[76px] place-items-center rounded-full border border-border bg-secondary font-display text-2xl sm:size-[104px] sm:text-3xl">
+                {tenant.name.slice(0, 1)}
+              </div>
             )}
-            <h1 className="mt-4 font-display text-5xl leading-[0.95] tracking-tight sm:text-6xl">
-              <span className="italic">{tenant.name}</span>
-            </h1>
-            <p className="mt-6 max-w-md text-sm leading-relaxed text-background/75">
+            <p className="font-cjk max-w-xl text-base font-medium leading-relaxed sm:text-lg">
               {tenant.description?.trim() ||
                 '在下方選擇您想預訂的服務、日期與時段。送出後狀態為「待確認」，教練確認後即正式成立。'}
             </p>
-            {(tenant.contact_email ||
-              tenant.contact_phone ||
-              tenant.contact_line_id ||
-              tenant.contact_note) && (
-              <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-xs text-background/80">
-                {tenant.contact_email && (
-                  <a
-                    href={`mailto:${tenant.contact_email}`}
-                    className="inline-flex items-center gap-1.5 hover:text-background"
-                  >
-                    <Mail className="h-3.5 w-3.5" />
-                    {tenant.contact_email}
-                  </a>
-                )}
-                {tenant.contact_phone && (
-                  <a
-                    href={`tel:${tenant.contact_phone}`}
-                    className="inline-flex items-center gap-1.5 hover:text-background"
-                  >
-                    <Phone className="h-3.5 w-3.5" />
-                    {tenant.contact_phone}
-                  </a>
-                )}
-                {tenant.contact_line_id && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <MessageCircle className="h-3.5 w-3.5" />
-                    LINE：{tenant.contact_line_id}
-                  </span>
-                )}
-                {tenant.contact_note && (
-                  <span className="inline-flex items-center gap-1.5 text-background/70">
-                    {tenant.contact_note}
-                  </span>
-                )}
-              </div>
-            )}
-            {!session && <AuthCta returnPath={returnPath} />}
           </div>
-        </header>
+          {(tenant.contact_email ||
+            tenant.contact_phone ||
+            tenant.contact_line_id ||
+            tenant.contact_note) && (
+            <div className="mt-7 flex flex-wrap gap-2">
+              {tenant.contact_email && (
+                <a
+                  href={`mailto:${tenant.contact_email}`}
+                  className="font-mono inline-flex items-center gap-2 rounded-full bg-secondary px-3.5 py-2 text-xs font-medium hover:bg-muted"
+                >
+                  <Mail className="size-3" />
+                  {tenant.contact_email}
+                </a>
+              )}
+              {tenant.contact_phone && (
+                <a
+                  href={`tel:${tenant.contact_phone}`}
+                  className="font-mono inline-flex items-center gap-2 rounded-full bg-secondary px-3.5 py-2 text-xs font-medium hover:bg-muted"
+                >
+                  <Phone className="size-3" />
+                  {tenant.contact_phone}
+                </a>
+              )}
+              {tenant.contact_line_id && (
+                <span className="font-mono inline-flex items-center gap-2 rounded-full bg-secondary px-3.5 py-2 text-xs font-medium">
+                  <MessageCircle className="size-3" />
+                  LINE {tenant.contact_line_id}
+                </span>
+              )}
+              {tenant.contact_note && (
+                <span className="font-mono inline-flex items-center gap-2 rounded-full bg-secondary px-3.5 py-2 text-xs font-medium">
+                  <MapPin className="size-3" />
+                  {tenant.contact_note}
+                </span>
+              )}
+            </div>
+          )}
+          {!session && (
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <PrimaryCtaLink href={`/login?redirect=${encodeURIComponent(returnPath)}`} size="lg">
+                登入預約
+              </PrimaryCtaLink>
+              <Button
+                variant="pill-outline"
+                size="xl"
+                render={<Link href={`/signup?redirect=${encodeURIComponent(returnPath)}`} />}
+              >
+                建立帳號
+              </Button>
+              <span className="font-mono text-[10.5px] tracking-[0.12em] text-muted-foreground">
+                訪客可瀏覽 · 預約需登入
+              </span>
+            </div>
+          )}
+        </section>
 
-        <BioBlock html={tenant.bio_html} />
-
-        {tenant.intro_video_url && (
-          <section className="mt-8">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">介紹影片</h2>
-            <VideoEmbed url={tenant.intro_video_url} />
+        {rescheduleFrom && (
+          <section className="border-t border-border px-5 py-5 sm:px-10 lg:px-[72px]">
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-accent px-5 py-4 text-accent-foreground">
+              <div className="flex-1">
+                <div className="font-cjk text-sm font-bold">
+                  改期模式 · 選擇新時段後原預約自動取消
+                </div>
+                <div className="font-cjk mt-1 text-xs opacity-90">
+                  選擇新時段送出後，原預約會自動取消、堂數退回套裝。
+                </div>
+              </div>
+            </div>
           </section>
         )}
 
-        <PhotoGallery photos={photos} />
-
-        {rescheduleFrom && (
-          <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-            ⓘ <strong>改期模式</strong>：選擇新時段後，原預約會自動取消並建立新「待確認」預約。
-          </div>
+        {/* BIO */}
+        {tenant.bio_html && tenant.bio_html.trim() && (
+          <section className="border-t border-border px-5 py-12 sm:px-10 sm:py-16 lg:px-[72px]">
+            <div className="grid items-start gap-8 lg:grid-cols-[280px_1fr] lg:gap-12">
+              <SectionHead kicker="ABOUT · 關於" title="關於我" eng="ABOUT" />
+              <article
+                className="font-cjk prose prose-sm max-w-[640px] prose-headings:font-display prose-a:text-foreground prose-strong:font-bold"
+                dangerouslySetInnerHTML={{ __html: tenant.bio_html }}
+              />
+            </div>
+          </section>
         )}
-        {!services || services.length === 0 ? (
-          <div className="mt-8 rounded-xl border bg-white p-10 text-center text-sm text-slate-500">
-            此教練尚未開放任何服務
-          </div>
-        ) : (
-          <div className="mt-6 space-y-6 sm:mt-8">
-            {/* Service selection */}
-            <section>
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
-                  1
-                </span>
-                選擇服務
-              </h2>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {services.map((s) => {
-                  const isActive = s.id === activeServiceId
-                  return (
-                    <Link
-                      key={s.id}
-                      href={`/${tenantSlug}?service=${s.id}${selectedDate ? `&date=${selectedDate}` : ''}`}
-                      className={`group rounded-xl border p-4 transition ${
-                        isActive
-                          ? 'border-blue-500 bg-blue-50/50 shadow-sm ring-2 ring-blue-500/10'
-                          : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="font-semibold text-foreground">{s.name}</div>
-                        {isActive && (
-                          <div className="grid h-5 w-5 place-items-center rounded-full bg-accent text-xs text-accent-foreground">
-                            ✓
-                          </div>
-                        )}
-                      </div>
-                      {s.description && (
-                        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                          {s.description}
-                        </p>
-                      )}
-                      <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> {s.duration_minutes} 分鐘
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          {s.price ? Number(s.price).toLocaleString() : '洽詢'}
-                        </span>
-                      </div>
-                    </Link>
-                  )
-                })}
-              </div>
-            </section>
 
-            {/* Date + Time selection via SlotPicker */}
-            {activeServiceId && (
+        {/* VIDEO */}
+        {tenant.intro_video_url && (
+          <section className="px-5 py-12 sm:px-10 sm:py-16 lg:px-[72px]">
+            <div className="grid items-start gap-8 lg:grid-cols-[280px_1fr] lg:gap-12">
+              <SectionHead kicker="VIDEO · 介紹影片" title="介紹影片" eng="" hint="了解我的訓練風格" />
+              <div className="max-w-[720px]">
+                <VideoEmbed url={tenant.intro_video_url} />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* GALLERY */}
+        {photos.length > 0 && (
+          <section className="px-5 py-12 sm:px-10 sm:py-16 lg:px-[72px]">
+            <SectionHead kicker="SPACE · 環境照片" title="環境" eng="SPACE" />
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+              {photos.map((p, i) => (
+                <figure key={p.id} className="m-0 space-y-2">
+                  <div className="overflow-hidden rounded-xl border border-border">
+                    <img
+                      src={p.public_url}
+                      alt={p.caption ?? ''}
+                      loading="lazy"
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                  </div>
+                  {p.caption && (
+                    <figcaption className="font-mono text-xs tracking-wider text-muted-foreground">
+                      {String(i + 1).padStart(2, '0')} — {p.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* SERVICES */}
+        {services && services.length > 0 && (
+          <section
+            id="services"
+            className="mt-8 border-t border-border bg-muted px-5 py-12 sm:px-10 sm:py-16 lg:px-[72px]"
+          >
+            <SectionHead
+              kicker="SECTION / 03"
+              title="服務"
+              eng="SERVICES"
+              hint="選一個服務、再挑選時段。"
+              right={
+                <span className="font-mono text-[11px] tracking-[0.1em] text-muted-foreground">
+                  {String(services.length).padStart(2, '0')} ITEMS
+                </span>
+              }
+            />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {services.map((s, i) => {
+                const isActive = s.id === activeServiceId
+                return (
+                  <Link
+                    key={s.id}
+                    href={`/${tenantSlug}?service=${s.id}${selectedDate ? `&date=${selectedDate}` : ''}`}
+                    className={`group relative flex flex-col gap-3 rounded-2xl border bg-card p-6 transition-shadow ${
+                      isActive
+                        ? 'border-foreground ring-2 ring-foreground/10'
+                        : 'border-border hover:shadow-[0_8px_24px_-18px_rgba(0,0,0,0.25)]'
+                    }`}
+                  >
+                    <span
+                      aria-hidden
+                      className="font-display pointer-events-none absolute right-5 top-4 text-7xl leading-none opacity-10"
+                    >
+                      0{i + 1}
+                    </span>
+                    <div className="font-mono flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                      <span className="h-0.5 w-3.5 rounded bg-accent" />
+                      SERVICE / 0{i + 1}
+                    </div>
+                    <h3 className="font-display font-cjk text-[22px] font-black leading-tight">
+                      {s.name}
+                    </h3>
+                    {s.description && (
+                      <p className="font-cjk line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                        {s.description}
+                      </p>
+                    )}
+                    <div className="mt-auto flex items-baseline justify-between border-t border-dashed border-border pt-3">
+                      <span className="font-mono text-[11px] tracking-[0.08em] text-muted-foreground">
+                        {s.duration_minutes} 分鐘
+                      </span>
+                      <span className="font-display border-b-[3px] border-accent pb-px text-[22px] leading-none">
+                        NT$ {Number(s.price ?? 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* SLOT PICKER */}
+        {activeServiceId && (
+          <section className="bg-muted px-5 pb-16 pt-8 sm:px-10 sm:pb-20 lg:px-[72px]">
+            <SectionHead kicker="SECTION / 04" title="時段" eng="SLOTS" />
+            <div className="rounded-2xl border border-border bg-card p-5 sm:p-7">
               <Suspense fallback={null}>
                 <SlotPicker
                   tenantSlug={tenantSlug}
@@ -230,8 +310,8 @@ export default async function TenantPublicPage({
                   rescheduleFrom={rescheduleFrom ?? null}
                 />
               </Suspense>
-            )}
-          </div>
+            </div>
+          </section>
         )}
       </main>
     </div>
