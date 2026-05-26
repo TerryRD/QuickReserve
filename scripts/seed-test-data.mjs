@@ -267,6 +267,37 @@ async function main() {
   })
   log(`  ✓ ${lin.tenant.name} (/${lin.tenant.slug})`)
 
+  // S5: coach intro page media (FR-131 ~ FR-134)
+  await admin
+    .from('tenants')
+    .update({
+      avatar_url: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=400&fit=crop',
+      bio_html:
+        '<h2>關於我</h2><p>10 年桌球教學經驗，<strong>國手級指導</strong>。專長從基本動作矯正到比賽戰術設計。</p><ul><li>業餘國手 5 年</li><li>桌球教練 C 級證照</li><li>北市青少年盃金牌教練</li></ul>',
+      intro_video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    })
+    .eq('id', lin.tenant.id)
+
+  // S5: 2 demo photo rows (FR-132)
+  // Note: storage_path points to coach-media bucket. Image files aren't auto-uploaded;
+  // captions still display, and the spec acknowledges the broken-image fallback is acceptable for seed.
+  await admin.from('tenant_photos').delete().eq('tenant_id', lin.tenant.id) // idempotent
+  await admin.from('tenant_photos').insert([
+    {
+      tenant_id: lin.tenant.id,
+      storage_path: `${lin.tenant.id}/demo-court-1.jpg`,
+      caption: '主場館 — 8 張球桌',
+      display_order: 0,
+    },
+    {
+      tenant_id: lin.tenant.id,
+      storage_path: `${lin.tenant.id}/demo-court-2.jpg`,
+      caption: '訓練區',
+      display_order: 1,
+    },
+  ])
+  log(`  ✓ 林教練 media (avatar + bio + 1 video + 2 photos)`)
+
   log('\n─── Creating staff (under 林教練) ───')
   const ming = await createStaff({
     tenantId: lin.tenant.id,
