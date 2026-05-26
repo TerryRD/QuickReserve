@@ -23,7 +23,12 @@ export default async function NotificationPreferences({ userId }: { userId: stri
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">通知設定</h1>
+      <header>
+        <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">SETTINGS · 通知</div>
+        <h1 className="font-display mt-2 text-3xl uppercase">
+          通知<span className="font-cjk">設定</span>
+        </h1>
+      </header>
       <PushOptIn />
       <PreferencesForm initial={prefs ?? DEFAULT_PREFS} />
     </div>

@@ -3,7 +3,6 @@ import { format, parseISO } from 'date-fns'
 import { Repeat, ArrowLeft, Calendar } from 'lucide-react'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { Card, CardContent } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
 import { RuleToggle, RuleDeleteButton } from './rule-row-actions'
 
@@ -85,28 +84,27 @@ export default async function RecurringRulesPage() {
           <ArrowLeft className="h-3.5 w-3.5" />
           回行事曆
         </Link>
-        <h1 className="font-display text-3xl tracking-tight">
-          <span className="italic">重複規則</span>
+        <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">CALENDAR · 重複規則</div>
+        <h1 className="font-display mt-2 text-3xl uppercase">
+          重複<span className="font-cjk">規則</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">管理「批量 / 重複」建立的所有規則</p>
+        <p className="font-cjk mt-1 text-sm text-muted-foreground">管理「批量 / 重複」建立的所有規則</p>
       </div>
 
       {!rules || rules.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Repeat className="mx-auto h-10 w-10 text-muted-foreground/40" />
-            <p className="mt-3 font-medium">尚無重複規則</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              在行事曆按「⚡ 批量 / 重複」建立第一個規則
-            </p>
-            <Link
-              href="/calendar"
-              className={buttonVariants({ variant: 'outline', size: 'sm' }) + ' mt-6'}
-            >
-              前往行事曆
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-border bg-card p-12 text-center">
+          <Repeat className="mx-auto h-10 w-10 text-muted-foreground/40" />
+          <p className="mt-3 font-medium">尚無重複規則</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            在行事曆按「⚡ 批量 / 重複」建立第一個規則
+          </p>
+          <Link
+            href="/calendar"
+            className={buttonVariants({ variant: 'outline', size: 'sm' }) + ' mt-6'}
+          >
+            前往行事曆
+          </Link>
+        </div>
       ) : (
         <div className="space-y-3">
           {rules.map((r) => {
@@ -118,52 +116,53 @@ export default async function RecurringRulesPage() {
             const memberLabel =
               member?.role === 'owner' ? 'Owner' : (member?.invited_email ?? 'Staff')
             return (
-              <Card key={r.id} className={r.is_active ? '' : 'opacity-60'}>
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-display text-xl italic">{svc?.name ?? '—'}</h3>
-                        {session.role === 'tenant_owner' && (
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase text-muted-foreground">
-                            {memberLabel}
-                          </span>
-                        )}
-                        {!r.is_active && (
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600">
-                            停用中
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-2 grid gap-1 text-sm text-foreground/80 sm:grid-cols-2">
-                        <div>
-                          <span className="text-muted-foreground">時間：</span>
-                          {describeRule(r)} {r.start_time?.slice(0, 5)}–{r.end_time?.slice(0, 5)}
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">起：</span>
-                          {format(parseISO(r.start_date), 'yyyy/MM/dd')}
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">結束：</span>
-                          {describeEnd(r)}
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">未來時段：</span>
-                          <span className="inline-flex items-center gap-1 font-medium">
-                            <Calendar className="h-3.5 w-3.5" />
-                            {slotCounts[r.id] ?? 0} 個
-                          </span>
-                        </div>
-                      </div>
+              <div
+                key={r.id}
+                className={`rounded-2xl border border-border bg-card p-5${r.is_active ? '' : ' opacity-60'}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-display text-xl italic">{svc?.name ?? '—'}</h3>
+                      {session.role === 'tenant_owner' && (
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase text-muted-foreground">
+                          {memberLabel}
+                        </span>
+                      )}
+                      {!r.is_active && (
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase text-muted-foreground">
+                          停用中
+                        </span>
+                      )}
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <RuleToggle ruleId={r.id} isActive={r.is_active} />
-                      <RuleDeleteButton ruleId={r.id} />
+                    <div className="mt-2 grid gap-1 text-sm text-foreground/80 sm:grid-cols-2">
+                      <div>
+                        <span className="text-muted-foreground">時間：</span>
+                        {describeRule(r)} {r.start_time?.slice(0, 5)}–{r.end_time?.slice(0, 5)}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">起：</span>
+                        {format(parseISO(r.start_date), 'yyyy/MM/dd')}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">結束：</span>
+                        {describeEnd(r)}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">未來時段：</span>
+                        <span className="inline-flex items-center gap-1 font-medium">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {slotCounts[r.id] ?? 0} 個
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <RuleToggle ruleId={r.id} isActive={r.is_active} />
+                    <RuleDeleteButton ruleId={r.id} />
+                  </div>
+                </div>
+              </div>
             )
           })}
         </div>

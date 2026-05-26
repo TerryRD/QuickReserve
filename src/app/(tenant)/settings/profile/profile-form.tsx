@@ -1,12 +1,11 @@
-// src/app/(tenant)/settings/profile/profile-form.tsx
 'use client'
 
 import { useState } from 'react'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PrimaryCta } from '@/components/ui/primary-cta'
 import { updateTenantProfileAction } from './actions'
 import AvatarUploader from './avatar-uploader'
 import BioEditor from './bio-editor'
@@ -24,6 +23,26 @@ type Profile = {
   bio_html: string | null
   intro_video_url: string | null
 }
+
+function SectionTitle({ kicker, title, eng, hint }: { kicker: string; title: string; eng: string; hint?: string }) {
+  return (
+    <div>
+      <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+        {kicker}
+      </div>
+      <h2 className="font-display mt-1 flex flex-wrap items-baseline gap-3 text-2xl uppercase leading-tight tracking-tight">
+        <span className="font-cjk">{title}</span>
+        <span className="relative inline-block text-xl">
+          {eng}
+          <span aria-hidden className="absolute inset-x-0 -bottom-0.5 h-1 rounded bg-accent" />
+        </span>
+      </h2>
+      {hint && <p className="font-cjk mt-1.5 text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  )
+}
+
+const inputClass = 'font-cjk h-11 rounded-xl border-2 border-border bg-background px-4 text-sm'
 
 export default function ProfileForm({
   tenantId,
@@ -51,7 +70,7 @@ export default function ProfileForm({
 
   return (
     <form
-      className="space-y-8"
+      className="space-y-10 pb-24"
       onSubmit={(e) => {
         e.preventDefault()
         execute({
@@ -68,24 +87,29 @@ export default function ProfileForm({
       }}
     >
       <section className="space-y-4">
-        <h2 className="font-display text-xl">基本資料</h2>
+        <SectionTitle kicker="01 · 基本資料" title="基本資料" eng="BASIC" />
         <div className="space-y-2">
-          <Label htmlFor="name">租戶名稱（公開顯示）</Label>
-          <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
+          <Label htmlFor="name" className="font-mono text-[11px] uppercase tracking-wider">
+            租戶名稱（公開顯示）
+          </Label>
+          <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="description">一句介紹（hero 副標）</Label>
+          <Label htmlFor="description" className="font-mono text-[11px] uppercase tracking-wider">
+            一句介紹（HERO 副標）
+          </Label>
           <Input
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="例如：10 年桌球教學經驗，國手級指導..."
+            className={inputClass}
           />
         </div>
       </section>
 
       <section className="space-y-4">
-        <h2 className="font-display text-xl">Hero 大頭照</h2>
+        <SectionTitle kicker="02 · HERO 大頭照" title="大頭照" eng="AVATAR" />
         <AvatarUploader
           tenantId={tenantId}
           initialUrl={avatarUrl || null}
@@ -95,48 +119,46 @@ export default function ProfileForm({
       </section>
 
       <section className="space-y-4">
-        <h2 className="font-display text-xl">完整介紹（Bio）</h2>
-        <p className="text-xs text-muted-foreground">支援粗體 / 斜體 / 標題 / 清單 / 連結。儲存時會做 HTML 過濾。</p>
+        <SectionTitle kicker="03 · 完整介紹" title="自我介紹" eng="BIO" hint="支援粗體 / 斜體 / 標題 / 清單 / 連結。儲存時會做 HTML 過濾。" />
         <BioEditor value={bioHtml} onChange={setBioHtml} />
       </section>
 
       <section className="space-y-4">
-        <h2 className="font-display text-xl">介紹影片</h2>
+        <SectionTitle kicker="04 · 介紹影片" title="介紹影片" eng="VIDEO" hint="支援 YouTube / Vimeo 連結。" />
         <VideoInput value={introVideoUrl} onChange={setIntroVideoUrl} />
       </section>
 
       <section className="space-y-4">
-        <h2 className="font-display text-xl">照片</h2>
+        <SectionTitle kicker="05 · 環境照片" title="照片" eng="PHOTOS" hint="最多 10 張。JPEG / PNG / WebP，單檔 ≤ 5 MB。" />
         <PhotoGalleryManager tenantId={tenantId} photos={photos} />
       </section>
 
       <section className="space-y-4">
-        <h2 className="font-display text-xl">聯絡方式（公開顯示）</h2>
-        <p className="text-xs text-muted-foreground">填的欄位會在你的公開預約頁顯示給學員。沒填的會隱藏。</p>
+        <SectionTitle kicker="06 · 聯絡方式" title="聯絡方式" eng="CONTACT" hint="填的欄位會在你的公開預約頁顯示給學員。沒填的會隱藏。" />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+            <Label htmlFor="email" className="font-mono text-[11px] uppercase tracking-wider">EMAIL</Label>
+            <Input id="email" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className={inputClass} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">電話</Label>
-            <Input id="phone" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
+            <Label htmlFor="phone" className="font-mono text-[11px] uppercase tracking-wider">PHONE · 電話</Label>
+            <Input id="phone" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className={inputClass} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="line">LINE ID</Label>
-            <Input id="line" value={contactLineId} onChange={(e) => setContactLineId(e.target.value)} />
+            <Label htmlFor="line" className="font-mono text-[11px] uppercase tracking-wider">LINE ID</Label>
+            <Input id="line" value={contactLineId} onChange={(e) => setContactLineId(e.target.value)} className={inputClass} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="note">備註</Label>
-            <Input id="note" value={contactNote} onChange={(e) => setContactNote(e.target.value)} />
+            <Label htmlFor="note" className="font-mono text-[11px] uppercase tracking-wider">NOTE · 備註</Label>
+            <Input id="note" value={contactNote} onChange={(e) => setContactNote(e.target.value)} className={inputClass} />
           </div>
         </div>
       </section>
 
-      <div className="sticky bottom-0 -mx-6 border-t bg-background/95 px-6 py-4 backdrop-blur">
-        <Button type="submit" disabled={isPending} size="lg">
+      <div className="sticky bottom-0 -mx-5 border-t border-border bg-background/95 px-5 py-4 backdrop-blur sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10">
+        <PrimaryCta type="submit" disabled={isPending} className="w-full max-w-md justify-between sm:w-auto">
           {isPending ? '儲存中...' : '儲存所有變更'}
-        </Button>
+        </PrimaryCta>
       </div>
     </form>
   )

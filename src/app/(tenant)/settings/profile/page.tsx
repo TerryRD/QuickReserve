@@ -37,11 +37,12 @@ export default async function TenantProfilePage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl tracking-tight">
-          <span className="italic">租戶資料</span>
+      <header className="mb-8">
+        <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">SETTINGS · 教練資料</div>
+        <h1 className="font-display mt-2 text-3xl uppercase">
+          設定<span className="font-cjk">資料</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">公開頁顯示的名稱、介紹、媒體與聯絡方式</p>
+        <p className="font-cjk mt-1 text-sm text-muted-foreground">公開頁顯示的名稱、介紹、媒體與聯絡方式</p>
       </header>
 
       <ProfileForm tenantId={session.tenantId} initial={tenant} photos={photos} />
