@@ -1062,11 +1062,11 @@ SENTRY_AUTH_TOKEN
 | 2026-05-25 | services 加 max_capacity/min_attendance/cancel_deadline_hours | FR-128 | `cb40fed`, `c797597`, `199b133` |
 | 2026-05-25 | 團班 auto-confirm + auto-cancel cron + 雙向通知 | FR-129 | `579e713`, `d299937` |
 | 2026-05-25 | is_active 軟刪除 UX 統一（刪除/重新啟用 + 已刪除分頁） | FR-130 | `c70a376`, `c797597` |
-| 2026-05-26 | 教練介紹頁 hero avatar wire | FR-131 | `<FILL_AFTER_COMMIT>` |
-| 2026-05-26 | tenant_photos 表 + coach-media Storage bucket + ≤10 張上限 | FR-132 | `<FILL_AFTER_COMMIT>` |
-| 2026-05-26 | Intro video URL（YouTube/Vimeo whitelist + iframe 嵌入） | FR-133 | `<FILL_AFTER_COMMIT>` |
-| 2026-05-26 | Bio rich text（TipTap + sanitize-html server-side filter） | FR-134 | `<FILL_AFTER_COMMIT>` |
-| 2026-05-26 | Signup `?redirect=` + 自動登入 + open-redirect safePath 防護 | FR-135 | `<FILL_AFTER_COMMIT>` |
-| 2026-05-26 | 公開頁未登入 AuthCta（/<slug> + /<slug>/packages） | FR-136 | `<FILL_AFTER_COMMIT>` |
+| 2026-05-26 | 教練介紹頁 hero avatar wire | FR-131 | `df61f35` |
+| 2026-05-26 | tenant_photos 表 + coach-media Storage bucket + ≤10 張上限 | FR-132 | `df61f35` |
+| 2026-05-26 | Intro video URL（YouTube/Vimeo whitelist + iframe 嵌入） | FR-133 | `df61f35` |
+| 2026-05-26 | Bio rich text（TipTap + sanitize-html server-side filter） | FR-134 | `df61f35` |
+| 2026-05-26 | Signup `?redirect=` + 自動登入 + open-redirect safePath 防護 | FR-135 | `df61f35` |
+| 2026-05-26 | 公開頁未登入 AuthCta（/<slug> + /<slug>/packages） | FR-136 | `df61f35` |
 
 > **流程約定**：未來每次功能變更後，補一行到此表並更新對應 FR。
