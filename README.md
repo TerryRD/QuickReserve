@@ -375,6 +375,33 @@ Storage RLS（policies on `storage.objects`）：
 - `font-cjk` 中文段落 Noto Sans TC + Sans fallback
 - `font-mono` 標籤 Space Mono + monospace fallback
 
+## Design language — claudeDesign UI Alignment Plan 1（2026-05-27）
+
+對齊 `claudeDesign/` 17 頁 mockup 的 Phase 1 已完成基礎層（schema + primitives + seed）：
+
+**新增 schema:**
+- `tenants.years_exp / established_year / city` — 公開頁 hero meta
+- `service_packages.is_popular` — 公開頁套裝 POPULAR 黃色 Pill
+- `notification_preferences.channels` (jsonb event × `{web_push, in_app}` 矩陣) + `quiet_hours_start/end`。**Email 通道不做**（成本/流量考量,列 Phase 2 backlog）
+
+**新增 primitives（11 個,含 Button 擴充）:**
+- `<Button>` 擴 `fullWidth` + `withArrow="circle"|"inline"`
+- `<Kicker>` — mono uppercase tracking-0.18em
+- `<EmptyState>` — dashed border + icon + title + hint + cta
+- `<KpiCard>` — label / value / unit / hint / icon / accent flag
+- `<SubNav>` — settings 4 頁 segmented control
+- `<AppShell>` — title / kicker / subnav / actions slot
+- `<DateRibbon>` — 日期 chip row + slot count（公開頁/booking）
+- `<TimeChip>` — 4 state（open / full / group / selected,含 N/M badge）
+- `<RescheduleBanner>` — 改期模式黃 banner + 退出 link
+- `<DateStrip>` — my-bookings 時間群組 header（today/thisWeek/later/past）
+- `<NotificationMatrix>` — 事件 × {web_push, in_app} 矩陣
+- `<QuietHoursInput>` — 勿擾時段 time range + 啟用 toggle
+
+**Seed:** `supabase/seed.sql` 增加 demo tenant + services + packages（auth-dependent 部分由既有 `scripts/seed-test-data.mjs` 負責）。
+
+下一階段（Plan 2~5）：17 頁實際 layout 對齊 + final QA。
+
 ## 部署
 
 - **Production**：push 到 `master` → Vercel 自動部署到 production 域名
