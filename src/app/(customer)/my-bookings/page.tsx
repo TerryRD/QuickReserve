@@ -173,7 +173,6 @@ export default async function MyBookingsPage() {
   const [
     bookingsRes,
     pendingCountRes,
-    confirmedCountRes,
     completedCountRes,
     cancelledCountRes,
   ] = await Promise.all([
@@ -193,11 +192,6 @@ export default async function MyBookingsPage() {
       .from('bookings')
       .select('id', { count: 'exact', head: true })
       .eq('customer_id', userId)
-      .eq('status', 'confirmed'),
-    supabase
-      .from('bookings')
-      .select('id', { count: 'exact', head: true })
-      .eq('customer_id', userId)
       .eq('status', 'completed'),
     supabase
       .from('bookings')
@@ -210,8 +204,6 @@ export default async function MyBookingsPage() {
   const pendingCount = pendingCountRes.count ?? 0
   const completedCount = completedCountRes.count ?? 0
   const cancelledCount = cancelledCountRes.count ?? 0
-  // confirmedCountRes available for future composite KPIs; not surfaced in current 4-card layout
-  void confirmedCountRes
 
   const now = new Date()
   const weekAhead = new Date(now.getTime() + 7 * 24 * 3600 * 1000)
