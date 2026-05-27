@@ -20,6 +20,9 @@ const UpdateProfileSchema = z.object({
   avatarUrl: z.string().url().or(z.literal('')).optional().nullable(),
   bioHtml: z.string().max(20_000).optional().nullable(),
   introVideoUrl: z.string().url().or(z.literal('')).optional().nullable(),
+  yearsExp: z.number().int().nonnegative().max(120).nullable().optional(),
+  establishedYear: z.number().int().min(1900).max(2100).nullable().optional(),
+  city: z.string().max(80).nullable().optional(),
 })
 
 export const updateTenantProfileAction = actionClient
@@ -47,6 +50,9 @@ export const updateTenantProfileAction = actionClient
         avatar_url: parsedInput.avatarUrl || null,
         bio_html: cleanBio,
         intro_video_url: parsedInput.introVideoUrl || null,
+        years_exp: parsedInput.yearsExp ?? null,
+        established_year: parsedInput.establishedYear ?? null,
+        city: parsedInput.city ? parsedInput.city.trim() || null : null,
       })
       .eq('id', session.tenantId)
     if (error) throw new AppError('TENANT_UPDATE_FAILED', error.message)
