@@ -5,10 +5,10 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
-import { Star } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { PrimaryCta } from '@/components/ui/primary-cta'
+import { Button } from '@/components/ui/button'
+import { Kicker } from '@/components/ui/kicker'
 import { SidePanel } from '../side-panel'
 import { signupAction } from './actions'
 
@@ -30,21 +30,23 @@ function SignupForm() {
   return (
     <div className="flex w-full flex-col gap-6 self-center sm:max-w-[480px]">
       {inviteToken && (
-        <div className="flex items-start gap-3 rounded-2xl bg-accent px-4 py-3 text-accent-foreground">
-          <Star className="mt-0.5 size-4 shrink-0" />
-          <div>
-            <div className="font-cjk text-sm font-bold">您正在接受教練邀請</div>
-            <div className="font-cjk mt-0.5 text-xs opacity-90">
-              完成註冊後將自動接受邀請、可立即購買該教練的套裝。
-            </div>
+        // TODO(src/app/(auth)/signup/page.tsx:34): Fetch tenant_name via a new
+        // public-by-token endpoint (e.g. /api/invite/resolve?token=...) and
+        // render "您被 {tenant_name} 邀請加入". Currently this is a client
+        // component so the admin lookup in /invite/[token]/page.tsx is not
+        // reusable here without a new server endpoint.
+        <div className="rounded-2xl border border-accent bg-accent/30 p-4">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground">
+            INVITED ·
+          </div>
+          <div className="font-cjk mt-1 text-sm text-foreground">
+            您正在接受教練邀請，完成註冊後將自動接受邀請、可立即購買該教練的套裝。
           </div>
         </div>
       )}
 
       <div>
-        <div className="font-mono mb-3 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-          STEP 01 · SIGN UP
-        </div>
+        <Kicker className="mb-3 text-[11px] tracking-[0.2em]">STEP 01 · SIGN UP</Kicker>
         <h1 className="font-display font-cjk text-[56px] font-normal uppercase leading-[0.95] tracking-tight">
           建立帳號
         </h1>
@@ -120,9 +122,15 @@ function SignupForm() {
         </div>
 
         <div className="mt-1">
-          <PrimaryCta type="submit" disabled={isPending} className="justify-between">
+          <Button
+            type="submit"
+            variant="default"
+            size="pill"
+            withArrow="inline"
+            disabled={isPending}
+          >
             {isPending ? '建立中...' : inviteToken ? '建立帳號並接受邀請' : '建立帳號'}
-          </PrimaryCta>
+          </Button>
         </div>
         <div className="font-mono mt-1 text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
           建立帳號即同意服務條款與隱私權政策
