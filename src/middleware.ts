@@ -40,6 +40,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/my-bookings') ||
     pathname.startsWith('/settings') ||
     pathname.startsWith('/notifications') ||
+    pathname.startsWith('/account') ||
     pathname.startsWith('/invite')
 
   if (!user && isProtected && !isPublic) {
