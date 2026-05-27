@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 import { approvePurchaseAction, rejectPurchaseAction } from './purchase-actions'
 
 type Props = {
@@ -27,9 +28,10 @@ type Props = {
     paymentSelfReported: 'claimed_paid' | 'awaiting_payment'
     createdAt: string
   }
+  emphasized?: boolean
 }
 
-export default function PurchaseRow({ purchase }: Props) {
+export default function PurchaseRow({ purchase, emphasized = false }: Props) {
   const [rejectOpen, setRejectOpen] = useState(false)
   const [reason, setReason] = useState('')
 
@@ -53,7 +55,12 @@ export default function PurchaseRow({ purchase }: Props) {
       : 'bg-amber-100 text-amber-800'
 
   return (
-    <Card>
+    <Card
+      className={cn(
+        'transition',
+        emphasized && 'bg-accent/15 ring-2 ring-accent',
+      )}
+    >
       <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
