@@ -5,11 +5,10 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
-import { Check } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { PrimaryCta } from '@/components/ui/primary-cta'
+import { Kicker } from '@/components/ui/kicker'
 import { SidePanel } from '../side-panel'
 import { loginAction } from './actions'
 
@@ -35,19 +34,18 @@ function LoginForm() {
   return (
     <div className="flex w-full flex-col gap-6 self-center sm:max-w-[480px]">
       {signedUp && (
-        <div className="flex items-start gap-3 rounded-2xl bg-primary px-4 py-3 text-primary-foreground">
-          <Check className="mt-0.5 size-4 shrink-0" />
-          <div>
-            <div className="font-cjk text-sm font-bold">註冊成功</div>
-            <div className="font-cjk mt-0.5 text-xs opacity-90">請使用剛建立的帳號登入。</div>
+        <div className="rounded-2xl border border-accent bg-accent/30 p-4">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground">
+            SIGNED UP ·
+          </div>
+          <div className="font-cjk mt-1 text-sm text-foreground">
+            註冊成功!請使用剛剛建立的帳號登入。
           </div>
         </div>
       )}
 
       <div>
-        <div className="font-mono mb-3 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-          STEP 01 · LOGIN
-        </div>
+        <Kicker className="mb-3 text-[11px] tracking-[0.2em]">STEP 01 · LOGIN</Kicker>
         <h1 className="font-display font-cjk text-[56px] font-normal uppercase leading-[0.95] tracking-tight">
           歡迎回來
         </h1>
@@ -101,13 +99,19 @@ function LoginForm() {
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-3">
-          <PrimaryCta type="submit" disabled={isPending} className="justify-between">
+          <Button
+            type="submit"
+            variant="default"
+            size="pill"
+            withArrow="inline"
+            disabled={isPending}
+          >
             {isPending ? '登入中...' : '登入'}
-          </PrimaryCta>
+          </Button>
           <Button
             type="button"
             variant="pill-outline"
-            size="xl"
+            size="pill"
             render={
               <Link
                 href={`/signup${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
