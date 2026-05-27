@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactElement } from 'react'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { Plus, Pencil } from 'lucide-react'
@@ -28,13 +28,28 @@ type Package = {
 }
 
 type Props =
-  | { mode: 'create'; services: Service[]; pkg?: undefined }
-  | { mode: 'edit'; services: Service[]; pkg: Package }
+  | {
+      mode: 'create'
+      services: Service[]
+      pkg?: undefined
+      trigger?: ReactElement
+      defaultServiceId?: string
+    }
+  | {
+      mode: 'edit'
+      services: Service[]
+      pkg: Package
+      trigger?: ReactElement
+      defaultServiceId?: undefined
+    }
 
 export default function PackageFormDialog(props: Props) {
   const isEdit = props.mode === 'edit'
+  const customTrigger = props.trigger
   const [open, setOpen] = useState(false)
-  const [serviceId, setServiceId] = useState(props.pkg?.service_id ?? props.services[0]?.id ?? '')
+  const [serviceId, setServiceId] = useState(
+    props.pkg?.service_id ?? props.defaultServiceId ?? props.services[0]?.id ?? '',
+  )
   const [name, setName] = useState(props.pkg?.name ?? '')
   const [classCount, setClassCount] = useState(String(props.pkg?.class_count ?? 10))
   const [price, setPrice] = useState(String(props.pkg?.price ?? ''))
@@ -69,7 +84,8 @@ export default function PackageFormDialog(props: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          isEdit ? (
+          customTrigger ??
+          (isEdit ? (
             <Button variant="outline" size="sm">
               <Pencil className="mr-1 h-3.5 w-3.5" />
               編輯
@@ -79,7 +95,7 @@ export default function PackageFormDialog(props: Props) {
               <Plus className="mr-1 h-3.5 w-3.5" />
               新增套裝
             </Button>
-          )
+          ))
         }
       />
       <DialogContent className="max-w-lg">
