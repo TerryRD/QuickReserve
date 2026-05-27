@@ -1,15 +1,7 @@
 import { Building2, ClipboardList, Bell, Users, UserCheck, Clock } from 'lucide-react'
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
-import { Card, CardContent } from '@/components/ui/card'
-
-const STAT_COLORS = {
-  blue: 'bg-blue-50 text-blue-600',
-  emerald: 'bg-emerald-50 text-emerald-600',
-  amber: 'bg-amber-50 text-amber-600',
-  indigo: 'bg-indigo-50 text-indigo-600',
-  rose: 'bg-rose-50 text-rose-600',
-  slate: 'bg-slate-100 text-slate-600',
-} as const
+import { Kicker } from '@/components/ui/kicker'
+import { KpiCard } from '@/components/ui/kpi-card'
 
 export default async function PlatformDashboard() {
   const admin = createSupabaseAdminClient()
@@ -33,58 +25,64 @@ export default async function PlatformDashboard() {
   const stats: Array<{
     label: string
     value: string
+    hint?: string
     icon: typeof Building2
-    color: keyof typeof STAT_COLORS
+    accent?: boolean
   }> = [
     {
       label: '啟用租戶',
       value: `${activeTenantCount ?? 0} / ${tenantCount ?? 0}`,
+      hint: '啟用 / 總數',
       icon: Building2,
-      color: 'blue',
     },
-    { label: '使用者總數', value: String(userCount ?? 0), icon: Users, color: 'indigo' },
+    {
+      label: '使用者總數',
+      value: String(userCount ?? 0),
+      icon: Users,
+    },
     {
       label: '預約紀錄總數',
       value: String(bookingCount ?? 0),
       icon: ClipboardList,
-      color: 'emerald',
     },
     {
       label: '待確認預約',
       value: String(pendingBookingCount ?? 0),
+      hint: (pendingBookingCount ?? 0) > 0 ? '需要教練處理' : '一切就緒',
       icon: Clock,
-      color: 'amber',
+      accent: (pendingBookingCount ?? 0) > 0,
     },
     {
       label: '推播訂閱數',
       value: String(subscriptionCount ?? 0),
       icon: Bell,
-      color: 'rose',
     },
-    { label: '平台管理員', value: '1', icon: UserCheck, color: 'slate' },
+    {
+      label: '平台管理員',
+      value: '1',
+      icon: UserCheck,
+    },
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">平台儀表板</h1>
-        <p className="mt-1 text-sm text-muted-foreground">即時系統狀態與統計</p>
+        <Kicker>PLATFORM · 平台後台</Kicker>
+        <h1 className="mt-2 font-display font-cjk text-3xl font-black uppercase sm:text-4xl">
+          平台儀表板
+        </h1>
+        <p className="font-cjk mt-2 text-sm text-muted-foreground">即時系統狀態與統計</p>
       </header>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
         {stats.map((s) => (
-          <Card key={s.label}>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div
-                className={`grid h-12 w-12 place-items-center rounded-xl ${STAT_COLORS[s.color]}`}
-              >
-                <s.icon className="h-6 w-6" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs text-muted-foreground">{s.label}</div>
-                <div className="text-2xl font-bold tracking-tight">{s.value}</div>
-              </div>
-            </CardContent>
-          </Card>
+          <KpiCard
+            key={s.label}
+            label={s.label}
+            value={s.value}
+            hint={s.hint}
+            icon={<s.icon className="size-3.5" />}
+            accent={s.accent}
+          />
         ))}
       </div>
     </div>

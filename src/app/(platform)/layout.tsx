@@ -1,24 +1,29 @@
 import Link from 'next/link'
-import { Calendar, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { requirePlatformAdmin } from '@/lib/auth/get-session'
+import { QRMark } from '@/components/brand/qr-mark'
+import { ThemeToggle } from '@/components/theme-toggle'
 import PlatformSidebarNav from './platform-sidebar-nav'
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
   await requirePlatformAdmin()
   return (
-    <div className="grid min-h-screen md:grid-cols-[240px_1fr]">
-      <aside className="flex flex-col bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:h-screen">
+    <div className="md:grid md:min-h-screen md:grid-cols-[240px_1fr]">
+      <aside className="hidden flex-col bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:flex md:h-screen">
+        {/* Logo block */}
         <div className="border-b border-sidebar-border p-4">
-          <Link href="/platform/dashboard" className="flex items-center gap-2">
-            <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
-              <Calendar className="h-4 w-4" strokeWidth={2.5} />
-            </div>
-            <div>
-              <div className="text-sm font-semibold">QuickReserve</div>
-              <div className="text-xs text-sidebar-foreground/60">平台後台</div>
+          <Link href="/platform/dashboard" className="flex items-center gap-3">
+            <QRMark size={36} />
+            <div className="min-w-0 flex-1 leading-tight">
+              <div className="font-display text-base uppercase tracking-wider">QuickReserve</div>
+              <div className="font-mono text-[9px] uppercase tracking-[0.15em] opacity-70">
+                PLATFORM · 平台後台
+              </div>
             </div>
           </Link>
         </div>
+
+        {/* Nav */}
         <div className="flex-1 overflow-y-auto p-3">
           <PlatformSidebarNav
             items={[
@@ -28,20 +33,27 @@ export default async function PlatformLayout({ children }: { children: React.Rea
             ]}
           />
         </div>
-        <div className="border-t border-sidebar-border p-3">
+
+        {/* Bottom: theme toggle + logout */}
+        <div className="space-y-2 border-t border-sidebar-border p-3">
+          <div className="px-1">
+            <ThemeToggle className="w-full justify-center" />
+          </div>
           <form action="/api/logout" method="post">
             <button
               type="submit"
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 font-cjk text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="size-4" />
               登出
             </button>
           </form>
         </div>
       </aside>
       <main className="bg-background">
-        <div className="mx-auto max-w-6xl p-6 md:p-8">{children}</div>
+        <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+          {children}
+        </div>
       </main>
     </div>
   )

@@ -1,16 +1,19 @@
 import { Suspense } from 'react'
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
+import { Kicker } from '@/components/ui/kicker'
+import { SectionHead } from '@/components/ui/section-head'
 import InviteCoachForm from './invite-coach-form'
 import TenantsTable from './tenants-table'
 
 export default function TenantsListPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <header>
-        <h1 className="font-display text-3xl tracking-tight">
-          <span className="italic">租戶管理</span>
+        <Kicker>PLATFORM · 平台後台</Kicker>
+        <h1 className="mt-2 font-display font-cjk text-3xl font-black uppercase sm:text-4xl">
+          租戶管理
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="font-cjk mt-2 text-sm text-muted-foreground">
           邀請、暫停、重發邀請、重設密碼
         </p>
       </header>
@@ -18,7 +21,7 @@ export default function TenantsListPage() {
       <InviteCoachForm />
 
       <section>
-        <h2 className="mb-2 font-display text-xl">租戶列表</h2>
+        <SectionHead kicker="TENANTS · 租戶列表" title="租戶列表" eng="ALL TENANTS" />
         <Suspense fallback={<TenantsListSkeleton />}>
           <TenantsList />
         </Suspense>
@@ -81,11 +84,11 @@ async function TenantsList() {
 
 function TenantsListSkeleton() {
   return (
-    <div className="space-y-2 rounded-lg border bg-card p-4">
+    <div className="space-y-2 rounded-2xl border border-border bg-card p-4">
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="h-12 animate-pulse rounded-md bg-muted/50"
+          className="h-12 animate-pulse rounded-xl bg-muted/50"
           style={{ animationDelay: `${i * 60}ms` }}
         />
       ))}
