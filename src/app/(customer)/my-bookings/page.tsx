@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Calendar, Settings, ExternalLink, Filter, X } from 'lucide-react'
+import { Calendar, Settings, Filter } from 'lucide-react'
 import { requireSession } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Badge, StatusBadge, type StatusType } from '@/components/ui/badge'
+import { KpiCard } from '@/components/ui/kpi-card'
+import { DateStrip, type DateStripGroup } from '@/components/bookings/date-strip'
 import PushOptIn from '@/components/push-opt-in'
 import CancelMyBookingButton from './cancel-button'
 
@@ -155,20 +157,71 @@ function BookingCard({ b }: { b: BookingRow }) {
   )
 }
 
+const groupKeyMap: Record<string, DateStripGroup> = {
+  '今日': 'today',
+  '本週': 'thisWeek',
+  '之後': 'later',
+  '已過': 'past',
+  '其他': 'past',
+}
+
 export default async function MyBookingsPage() {
   const session = await requireSession()
   const supabase = await createSupabaseServerClient()
-  const { data: bookingsRaw } = await supabase
-    .from('bookings')
-    .select(
-      'id, status, customer_notes, created_at, service_id, tenants(name, slug), services(name, duration_minutes), availability_slots(start_at, end_at)',
-    )
-    .eq('customer_id', session.userId)
-    .order('created_at', { ascending: false })
+  const userId = session.userId
 
-  const bookings = (bookingsRaw ?? []) as BookingRow[]
+  const [
+    bookingsRes,
+    pendingCountRes,
+    confirmedCountRes,
+    completedCountRes,
+    cancelledCountRes,
+  ] = await Promise.all([
+    supabase
+      .from('bookings')
+      .select(
+        'id, status, customer_notes, created_at, service_id, tenants(name, slug), services(name, duration_minutes), availability_slots(start_at, end_at)',
+      )
+      .eq('customer_id', userId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('customer_id', userId)
+      .eq('status', 'pending'),
+    supabase
+      .from('bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('customer_id', userId)
+      .eq('status', 'confirmed'),
+    supabase
+      .from('bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('customer_id', userId)
+      .eq('status', 'completed'),
+    supabase
+      .from('bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('customer_id', userId)
+      .eq('status', 'cancelled'),
+  ])
+
+  const bookings = (bookingsRes.data ?? []) as BookingRow[]
+  const pendingCount = pendingCountRes.count ?? 0
+  const completedCount = completedCountRes.count ?? 0
+  const cancelledCount = cancelledCountRes.count ?? 0
+  // confirmedCountRes available for future composite KPIs; not surfaced in current 4-card layout
+  void confirmedCountRes
+
   const now = new Date()
-  const isFuture = (iso: string) => new Date(iso) > now
+  const weekAhead = new Date(now.getTime() + 7 * 24 * 3600 * 1000)
+  const thisWeekCount = bookings.filter((b) => {
+    if (b.status !== 'pending' && b.status !== 'confirmed') return false
+    const start = b.availability_slots?.start_at
+    if (!start) return false
+    const t = new Date(start)
+    return t >= now && t <= weekAhead
+  }).length
 
   const grouped: Record<string, BookingRow[]> = {}
   for (const b of bookings) {
@@ -176,29 +229,6 @@ export default async function MyBookingsPage() {
     grouped[key] = grouped[key] ?? []
     grouped[key].push(b)
   }
-
-  // KPI stats
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const bookedThisMonth = bookings.filter(
-    (b) =>
-      b.availability_slots &&
-      new Date(b.availability_slots.start_at) >= monthStart &&
-      (b.status === 'confirmed' || b.status === 'completed' || b.status === 'pending'),
-  ).length
-  const pendingCount = bookings.filter((b) => b.status === 'pending').length
-  const upcomingNearest = bookings
-    .filter(
-      (b) =>
-        b.availability_slots &&
-        isFuture(b.availability_slots.start_at) &&
-        (b.status === 'pending' || b.status === 'confirmed'),
-    )
-    .sort((a, b) =>
-      a.availability_slots!.start_at.localeCompare(b.availability_slots!.start_at),
-    )[0]
-  const upcomingLabel = upcomingNearest?.availability_slots
-    ? format(toLocal(upcomingNearest.availability_slots.start_at), 'M/d HH:mm')
-    : '—'
 
   return (
     <div className="min-h-screen bg-background">
@@ -231,26 +261,18 @@ export default async function MyBookingsPage() {
         </div>
 
         {/* KPI quick stats */}
-        <div className="mb-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-4">
-          {[
-            { label: '本月已預約', value: String(bookedThisMonth), unit: '堂' },
-            { label: '待確認', value: String(pendingCount), unit: '堂' },
-            { label: '預約總數', value: String(bookings.length), unit: '筆' },
-            { label: '最近一次', value: upcomingLabel, unit: '' },
-          ].map((s) => (
-            <div key={s.label} className="bg-card px-5 py-4">
-              <div className="font-mono text-[10.5px] uppercase tracking-[0.15em] text-muted-foreground">
-                {s.label}
-              </div>
-              <div className="mt-1.5 flex items-baseline gap-1">
-                <span className="font-display text-[26px] font-normal">{s.value}</span>
-                {s.unit && (
-                  <span className="font-cjk text-xs text-muted-foreground">{s.unit}</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <section className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <KpiCard label="本週" value={thisWeekCount} unit="筆" hint="未來 7 天" />
+          <KpiCard
+            label="待回覆"
+            value={pendingCount}
+            unit="筆"
+            hint="教練核可中"
+            accent={pendingCount > 0}
+          />
+          <KpiCard label="已完成" value={completedCount} unit="筆" />
+          <KpiCard label="已取消" value={cancelledCount} unit="筆" />
+        </section>
 
         <PushOptIn />
 
@@ -266,25 +288,19 @@ export default async function MyBookingsPage() {
           </div>
         ) : (
           <div className="space-y-10">
-            {GROUP_ORDER.filter((g) => grouped[g] && grouped[g].length > 0).map((g) => (
-              <section key={g}>
-                {/* Section divider with title + count + hr */}
-                <div className="mb-3.5 flex items-baseline gap-3.5">
-                  <h2 className="font-display font-cjk text-[22px] font-black sm:text-[26px]">
-                    {g}
-                  </h2>
-                  <span className="font-mono text-[11px] tracking-[0.1em] text-muted-foreground">
-                    {grouped[g]!.length} 筆
-                  </span>
-                  <span aria-hidden className="h-px flex-1 bg-border" />
-                </div>
-                <div className="flex flex-col gap-3">
-                  {grouped[g]!.map((b) => (
-                    <BookingCard key={b.id} b={b} />
-                  ))}
-                </div>
-              </section>
-            ))}
+            {GROUP_ORDER.filter((g) => grouped[g] && grouped[g].length > 0).map((g) => {
+              const items = grouped[g]!
+              return (
+                <section key={g} className="space-y-3.5">
+                  <DateStrip groupKey={groupKeyMap[g] ?? 'past'} count={items.length} />
+                  <div className="flex flex-col gap-3">
+                    {items.map((b) => (
+                      <BookingCard key={b.id} b={b} />
+                    ))}
+                  </div>
+                </section>
+              )
+            })}
           </div>
         )}
       </main>
