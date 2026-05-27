@@ -400,7 +400,14 @@ Storage RLS（policies on `storage.objects`）：
 
 **Seed:** `supabase/seed.sql` 增加 demo tenant + services + packages（auth-dependent 部分由既有 `scripts/seed-test-data.mjs` 負責）。
 
-下一階段（Plan 2~5）：17 頁實際 layout 對齊 + final QA。
+**Plan 2 已完成（Student 6 頁,2026-05-27）:**
+- `/<slug>` 公開頁:Hero EST/YRS/city meta + Reschedule banner + DateRibbon + TimeChip slot picker + 黑底 selected slot recap bar + QRMark footer
+- `/<slug>/packages`:按服務分組 + POPULAR yellow Pill + in-card 申請表單 + 付款狀態 segmented (claimed_paid / awaiting_payment)
+- `/book/<slotId>`:大 display time slot card + 套裝餘額 radio cards 含進度條 + EmptyState 無套裝 + 取消政策框
+- `/login`、`/signup`:Kicker primitive + pill submit + signedup/invited banner
+- `/my-bookings`:4 KpiCard 列(本週/待回覆/已完成/已取消) + DateStrip 群組 header + 改期 link
+
+下一階段（Plan 3~5）:Coach 7 頁 + Settings 4 頁 + Final QA。
 
 ## 部署
 
