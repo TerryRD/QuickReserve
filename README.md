@@ -416,7 +416,16 @@ Storage RLS（policies on `storage.objects`）：
 - `/packages/pending`:4 KpiCard 列(總待審/等待最久/本週新進/本月通過,column 名是 approval_status='pending_review') + 第一筆 accent ring 強調
 - `/notifications`:重寫為 notification_log inbox (取代 preferences wrapper) + 4 tabs + 24h 內 cosmetic 黃色側條(不持久化)
 
-下一階段（Plan 4~5）:Settings 4 頁 + Final QA。
+**Plan 4 已完成（Settings 4 頁,2026-05-27）:**
+- 4 頁共用 SubNav segmented (公開頁 / 通知 / 作息 / 重複)
+- `/settings/profile`:6 numbered sections + 新 Hero meta inputs (years_exp/established_year/city) + sticky 底部儲存列含 dirty 狀態指示
+- `/settings/notifications`:**新建租戶側** — Web Push 訂閱卡 + 已訂閱裝置列表 + 9 events × 2 channels NotificationMatrix + QuietHoursInput + 儲存 server action(僅 web_push / in_app,**無 email 通道**)
+- `/calendar/availability`:SubNav + 3 個 SectionHead-包覆 sections(TEMPLATES / EVENTS / PREVIEW)+ Card token polish(移除 hardcoded emerald/blue/amber)
+- `/calendar/rules`:SubNav + 4 種重複類型 segmented control + 動態參數區 + 結束條件 segmented + dialog 視覺對齊 token
+
+**Phase 2 backlog(本期不做):** Web Push 真實訂閱完整流程、Email 通知、Service 排序拖曳、live conflict detection inline preview、`/notifications` persistent read state、Dashboard 進階分析、原 S7 audit report
+
+下一階段（Plan 5）:Final QA 跨 17 頁 + 文件收尾。
 
 ## 部署
 
