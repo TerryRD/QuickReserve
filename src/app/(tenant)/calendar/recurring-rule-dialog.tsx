@@ -161,25 +161,32 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
             <div className="grid grid-cols-4 gap-2 text-sm">
               {(
                 [
-                  ['daily', '每天'],
-                  ['weekly', '每週'],
-                  ['monthly', '每月'],
-                  ['every_n_days', '每 N 天'],
+                  ['daily', '每天', 'DAILY'],
+                  ['weekly', '每週', 'WEEKLY'],
+                  ['monthly', '每月', 'MONTHLY'],
+                  ['every_n_days', '每 N 天', 'EVERY-N'],
                 ] as const
-              ).map(([val, label]) => (
-                <button
-                  type="button"
-                  key={val}
-                  onClick={() => setFreq(val)}
-                  className={`rounded border p-2 ${
-                    freq === val
-                      ? 'border-blue-500 bg-blue-50 font-medium'
-                      : 'border-slate-300 bg-white'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+              ).map(([val, label, code]) => {
+                const on = freq === val
+                return (
+                  <button
+                    type="button"
+                    key={val}
+                    aria-pressed={on}
+                    onClick={() => setFreq(val)}
+                    className={`flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition ${
+                      on
+                        ? 'border-foreground bg-background shadow-[0_0_0_1.5px_var(--color-foreground)]'
+                        : 'border-border bg-card hover:border-foreground/40'
+                    }`}
+                  >
+                    <span className="font-cjk text-[13px] font-semibold">{label}</span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                      {code}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
@@ -208,11 +215,12 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
                     <button
                       type="button"
                       key={wd}
+                      aria-pressed={active}
                       onClick={() => toggleWeekday(wd)}
-                      className={`h-10 w-10 rounded-full text-sm font-medium ${
+                      className={`font-cjk h-10 w-10 rounded-full text-sm font-medium transition ${
                         active
-                          ? 'bg-blue-500 text-white'
-                          : 'border border-slate-300 bg-white text-slate-700'
+                          ? 'bg-foreground text-background'
+                          : 'border border-border bg-card text-foreground hover:border-foreground/40'
                       }`}
                     >
                       {label}
@@ -270,27 +278,34 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
 
           <div className="space-y-2">
             <Label>何時結束</Label>
-            <div className="flex gap-2 text-sm">
+            <div className="flex flex-wrap gap-2 text-sm">
               {(
                 [
-                  ['count', 'N 次後'],
-                  ['until', '截止日'],
-                  ['none', '不限'],
+                  ['count', 'N 次後', 'COUNT'],
+                  ['until', '截止日', 'UNTIL'],
+                  ['none', '不限', 'INFINITE'],
                 ] as const
-              ).map(([val, label]) => (
-                <button
-                  type="button"
-                  key={val}
-                  onClick={() => setEndCondition(val)}
-                  className={`rounded border px-3 py-1.5 ${
-                    endCondition === val
-                      ? 'border-blue-500 bg-blue-50 font-medium'
-                      : 'border-slate-300 bg-white'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+              ).map(([val, label, code]) => {
+                const on = endCondition === val
+                return (
+                  <button
+                    type="button"
+                    key={val}
+                    aria-pressed={on}
+                    onClick={() => setEndCondition(val)}
+                    className={`inline-flex items-baseline gap-2 rounded-full border px-3.5 py-1.5 transition ${
+                      on
+                        ? 'border-foreground bg-background shadow-[0_0_0_1.5px_var(--color-foreground)]'
+                        : 'border-border bg-card hover:border-foreground/40'
+                    }`}
+                  >
+                    <span className="font-cjk font-medium">{label}</span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                      {code}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
             {endCondition === 'count' && (
               <Input
@@ -311,26 +326,32 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
               />
             )}
             {endCondition === 'none' && (
-              <p className="text-xs text-slate-500">每日 00:30 自動往前推 1 天（90 天滑動視窗）</p>
+              <p className="font-mono text-xs text-muted-foreground">
+                每日 00:30 自動往前推 1 天（90 天滑動視窗）
+              </p>
             )}
           </div>
 
-          <div className="rounded border border-blue-200 bg-blue-50 p-3 text-sm">
-            📋 預覽：將建立約 <strong>{previewCount}</strong> 個時段
+          <div className="font-cjk rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm">
+            <span className="font-mono mr-2 text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+              PREVIEW · 預覽
+            </span>
+            將建立約{' '}
+            <strong className="font-display tabular-nums">{previewCount}</strong> 個時段
           </div>
 
           {conflicts.length > 0 && (
-            <div className="rounded border-2 border-red-300 bg-red-50 p-4">
-              <p className="mb-2 font-semibold text-red-700">
-                ⚠️ 與以下 {conflicts.length} 個既有時段衝突：
+            <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4">
+              <p className="font-cjk mb-2 font-semibold text-destructive">
+                與以下 {conflicts.length} 個既有時段衝突：
               </p>
               <ul className="max-h-40 space-y-2 overflow-y-auto text-xs">
                 {conflicts.map((c) => (
                   <li
                     key={c.id}
-                    className="flex items-center justify-between gap-2 rounded bg-white p-2"
+                    className="flex items-center justify-between gap-2 rounded-lg bg-background p-2"
                   >
-                    <span>
+                    <span className="font-cjk">
                       {new Date(c.startAt).toLocaleString('zh-TW')}
                       {c.endAt && ` — ${new Date(c.endAt).toLocaleString('zh-TW')}`}
                       {c.serviceName ? ` (${c.serviceName})` : ''}

@@ -24,13 +24,15 @@ export function RuleToggle({ ruleId, isActive }: { ruleId: string; isActive: boo
     <button
       type="button"
       disabled={isPending}
+      aria-pressed={isActive}
+      aria-label={isActive ? '停用規則' : '啟用規則'}
       onClick={() => execute({ id: ruleId, isActive: !isActive })}
       className={`relative h-6 w-11 rounded-full transition-colors disabled:opacity-50 ${
-        isActive ? 'bg-emerald-500' : 'bg-slate-300'
+        isActive ? 'bg-foreground' : 'bg-muted-foreground/40'
       }`}
     >
       <div
-        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform ${
           isActive ? 'translate-x-5' : 'translate-x-0.5'
         }`}
       />
