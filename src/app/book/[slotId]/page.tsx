@@ -1,17 +1,23 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { ArrowLeft, Calendar } from 'lucide-react'
+import { ArrowLeft, Package } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/get-session'
 import { findActivePurchaseForBooking } from '@/lib/purchases-server'
+import { isActivePurchase, type CustomerPurchase } from '@/lib/purchases'
 import { SectionHead } from '@/components/ui/section-head'
-import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { PrimaryCtaLink } from '@/components/ui/primary-cta'
 import BookForm from './book-form'
 
 const TZ_OFFSET_HOURS = 8
 const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+
+type ActivePurchaseRow = CustomerPurchase & {
+  service_packages: { name: string } | null
+}
 
 export default async function BookConfirmPage({
   params,
@@ -27,7 +33,7 @@ export default async function BookConfirmPage({
   const { data: slot } = await supabase
     .from('availability_slots')
     .select(
-      'id, start_at, end_at, status, service_id, tenants(name, slug), services(name, duration_minutes, price)',
+      'id, start_at, end_at, status, service_id, tenants(name, slug), services(name, duration_minutes, price, cancel_deadline_hours)',
     )
     .eq('id', slotId)
     .maybeSingle()
@@ -63,158 +69,197 @@ export default async function BookConfirmPage({
     redirect(`/login?redirect=/book/${slotId}`)
   }
 
+  const tenant = slot.tenants as { name: string; slug: string } | null
+  const service = slot.services as {
+    name: string
+    duration_minutes: number
+    price: number | null
+    cancel_deadline_hours: number
+  } | null
+  const tenantSlug = tenant?.slug ?? ''
+
   const activePurchase = await findActivePurchaseForBooking(
     supabase,
     session.userId,
     slot.service_id,
   )
 
+  // No active purchase → empty state pointing to packages
   if (!activePurchase) {
-    const { data: packages } = await supabase
-      .from('service_packages')
-      .select('id, name, class_count, price, expires_in_days')
-      .eq('service_id', slot.service_id)
-      .eq('is_active', true)
-      .order('class_count', { ascending: true })
-
-    const serviceName = (slot.services as { name: string } | null)?.name ?? '此服務'
-    const tenantSlug = (slot.tenants as { slug: string } | null)?.slug ?? ''
-
     return (
       <div className="min-h-screen bg-background">
-        <main className="mx-auto max-w-2xl px-5 py-10 sm:px-10 sm:py-14">
-          <SectionHead
-            kicker="NEED PACKAGE · 需先購買套裝"
-            title="需先購買套裝"
-            eng="STOP"
-            hint={`您尚未持有 ${serviceName} 的有效課數。請先選擇方案、送出申請、待教練確認後即可預約。`}
-          />
-          {packages && packages.length > 0 && (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {packages.map((p) => (
-                <div key={p.id} className="rounded-2xl border border-border bg-card p-5">
-                  <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground">
-                    PACKAGE
-                  </div>
-                  <div className="font-display font-cjk mt-1 text-lg font-black">{p.name}</div>
-                  <div className="mt-2 flex items-baseline gap-2">
-                    <span className="font-display text-3xl leading-none">{p.class_count}</span>
-                    <span className="font-cjk text-xs text-muted-foreground">堂</span>
-                  </div>
-                  <div className="font-cjk mt-2 text-xs text-muted-foreground">
-                    {p.expires_in_days ? `${p.expires_in_days} 天內上完` : '永久有效'}
-                  </div>
-                  <div className="mt-3 border-t border-dashed border-border pt-3">
-                    <span className="font-display border-b-[3px] border-accent pb-px text-lg">
-                      NT$ {Number(p.price).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <main className="mx-auto max-w-[920px] space-y-7 px-5 py-10 sm:px-10 sm:py-14">
+          {tenant && (
+            <Link
+              href={`/${tenant.slug}`}
+              className="font-mono inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="size-3" />
+              {tenant.name}
+            </Link>
           )}
-          <div className="mt-8">
-            <PrimaryCtaLink href={`/${tenantSlug}/packages`} size="lg">
-              前往購買套裝
-            </PrimaryCtaLink>
-          </div>
+          <SectionHead
+            kicker={`/book · ${tenantSlug}`}
+            title="預約確認"
+            eng="CONFIRM"
+            hint={`您尚未持有 ${service?.name ?? '此服務'} 的有效課數，請先申請套裝。`}
+          />
+          <EmptyState
+            icon={<Package className="size-5" />}
+            title="尚無可用套裝"
+            hint="先去申請一個套裝才能預約"
+            cta={
+              <PrimaryCtaLink href={`/${tenantSlug}/packages`}>瀏覽套裝</PrimaryCtaLink>
+            }
+          />
         </main>
       </div>
     )
   }
 
-  const tenant = slot.tenants as { name: string; slug: string } | null
-  const service = slot.services as {
-    name: string
-    duration_minutes: number
-    price: number | null
-  } | null
+  // Fetch all active purchases (with package name) for visual radio list
+  const { data: rawPurchases } = await supabase
+    .from('customer_purchases')
+    .select(
+      'id, approval_status, classes_total, classes_used, expires_at, service_packages(name)',
+    )
+    .eq('customer_id', session.userId)
+    .eq('service_id', slot.service_id)
+    .eq('approval_status', 'confirmed')
+    .order('expires_at', { ascending: true, nullsFirst: false })
+
+  const now = new Date()
+  const activePurchases: ActivePurchaseRow[] = ((rawPurchases ?? []) as ActivePurchaseRow[]).filter(
+    (p) => isActivePurchase(p, now),
+  )
+
   const start = toLocal(slot.start_at)
   const end = toLocal(slot.end_at)
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-md px-5 py-10 sm:py-14">
+      <main className="mx-auto max-w-[920px] space-y-7 px-5 py-10 sm:px-10 sm:py-14">
         {tenant && (
           <Link
             href={`/${tenant.slug}`}
-            className="font-mono mb-6 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
+            className="font-mono inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-3" />
             {tenant.name}
           </Link>
         )}
 
-        <div className="font-mono mb-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-          {rescheduleFrom ? 'RESCHEDULE · 確認改期' : 'BOOKING · 確認預約'}
-        </div>
-        <h1 className="font-display text-4xl uppercase leading-none tracking-tight">
-          {rescheduleFrom ? (
-            <>
-              確認<span className="font-cjk">改期</span>
-            </>
-          ) : (
-            <>
-              確認<span className="font-cjk">預約</span>
-            </>
-          )}
-        </h1>
-        <p className="font-cjk mt-3 text-sm text-muted-foreground">
-          {rescheduleFrom ? '送出後將自動取消原預約並改為此時段。' : '確認資訊後送出預約申請。'}
-        </p>
+        <SectionHead
+          kicker={`/book · ${tenantSlug}`}
+          title={rescheduleFrom ? '改期確認' : '預約確認'}
+          eng="CONFIRM"
+          hint={
+            rescheduleFrom
+              ? '送出後將自動取消原預約並改為此時段。'
+              : '確認資訊後送出預約申請，待教練核可。'
+          }
+        />
 
         {rescheduleFrom && (
-          <div className="mt-5 rounded-2xl bg-accent px-4 py-3 font-cjk text-xs text-accent-foreground">
+          <div className="rounded-2xl bg-accent px-4 py-3 font-cjk text-xs text-accent-foreground">
             ⓘ 您正在改期。原預約將被取消，重新建立的新預約狀態為「待確認」。
           </div>
         )}
 
-        <div className="mt-7 rounded-2xl border border-border bg-card p-5 shadow-[0_1px_0_var(--border),0_8px_24px_-18px_rgba(0,0,0,0.18)]">
-          <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-full bg-foreground text-background">
-              <Calendar className="size-5" />
-            </div>
-            <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                DATE / TIME
-              </div>
-              <div className="font-display mt-0.5 text-lg leading-none">
-                {format(start, 'yyyy/MM/dd')} · {format(start, 'HH:mm')}–{format(end, 'HH:mm')}
-              </div>
-            </div>
+        {/* Slot detail card */}
+        <Card className="p-7">
+          <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            {format(start, 'EEEE, MMM dd')}
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 border-t border-dashed border-border pt-4">
-            <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                SERVICE
-              </div>
-              <div className="font-cjk mt-0.5 text-sm font-semibold">
-                {service?.name} <span className="text-muted-foreground">({service?.duration_minutes} 分)</span>
-              </div>
-            </div>
-            <div>
+          <div className="font-display mt-1 text-5xl leading-none tracking-tight">
+            {format(start, 'HH:mm')}
+            <span className="text-muted-foreground/60 ml-3 text-2xl">
+              –{format(end, 'HH:mm')}
+            </span>
+          </div>
+          <div className="font-cjk mt-3 text-base">
+            {service?.name} · {service?.duration_minutes} 分鐘
+          </div>
+          {service?.price ? (
+            <div className="mt-4 border-t border-dashed border-border pt-4">
               <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                 PRICE
               </div>
-              <div className="font-display mt-0.5 text-base">
-                {service?.price ? `NT$ ${Number(service.price).toLocaleString()}` : '洽詢'}
+              <div className="font-display mt-1 text-lg">
+                NT$ {Number(service.price).toLocaleString()}
               </div>
             </div>
-          </div>
-        </div>
+          ) : null}
+        </Card>
 
-        <div className="mt-5 rounded-2xl border border-border bg-muted/40 p-4">
+        {/* Package balance picker (radio cards; oldest-expiring auto-selected) */}
+        <section>
+          <SectionHead
+            kicker="PACKAGE · 套裝餘額"
+            title="本次將扣除"
+            eng="DEDUCT"
+            hint="系統自動從最快到期的套裝扣 1 堂。"
+          />
+          <div className="grid gap-3">
+            {activePurchases.map((p) => {
+              const remaining = p.classes_total - p.classes_used
+              const total = p.classes_total
+              const percent = total > 0 ? (remaining / total) * 100 : 0
+              const isSelected = p.id === activePurchase.id
+              const pkgName = p.service_packages?.name ?? '套裝'
+              return (
+                <label
+                  key={p.id}
+                  className="flex cursor-pointer items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors has-[:checked]:border-foreground has-[:checked]:bg-accent has-[:checked]:text-accent-foreground"
+                >
+                  <input
+                    type="radio"
+                    name="package-display"
+                    value={p.id}
+                    defaultChecked={isSelected}
+                    disabled
+                    className="size-4 accent-foreground"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-cjk truncate text-sm font-semibold">{pkgName}</div>
+                    <div className="font-mono mt-1 text-xs tracking-wider text-muted-foreground">
+                      {remaining}/{total} 堂
+                      {p.expires_at ? (
+                        <>
+                          {' · '}期限 {format(new Date(p.expires_at), 'yyyy/MM/dd')}
+                        </>
+                      ) : null}
+                    </div>
+                    <div className="bg-muted mt-2 h-1 overflow-hidden rounded-full">
+                      <div
+                        className="bg-foreground h-full"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="font-display text-2xl leading-none">{remaining}</div>
+                </label>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* Cancellation policy */}
+        <div className="rounded-2xl border border-border bg-muted/40 p-5">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            ACTIVE PACKAGE · 套裝餘額
+            POLICY · 取消政策
           </div>
-          <div className="font-cjk mt-1.5 text-sm font-medium">
-            預約成立後將從現有套裝扣除 1 堂。
-          </div>
+          <p className="font-cjk mt-2 text-xs leading-relaxed text-muted-foreground">
+            開始前{' '}
+            <strong className="text-foreground">
+              {service?.cancel_deadline_hours ?? 24} 小時
+            </strong>{' '}
+            以上取消，堂數退回套裝；逾時取消或未到場視同已上完一堂。
+          </p>
         </div>
 
-        <div className="mt-7">
-          <BookForm slotId={slotId} rescheduleFrom={rescheduleFrom ?? null} />
-        </div>
+        {/* Submit (preserves existing server action via BookForm) */}
+        <BookForm slotId={slotId} rescheduleFrom={rescheduleFrom ?? null} />
       </main>
     </div>
   )
