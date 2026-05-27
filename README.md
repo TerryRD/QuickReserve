@@ -407,7 +407,16 @@ Storage RLS（policies on `storage.objects`）：
 - `/login`、`/signup`:Kicker primitive + pill submit + signedup/invited banner
 - `/my-bookings`:4 KpiCard 列(本週/待回覆/已完成/已取消) + DateStrip 群組 header + 改期 link
 
-下一階段（Plan 3~5）:Coach 7 頁 + Settings 4 頁 + Final QA。
+**Plan 3 已完成（Coach 後台 7 頁,2026-05-27）:**
+- `/dashboard`:黑底 hero card + 右上半透明黃圓 + 4 KpiCard + Today timeline (NEXT UP 高亮) + Pending column + 條件式 Quick action card + Empty state preview
+- `/calendar`:三視圖 tab (Week / List / Month) + 新 MonthView grid + Owner member filter chip(slot popover + conflict badge 既存,保留)
+- `/services`:Tab 分類 (ALL / 1-ON-1 / GROUP) + ServiceCard 含 CAP/MIN/CXL 群班參數 + dashed 新增服務 placeholder
+- `/customers`:GET 表單搜尋 + status 篩選 chips + Sheet drawer (booking 紀錄 + 套裝餘額進度條)
+- `/packages`:Tab 含草稿 + 按服務分組 + PackageCard (POPULAR pill / 草稿 badge) + dashed placeholder per group
+- `/packages/pending`:4 KpiCard 列(總待審/等待最久/本週新進/本月通過,column 名是 approval_status='pending_review') + 第一筆 accent ring 強調
+- `/notifications`:重寫為 notification_log inbox (取代 preferences wrapper) + 4 tabs + 24h 內 cosmetic 黃色側條(不持久化)
+
+下一階段（Plan 4~5）:Settings 4 頁 + Final QA。
 
 ## 部署
 
