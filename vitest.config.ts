@@ -11,6 +11,9 @@ export default defineConfig({
     passWithNoTests: true,
     coverage: { reporter: ['text', 'html'] },
   },
+  esbuild: {
+    jsx: 'automatic',
+  },
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },

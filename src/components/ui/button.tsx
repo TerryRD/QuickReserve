@@ -1,5 +1,6 @@
 import { Button as ButtonPrimitive } from '@base-ui/react/button'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { ArrowRight } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -44,18 +45,49 @@ const buttonVariants = cva(
   },
 )
 
+type ButtonExtraProps = {
+  fullWidth?: boolean
+  withArrow?: 'circle' | 'inline'
+}
+
 function Button({
   className,
   variant = 'default',
   size = 'default',
+  fullWidth,
+  withArrow,
+  children,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props &
+  VariantProps<typeof buttonVariants> &
+  ButtonExtraProps) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(
+        buttonVariants({ variant, size, className }),
+        fullWidth && 'w-full',
+      )}
       {...props}
-    />
+    >
+      {children}
+      {withArrow === 'inline' && (
+        <ArrowRight
+          data-testid="btn-arrow-inline"
+          className="ml-0.5 size-[14px]"
+          aria-hidden
+        />
+      )}
+      {withArrow === 'circle' && (
+        <span
+          data-testid="btn-arrow-circle"
+          aria-hidden
+          className="ml-1.5 inline-flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground"
+        >
+          <ArrowRight className="size-[13px]" />
+        </span>
+      )}
+    </ButtonPrimitive>
   )
 }
 
