@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
+import { zhTW } from 'date-fns/locale'
 import { Mail, Phone, MessageCircle, MapPin, Star } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getTenantBySlug } from '@/lib/auth/get-tenant-context'
@@ -12,7 +13,19 @@ import { Button } from '@/components/ui/button'
 import { PrimaryCtaLink } from '@/components/ui/primary-cta'
 import { SectionHead } from '@/components/ui/section-head'
 import { VideoEmbed } from '@/components/public-page/video-embed'
+import { RescheduleBanner } from '@/components/booking/reschedule-banner'
+import { QRMark } from '@/components/brand/qr-mark'
 import SlotPicker from './slot-picker'
+
+const TZ_OFFSET_HOURS = 8
+const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+
+type RescheduleBookingRow = {
+  id: string
+  status: string
+  services: { name: string } | null
+  availability_slots: { start_at: string } | null
+}
 
 function deriveEngTitle(slug: string): string {
   // Use the slug as the English display title — uppercase, hyphens to spaces
@@ -53,22 +66,33 @@ export default async function TenantPublicPage({
   }
 
   const supabase = await createSupabaseServerClient()
-  const [{ data: services }, { data: photoRows }, session] = await Promise.all([
-    supabase
-      .from('services')
-      .select('id, name, description, duration_minutes, price')
-      .eq('tenant_id', tenant.id)
-      .eq('is_active', true)
-      .order('name'),
-    supabase
-      .from('tenant_photos')
-      .select('id, storage_path, caption')
-      .eq('tenant_id', tenant.id)
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: true }),
-    getSession(),
-  ])
+  const [{ data: services }, { data: photoRows }, session, { data: rescheduleBookingRaw }] =
+    await Promise.all([
+      supabase
+        .from('services')
+        .select('id, name, description, duration_minutes, price')
+        .eq('tenant_id', tenant.id)
+        .eq('is_active', true)
+        .order('name'),
+      supabase
+        .from('tenant_photos')
+        .select('id, storage_path, caption')
+        .eq('tenant_id', tenant.id)
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: true }),
+      getSession(),
+      rescheduleFrom
+        ? supabase
+            .from('bookings')
+            .select(
+              'id, status, services(name), availability_slots(start_at)',
+            )
+            .eq('id', rescheduleFrom)
+            .maybeSingle()
+        : Promise.resolve({ data: null as RescheduleBookingRow | null }),
+    ])
 
+  const rescheduleBooking = rescheduleBookingRaw as RescheduleBookingRow | null
   const photos = (photoRows ?? []).map((p) => ({
     id: p.id,
     public_url: getCoachMediaPublicUrl(p.storage_path),
@@ -76,6 +100,7 @@ export default async function TenantPublicPage({
   }))
   const returnPath = `/${tenantSlug}`
   const activeServiceId = selectedServiceId ?? services?.[0]?.id ?? null
+  const activeService = services?.find((s) => s.id === activeServiceId) ?? services?.[0] ?? null
   const dateStr = selectedDate ?? format(new Date(), 'yyyy-MM-dd')
 
   return (
@@ -89,7 +114,14 @@ export default async function TenantPublicPage({
               COACH
             </Badge>
             <span className="font-mono text-[11px] tracking-[0.12em] text-muted-foreground">
-              /{tenant.slug}
+              {[
+                tenant.established_year ? `EST ${tenant.established_year}` : null,
+                tenant.years_exp != null ? `${tenant.years_exp} YRS` : null,
+                tenant.city,
+                `/${tenant.slug}`,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             </span>
           </div>
 
@@ -190,18 +222,17 @@ export default async function TenantPublicPage({
           )}
         </section>
 
-        {rescheduleFrom && (
+        {rescheduleFrom && rescheduleBooking?.availability_slots && rescheduleBooking.services && (
           <section className="border-t border-border px-5 py-5 sm:px-10 lg:px-[72px]">
-            <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-accent px-5 py-4 text-accent-foreground">
-              <div className="flex-1">
-                <div className="font-cjk text-sm font-bold">
-                  改期模式 · 選擇新時段後原預約自動取消
-                </div>
-                <div className="font-cjk mt-1 text-xs opacity-90">
-                  選擇新時段送出後，原預約會自動取消、堂數退回套裝。
-                </div>
-              </div>
-            </div>
+            <RescheduleBanner
+              originalSlotLabel={format(
+                toLocal(rescheduleBooking.availability_slots.start_at),
+                'M/d (E) HH:mm',
+                { locale: zhTW },
+              )}
+              serviceName={rescheduleBooking.services.name}
+              exitHref={`/${tenantSlug}`}
+            />
           </section>
         )}
 
@@ -320,15 +351,23 @@ export default async function TenantPublicPage({
         )}
 
         {/* SLOT PICKER */}
-        {activeServiceId && (
+        {activeServiceId && activeService && (
           <section className="bg-muted px-5 pb-16 pt-8 sm:px-10 sm:pb-20 lg:px-[72px]">
-            <SectionHead kicker="SECTION / 04" title="時段" eng="SLOTS" />
+            <SectionHead
+              kicker="SECTION / 04"
+              title="時段"
+              eng="SLOTS"
+              hint={`目前服務：${activeService.name} · ${activeService.duration_minutes} 分鐘 · NT$ ${Number(activeService.price ?? 0).toLocaleString()}`}
+            />
             <div className="rounded-2xl border border-border bg-card p-5 sm:p-7">
               <Suspense fallback={null}>
                 <SlotPicker
                   tenantSlug={tenantSlug}
                   tenantId={tenant.id}
                   serviceId={activeServiceId}
+                  serviceName={activeService.name}
+                  serviceDuration={activeService.duration_minutes}
+                  servicePrice={Number(activeService.price ?? 0)}
                   initialDate={dateStr}
                   fromOffset={Math.max(0, parseInt(fromOffset ?? '0', 10) || 0)}
                   rescheduleFrom={rescheduleFrom ?? null}
@@ -338,6 +377,39 @@ export default async function TenantPublicPage({
           </section>
         )}
       </main>
+
+      <footer className="border-t border-border px-5 py-8 sm:px-10 lg:px-[72px]">
+        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <QRMark size={28} />
+            <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+              QUICKRESERVE · 由 {tenant.name} 教練建立 · 2026
+            </span>
+          </div>
+          <nav className="flex gap-5">
+            <Link
+              href={`/${tenantSlug}/packages`}
+              className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground hover:text-foreground"
+            >
+              套裝
+            </Link>
+            <Link
+              href="/my-bookings"
+              className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground hover:text-foreground"
+            >
+              我的預約
+            </Link>
+            {!session && (
+              <Link
+                href={`/login?redirect=${encodeURIComponent(returnPath)}`}
+                className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground hover:text-foreground"
+              >
+                登入
+              </Link>
+            )}
+          </nav>
+        </div>
+      </footer>
     </div>
   )
 }
