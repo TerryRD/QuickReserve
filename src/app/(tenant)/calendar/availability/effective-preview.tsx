@@ -25,9 +25,9 @@ export default async function EffectivePreview() {
   const days = Array.from({ length: PREVIEW_DAYS }, (_, i) => addDays(today, i))
 
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <div className="rounded-2xl border border-border bg-card p-5">
       {template === null ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="font-cjk text-sm text-muted-foreground">
           目前未指定生效模板。所有時段不受作息限制；學員端只看實際存在的 slot。
         </p>
       ) : (
@@ -42,18 +42,18 @@ export default async function EffectivePreview() {
             const jsDay = d.getDay()
             return (
               <div key={d.toISOString()} className="flex items-center gap-3 text-sm">
-                <div className="w-24 shrink-0 font-mono text-xs">
+                <div className="w-24 shrink-0 font-mono text-xs uppercase tracking-wider text-muted-foreground">
                   {format(d, 'MM/dd')}（{WEEKDAY_LABEL[jsDay]}）
                 </div>
                 <div className="flex-1">
                   {ranges.length === 0 ? (
-                    <span className="text-xs text-muted-foreground">休</span>
+                    <span className="font-cjk text-xs text-muted-foreground">休</span>
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       {ranges.map((r, idx) => (
                         <span
                           key={idx}
-                          className="rounded bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800"
+                          className="font-mono rounded-md border border-border bg-muted px-2 py-0.5 text-xs text-foreground"
                         >
                           {format(r.start, 'HH:mm')}–{format(r.end, 'HH:mm')}
                         </span>

@@ -88,18 +88,16 @@ export default function UnavailableEventDialog() {
                   ['custom', '自訂時間'],
                 ] as const
               ).map(([val, label]) => (
-                <button
+                <Button
                   type="button"
                   key={val}
+                  variant={preset === val ? 'default' : 'outline'}
+                  size="sm"
                   onClick={() => setPreset(val)}
-                  className={`rounded border p-2 ${
-                    preset === val
-                      ? 'border-blue-500 bg-blue-50 font-medium'
-                      : 'border-slate-300 bg-white'
-                  }`}
+                  className="justify-center"
                 >
                   {label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -189,7 +187,7 @@ export default function UnavailableEventDialog() {
             />
           </div>
 
-          <div className="rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          <div className="font-cjk rounded-lg border border-border bg-muted p-3 text-xs text-muted-foreground">
             ℹ️ 若此時段內已有學員預約，建立後不會自動取消；行事曆會顯示 ⚠ 警示徽章，請自行決定是否取消。
           </div>
         </div>

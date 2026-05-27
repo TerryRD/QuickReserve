@@ -59,9 +59,11 @@ export default async function TemplatesSection() {
       ))}
       <TemplateEditor template={null} isActive={false} />
       {(templates ?? []).length === 0 && (
-        <p className="text-xs text-muted-foreground">
-          尚無模板。建立第一個模板後，可指定生效日期、批量設定每週可上課時段。
-        </p>
+        <div className="rounded-2xl border border-border bg-muted p-6 text-center">
+          <p className="font-cjk text-sm text-muted-foreground">
+            尚無模板。建立第一個模板後，可指定生效日期、批量設定每週可上課時段。
+          </p>
+        </div>
       )}
     </div>
   )

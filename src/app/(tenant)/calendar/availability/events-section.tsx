@@ -24,9 +24,11 @@ export default async function EventsSection() {
       <UnavailableEventDialog />
 
       {(events ?? []).length === 0 ? (
-        <p className="text-xs text-muted-foreground">尚無未來不可用事件</p>
+        <div className="rounded-2xl border border-border bg-muted p-6 text-center">
+          <p className="font-cjk text-sm text-muted-foreground">尚無未來不可用事件</p>
+        </div>
       ) : (
-        <div className="divide-y rounded-xl border bg-card">
+        <div className="divide-y divide-border rounded-2xl border border-border bg-card">
           {(events ?? []).map((e) => {
             const s = toLocal(e.start_at)
             const en = toLocal(e.end_at)
@@ -37,9 +39,9 @@ export default async function EventsSection() {
             return (
               <div key={e.id} className="flex items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
-                  <div className="font-medium">{label}</div>
+                  <div className="font-cjk text-sm font-medium">{label}</div>
                   {e.reason && (
-                    <div className="text-xs text-muted-foreground">{e.reason}</div>
+                    <div className="font-cjk mt-0.5 text-xs text-muted-foreground">{e.reason}</div>
                   )}
                 </div>
                 <DeleteEventButton eventId={e.id} />

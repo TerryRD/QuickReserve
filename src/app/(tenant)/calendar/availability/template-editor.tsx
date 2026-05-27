@@ -117,7 +117,7 @@ export default function TemplateEditor(props: Props) {
                   .map((w, idx) => ({ ...w, idx }))
                   .filter((w) => w.weekday === wd)
                 return (
-                  <div key={wd} className="flex flex-wrap items-center gap-2 rounded border p-2">
+                  <div key={wd} className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-2">
                     <div className="w-12 text-sm font-medium">{WEEKDAY_LABELS[wd]}</div>
                     <div className="flex flex-1 flex-wrap items-center gap-2">
                       {dayWindows.length === 0 ? (
@@ -143,13 +143,15 @@ export default function TemplateEditor(props: Props) {
                               onChange={(e) => updateWindow(w.idx, 'end_time', e.target.value)}
                               className="h-7 w-24"
                             />
-                            <button
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="icon-xs"
                               onClick={() => removeWindow(w.idx)}
-                              className="text-muted-foreground hover:text-foreground"
+                              aria-label="移除時段"
                             >
                               ✕
-                            </button>
+                            </Button>
                           </span>
                         ))
                       )}
@@ -193,18 +195,18 @@ export default function TemplateEditor(props: Props) {
   }
 
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <div className="rounded-2xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-xl italic">{props.template.name}</h3>
+            <h3 className="font-display font-cjk text-xl font-black">{props.template.name}</h3>
             {props.isActive && (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">
+              <span className="font-mono rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground">
                 生效中
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="font-cjk mt-1 text-xs text-muted-foreground">
             {props.template.windows.length === 0
               ? '尚未設定任何時段（全週休）'
               : summarizeWindows(props.template.windows)}
