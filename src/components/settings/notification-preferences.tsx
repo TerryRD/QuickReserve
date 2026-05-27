@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import PushOptIn from '@/components/push-opt-in'
-import PreferencesForm from '@/app/(customer)/settings/notifications/preferences-form'
+import PreferencesForm from '@/app/(customer)/account/notifications/preferences-form'
 
 const DEFAULT_PREFS = {
   weekly_summary_enabled: true,

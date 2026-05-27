@@ -34,6 +34,6 @@ export const updateNotificationPreferencesAction = actionClient
       { onConflict: 'user_id' },
     )
     if (error) throw new AppError('PREFS_UPDATE_FAILED', error.message)
-    revalidatePath('/settings/notifications')
+    revalidatePath('/account/notifications')
     return { ok: true }
   })

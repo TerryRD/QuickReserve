@@ -245,7 +245,7 @@ export default async function MyBookingsPage() {
             <Button
               variant="pill-outline"
               size="sm"
-              render={<Link href="/settings/notifications" />}
+              render={<Link href="/account/notifications" />}
             >
               <Settings className="size-3" /> 通知
             </Button>
