@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactElement } from 'react'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -28,11 +28,14 @@ type Service = {
   cancel_deadline_hours?: number
 }
 
-type Props = { mode: 'create'; service?: undefined } | { mode: 'edit'; service: Service }
+type Props =
+  | { mode: 'create'; service?: undefined; trigger?: ReactElement }
+  | { mode: 'edit'; service: Service; trigger?: ReactElement }
 
 export default function ServiceFormDialog(props: Props) {
   const isEdit = props.mode === 'edit'
   const initial = props.service
+  const customTrigger = props.trigger
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
@@ -76,9 +79,11 @@ export default function ServiceFormDialog(props: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant={isEdit ? 'ghost' : 'default'} size={isEdit ? 'sm' : 'default'}>
-            {isEdit ? '編輯' : '+ 新增服務'}
-          </Button>
+          customTrigger ?? (
+            <Button variant={isEdit ? 'ghost' : 'default'} size={isEdit ? 'sm' : 'default'}>
+              {isEdit ? '編輯' : '+ 新增服務'}
+            </Button>
+          )
         }
       />
       <DialogContent>
