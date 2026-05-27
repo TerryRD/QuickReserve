@@ -66,3 +66,39 @@
 7. **P1**：平台管理員可從租戶列表直接 impersonate-view（唯讀進入該租戶後台）
 
 修完後再來決定下一輪。
+
+---
+
+# 🎨 claudeDesign UI Alignment(2026-05-27 已完成)
+
+S6 之後再做的一次完整 UI 對齊到 `claudeDesign/` mockup,Direction C(B&W + 鮮黃 accent / 18px card / 999px pill / Anton + Space Grotesk + Noto Sans TC + Space Mono)。Spec: `docs/superpowers/specs/2026-05-27-claudedesign-ui-alignment-design.md`。
+
+## Phase 1 覆蓋(已完成)
+
+| Plan | 範圍 | 完成 commits |
+|---|---|---|
+| P1 Foundation | 3 schema migrations(hero meta / is_popular / notification matrix + quiet hours)+ 11 primitives(Button 擴充、Kicker、EmptyState、KpiCard、SubNav、AppShell、DateRibbon、TimeChip、RescheduleBanner、DateStrip、NotificationMatrix、QuietHoursInput)+ supabase/seed.sql 基礎 demo + vitest TSX setup | `ae1e757`~`70098d4` |
+| P2 Student 6 頁 | /<slug> hero meta + reschedule banner + DateRibbon/TimeChip + recap + footer / /<slug>/packages 分組+POPULAR / /book empty state+radio cards / /login+/signup polish / /my-bookings KPI+DateStrip | `4886601`~`1753764` |
+| P3 Coach 7 頁 | /dashboard 黑底 hero+4 KPI+timeline+pending / /calendar 三視圖 / /services tab+grid / /customers 搜尋+Sheet drawer / /packages 分組+POPULAR / /packages/pending KPI / /notifications log inbox | `0ffbc36`~`37c2b46` |
+| P4 Settings 4 頁 | SubNav 跨頁共用 / /settings/profile 6 sections+sticky save+hero inputs / /settings/notifications 新建(matrix+quiet hours,無 email) / /calendar/availability+/rules SectionHead polish | `960d7a8`~`e7a8e4e` |
+
+## 已知 deferred(Phase 2 backlog)
+
+- Web Push 真實訂閱完整 service worker 流程(現只 UI 殼 + 既存 PushOptIn)
+- **Email 通知整套**(成本/流量限制決策,本期不做)
+- `/book/<slotId>` 互動式套裝選擇(`book_with_purchase` RPC 無 `p_purchase_id` 參數,需 RPC 擴充)
+- Public page slot picker group capacity / full state(`/api/public/slots` 沒返回 group_filled / group_capacity)
+- /<slug>/packages 第 3 種付款狀態 `部份付` + receipt note(DB CHECK constraint / 欄位缺)
+- /signup invite mode banner 顯示 tenant_name(需要新公開 API endpoint /api/invite/resolve)
+- /notifications persistent read state(需要新 read_at column;現以 sent_at 24h 內 cosmetic 黃側條替代)
+- /calendar slot popover live conflict-detection inline preview(需要 overlap pre-flight query)
+- /settings/profile services 拖曳排序(需要新 server action + DnD lib)
+- 原 S7 audit report(架構/資安 review)
+
+## 對齊 token / 規則(全站已套)
+
+- 18px radius cards / 999px pill buttons / 卡片陰影 `0 8px 24px -18px rgba(0,0,0,0.18)`
+- Anton + Space Grotesk + Noto Sans TC + Space Mono via `next/font/google`
+- B&W 主軸 + accent 黃**僅作 punctuation**(badge / kicker dot / arrow circle / Pill yellow / NEXT-UP highlight / RescheduleBanner)
+- Dashed border-[1.5px] empty states / Mobile drawer overlay bg-black/45 backdrop-blur
+- Direction C tokens light + dark 兩套,next-themes 切換
