@@ -2,7 +2,7 @@
 
 ## TL;DR — 給 Claude 看的一行
 
-> claudeDesign UI Alignment Phase 1 + 後續 polish 已全上 production(latest commit `7baf41e`)。docs / advisor fixes / Playwright E2E 都到位。下一步看你想做哪個方向: Phase 2 backlog(下表)、**S7 架構/資安 audit**(advisor 已預掃 80%)、或繼續完善測試。
+> claudeDesign UI Alignment Phase 1 + S7 audit + 高優 P0 fix 全上 production(latest commit `1811011`)。docs / advisor fixes / Playwright E2E + GitHub Actions / S7 audit report 都到位。剩下大頭是 **S7 RLS rewrite**(120 lints,該走 brainstorm→spec→plan)+ 中工程 backlog 項目。
 
 ## 起手式
 
@@ -32,8 +32,12 @@
 - Advisor low-risk fixes 套用: 5 個缺的 FK indexes + 收緊 `coach-media` bucket listing(security 17→16)
 - 真實 bug found by E2E: customer hit `/dashboard` 會 500(無 tenant membership 但 middleware 不知道)— 加 role-based redirect 在 tenant/platform layout 修掉
 - `docs/e2e-manual-checklist.md`: 4 角色 × 17 頁手動 walkthrough checklist(含已知 deferred 提示,不會 false-positive)
-- **Playwright E2E suite 設好**: 24 tests(21 active + 3 skipped platform),covers public + coach + customer 路徑 against production
+- **Playwright E2E suite 設好**: 31 tests(28 active + 3 skipped platform),covers public + coach + customer + flows against production
+- **GitHub Actions e2e workflow**: push to master → 90s 等 Vercel deploy → 跑全 suite + 失敗時 upload artifacts
 - `claudeDesign/` 推上 GitHub(含 README + 對照表),`uploads/` 守 .gitignore(真實行事曆 PNG 不上)
+- Supabase types regen(`npm run db:types`)— manual patches 已乾淨,只多 `service_packages.is_popular`
+- **S7 audit report 寫好**:`docs/superpowers/specs/2026-05-28-s7-audit-report.md` — 補完 advisor 沒覆蓋的部分(open-redirect / 權限矩陣 / 檔案大小 / 機密 / test coverage)
+- **🔴 P0 fix shipped**: OAuth callback 的 open-redirect 修了(commit `1811011`)— `safePath` 抽到 `src/lib/`,3 處 import 共用,加 6 case unit test
 
 ### 🧪 手動驗收(你有空時跑)
 
