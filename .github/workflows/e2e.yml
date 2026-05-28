@@ -1,0 +1,58 @@
+name: E2E (Production)
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Base URL to test against (defaults to production)'
+        required: false
+        default: 'https://quick-reserve-mu.vercel.app'
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait for Vercel deploy to settle
+        if: github.event_name == 'push'
+        run: |
+          # Vercel typically takes 1-3 minutes to build + deploy after a push
+          # to master. Wait, then poll the URL to confirm it's responding.
+          echo "Sleeping 90s for Vercel build…"
+          sleep 90
+          URL="${{ github.event.inputs.base_url || 'https://quick-reserve-mu.vercel.app' }}"
+          for i in 1 2 3 4 5; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" -A "GitHubActions/e2e" "$URL")
+            echo "attempt $i: $URL → $CODE"
+            if [ "$CODE" = "200" ]; then break; fi
+            sleep 20
+          done
+
+      - name: Run Playwright tests
+        env:
+          E2E_BASE_URL: ${{ github.event.inputs.base_url || 'https://quick-reserve-mu.vercel.app' }}
+        run: npm run test:e2e -- --reporter=list
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
