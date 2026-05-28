@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -55,7 +56,14 @@ export default function AvatarUploader({ tenantId, initialUrl, onUploaded, onCle
       <Label>大頭照（公開頁顯示）</Label>
       {url ? (
         <div className="flex items-center gap-4">
-          <img src={url} alt="" className="h-20 w-20 rounded-full object-cover ring-2 ring-border" />
+          <Image
+            src={url}
+            alt=""
+            width={80}
+            height={80}
+            className="size-20 rounded-full object-cover ring-2 ring-border"
+            unoptimized
+          />
           <div className="flex flex-col gap-2">
             <label
               className={cn(

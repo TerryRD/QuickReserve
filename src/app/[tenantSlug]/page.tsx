@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { format } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { Mail, Phone, MessageCircle, MapPin, Star } from 'lucide-react'
@@ -147,9 +148,11 @@ export default async function TenantPublicPage({
           {/* Avatar + subtitle */}
           <div className="mt-7 flex max-w-[880px] flex-col items-start gap-5 sm:mt-10 sm:flex-row sm:items-center sm:gap-7">
             {tenant.avatar_url ? (
-              <img
+              <Image
                 src={tenant.avatar_url}
                 alt={tenant.name}
+                width={104}
+                height={104}
                 className="size-[76px] shrink-0 rounded-full border border-border object-cover sm:size-[104px]"
               />
             ) : (
@@ -268,12 +271,13 @@ export default async function TenantPublicPage({
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
               {photos.map((p, i) => (
                 <figure key={p.id} className="m-0 space-y-2">
-                  <div className="overflow-hidden rounded-xl border border-border">
-                    <img
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border">
+                    <Image
                       src={p.public_url}
                       alt={p.caption ?? ''}
-                      loading="lazy"
-                      className="aspect-[4/3] w-full object-cover"
+                      fill
+                      sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      className="object-cover"
                     />
                   </div>
                   {p.caption && (

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import Image from 'next/image'
+import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
@@ -102,7 +103,15 @@ export default function PhotoGalleryManager({ tenantId, photos }: Props) {
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
           {photos.map((p) => (
             <div key={p.id} className="space-y-2 rounded-lg border bg-card p-2">
-              <img src={p.public_url} alt={p.caption ?? ''} className="aspect-square w-full rounded object-cover" />
+              <div className="relative aspect-square w-full overflow-hidden rounded">
+                <Image
+                  src={p.public_url}
+                  alt={p.caption ?? ''}
+                  fill
+                  sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
               <Input
                 defaultValue={p.caption ?? ''}
                 placeholder="說明（選填）"

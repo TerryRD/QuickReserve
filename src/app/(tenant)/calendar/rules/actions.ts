@@ -9,8 +9,6 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError, NotFoundError } from '@/lib/errors'
 import { publicSlotsTag } from '@/lib/cache-tags'
 
-const RuleIdSchema = z.object({ id: z.string().uuid() })
-
 export const toggleRuleActiveAction = actionClient
   .inputSchema(z.object({ id: z.string().uuid(), isActive: z.boolean() }))
   .action(async ({ parsedInput }) => {
