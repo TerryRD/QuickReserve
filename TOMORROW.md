@@ -80,8 +80,8 @@
 - Hard-coded secrets / API keys 掃描
 
 高優先 fix(從 advisor 來):
-- 120 `multiple_permissive_policies` 重寫 — availability_* + customer_purchases + service_packages + tenant_photos 多條 PERMISSIVE 合 OR
-- 10 `auth_rls_initplan` 修 — `auth.uid()` 包 `(select ...)` 給 Postgres cache
+- ✅ 120 `multiple_permissive_policies` 重寫(commit `64bd953`,2026-05-28)
+- ✅ 10 `auth_rls_initplan` wrap auth.uid()(同 commit)
 - 14 個 SECURITY DEFINER RPC 逐個 review caller-guard(book_with_purchase / reschedule_booking_purchase / cancel_booking_refund 等)
 - 1-click in Dashboard: 開「Prevent sign up with leaked passwords」
 

@@ -54,6 +54,8 @@ Pulled live via Supabase Management API after Phase 1 ship. Nothing is fixed yet
 
 ## Performance (15 INFO + 130 WARN = 145)
 
+> **Update 2026-05-28:** `multiple_permissive_policies` (120 lints) and `auth_rls_initplan` (10 lints) RESOLVED by migration `20260528152243_rls_rewrite_combine_permissive.sql` (commit `64bd953`). See `docs/superpowers/plans/2026-05-28-rls-rewrite-combine-permissive.md` for the rewrite plan and `2026-05-28-rls-rewrite-rollback.sql` for the escape hatch. Remaining perf lints: 5 unindexed_foreign_keys closed earlier in commit `b613dcd` (advisor may take time to catch up) + 15 unused_index (10 pre-existing + 5 from b613dcd new indexes which need ~1 week usage data to confirm safe to drop).
+
 ### 🔴 120 × `multiple_permissive_policies` (the big one)
 
 Tables with multiple PERMISSIVE RLS policies for the same role × action — Postgres has to evaluate every one and union them, costing query time. Postgres recommends ONE PERMISSIVE + multiple RESTRICTIVE, or merge into one with OR.
