@@ -43,29 +43,36 @@
 /invite/[token]                邀請接受流程
 
 (platform) — 平台管理員
-  /platform/dashboard          統計儀表板
+  /platform/dashboard          統計儀表板（6 KpiCard）
   /platform/tenants            租戶管理（邀請 / 暫停 / 啟用）
+  /platform/tenants/[id]       單一租戶 drill-in
+  /platform/bookings           全平台預約唯讀檢視
 
 (tenant) — 教練後台
-  /dashboard                   儀表板
-  /calendar                    行事曆週檢視
+  /dashboard                   儀表板（黑底 hero + 4 KPI + today timeline + pending column）
+  /calendar                    行事曆 ?view=week|list|month + slot popover
   /calendar?member=<id>        Owner 檢視他人行事曆
-  /calendar/availability       作息模板 + 不可用事件管理（S3）
-  /services                    服務項目管理
+  /calendar/availability       作息模板 + 不可用事件 + materialize 預覽（S3）
+  /calendar/rules              重複規則管理（4 種類型 + 結束條件）
+  /services                    服務項目管理 ?tab=all|1on1|group
   /bookings                    預約管理（確認 / 取消）
+  /customers                   學員管理（搜尋 + 篩選 + 詳情 drawer）
   /staff                       助教管理（Owner 限定）
-  /notifications               通知偏好（教練 / 助教，留在 tenant 後台 chrome）
-  /settings/profile            租戶資料（Owner 限定）
-  /packages                    套裝管理（每服務的 N 堂方案 CRUD、軟刪除）（S4）
-  /packages/pending            待審核購買申請佇列（S4）
+  /notifications               通知收件匣 ?tab=all|bookings|packages|system（notification_log inbox）
+  /settings/profile            租戶資料 6 sections + sticky save bar（Owner 限定）
+  /settings/notifications      通知偏好 — 事件×通道矩陣（web_push + in_app）+ 勿擾時段
+  /packages                    套裝管理 ?tab=all|1on1|group|draft（按服務分組）（S4）
+  /packages/pending            待審核購買申請佇列 + 4 KpiCard（S4）
 
 (customer) — 學員後台
-  /my-bookings                 我的預約
+  /my-bookings                 我的預約 + 4 KpiCard + DateStrip 群組 + 改期 link
+  /account/notifications       通知偏好（學員端,獨立於 tenant /settings/notifications）
 
 [tenantSlug] — 公開預約頁
-  /[slug]                      教練介紹 + 服務列表 + 日期/時間挑選
-  /book/[slotId]               預約確認頁
-  /[slug]/packages             可購方案瀏覽 + 申請（S4）
+  /[slug]                      教練介紹 + hero meta + bio + video + gallery + services + slot picker
+  /[slug]?reschedule=<id>      改期模式（黃色 banner + 選新時段後原預約自動取消）
+  /book/[slotId]               預約確認頁 + 套裝餘額 radio cards
+  /[slug]/packages             可購方案瀏覽 + POPULAR pill + in-card 申請（S4）
   /[slug]/purchases            學員看自己的餘額（S4）
 
 API

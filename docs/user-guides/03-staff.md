@@ -53,9 +53,12 @@
 
 ## 4. 通知
 
-跟 Owner 一樣：可在 `/settings/notifications` 啟用 Web Push + 設定偏好。
+兩個分開的入口(跟 Owner 一樣):
 
-新預約申請會立刻通知到你的瀏覽器。
+- **`/notifications`** — 收件匣,看所有寄給你的事件記錄,24h 內事件左側有黃色未讀條
+- **`/settings/notifications`** — 設定頁,啟用 Web Push + 事件×通道矩陣 + 勿擾時段
+
+新預約申請、改期等會即時推播到你的瀏覽器(瀏覽器需要先同意通知權限)。
 
 ---
 
