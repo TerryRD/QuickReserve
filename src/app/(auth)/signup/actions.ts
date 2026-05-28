@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { actionClient } from '@/lib/safe-action'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError } from '@/lib/errors'
+import { safePath } from '@/lib/safe-path'
 
 const SignupSchema = z.object({
   email: z.string().email('Email 格式不正確'),
@@ -13,15 +14,6 @@ const SignupSchema = z.object({
   inviteToken: z.string().optional(),
   redirectTo: z.string().optional(),
 })
-
-function safePath(path: string | undefined | null): string {
-  if (!path) return '/'
-  // Must be an internal absolute path. Block:
-  //   - protocol-relative URLs (//evil.com)
-  //   - backslash bypass (/\evil.com → browsers normalize to //evil.com)
-  if (!path.startsWith('/') || path.startsWith('//') || path.startsWith('/\\')) return '/'
-  return path
-}
 
 export const signupAction = actionClient.inputSchema(SignupSchema).action(async ({ parsedInput }) => {
   const supabase = await createSupabaseServerClient()
