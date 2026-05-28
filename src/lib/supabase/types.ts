@@ -613,6 +613,7 @@ export type Database = {
           expires_in_days: number | null
           id: string
           is_active: boolean
+          is_popular: boolean
           name: string
           price: number
           service_id: string
@@ -625,6 +626,7 @@ export type Database = {
           expires_in_days?: number | null
           id?: string
           is_active?: boolean
+          is_popular?: boolean
           name: string
           price: number
           service_id: string
@@ -637,6 +639,7 @@ export type Database = {
           expires_in_days?: number | null
           id?: string
           is_active?: boolean
+          is_popular?: boolean
           name?: string
           price?: number
           service_id?: string
