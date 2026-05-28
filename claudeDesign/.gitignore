@@ -1,0 +1,7 @@
+# Personal calendar screenshot (real names / internal projects — keep out of git).
+# Other md files here are duplicates of docs/superpowers/briefs/s6/*.md (the
+# canonical copies live there). Skip the whole folder.
+uploads/
+
+# Claude Design canvas tool's generated thumbnail
+.thumbnail

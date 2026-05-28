@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>QuickReserve · Brief 02 · 教練後台</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@400;500;600&display=swap" />
+
+<link rel="stylesheet" href="styles/tokens.css" />
+
+<style>
+  html, body { margin: 0; padding: 0; background: #f0eee9; height: 100%; }
+  #root { height: 100%; }
+  body { font-family: "Space Grotesk", "Noto Sans TC", system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<!-- Shared atoms (student/atoms.jsx exports primitives that coach reuses) -->
+<script type="text/babel" src="student/atoms.jsx"></script>
+
+<!-- Coach app -->
+<script type="text/babel" src="coach/atoms.jsx"></script>
+<script type="text/babel" src="coach/page-notifications.jsx"></script>
+<script type="text/babel" src="coach/page-packages.jsx"></script>
+<script type="text/babel" src="coach/page-services-customers.jsx"></script>
+<script type="text/babel" src="coach/page-dashboard.jsx"></script>
+<script type="text/babel" src="coach/page-calendar.jsx"></script>
+<script type="text/babel" src="coach/app.jsx"></script>
+</body>
+</html>
