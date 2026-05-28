@@ -2,7 +2,7 @@
 
 ## TL;DR — 給 Claude 看的一行
 
-> claudeDesign UI Alignment Phase 1 已完成並上 production(2026-05-28,latest commit `52b6467`)。下一步看你想做哪個方向: Phase 2 backlog(下表)、原本排定的 **S7 架構/資安 audit**、或一些手動驗收。
+> claudeDesign UI Alignment Phase 1 + 後續 polish 已全上 production(latest commit `7baf41e`)。docs / advisor fixes / Playwright E2E 都到位。下一步看你想做哪個方向: Phase 2 backlog(下表)、**S7 架構/資安 audit**(advisor 已預掃 80%)、或繼續完善測試。
 
 ## 起手式
 
@@ -22,9 +22,18 @@
   - **P3 Coach 7 頁** — `/dashboard` 黑底 hero · `/calendar` 三視圖 · `/services` `/customers` `/packages` `/packages/pending` `/notifications` 全部
   - **P4 Settings 4 頁** — `/settings/profile` 6 sections + sticky save · `/settings/notifications`(新建) · `/calendar/availability` `/calendar/rules` polish
   - **Post-deploy fixes** — middleware 補 `/account` `/packages` 保護 · `/platform/*` 3 頁也對齊 Direction C(原 spec 漏列)
-- 所有 quality gates 過(`lint` / `typecheck` / `test 105/105` / `build` 33 routes)
+- 所有 quality gates 過(`lint 0` / `typecheck 0` / `test 105/105` / `build` 33 routes)
 - Production 部署完成(`https://quick-reserve-mu.vercel.app/`)
 - Docs 同步:`README.md` `docs/ux-audit.md` 4 個 user-guides 都更新
+
+**後續 polish(2026-05-28):**
+- Lint pre-existing warnings 全清(8 個 → 0)— next/image + remotePatterns + eslint `^_` ignore + drop unused vars
+- Supabase advisor 跑過: 17 sec WARN + 145 perf WARN,報告在 `docs/superpowers/specs/2026-05-28-supabase-advisors-snapshot.md`
+- Advisor low-risk fixes 套用: 5 個缺的 FK indexes + 收緊 `coach-media` bucket listing(security 17→16)
+- 真實 bug found by E2E: customer hit `/dashboard` 會 500(無 tenant membership 但 middleware 不知道)— 加 role-based redirect 在 tenant/platform layout 修掉
+- `docs/e2e-manual-checklist.md`: 4 角色 × 17 頁手動 walkthrough checklist(含已知 deferred 提示,不會 false-positive)
+- **Playwright E2E suite 設好**: 24 tests(21 active + 3 skipped platform),covers public + coach + customer 路徑 against production
+- `claudeDesign/` 推上 GitHub(含 README + 對照表),`uploads/` 守 .gitignore(真實行事曆 PNG 不上)
 
 ### 🧪 手動驗收(你有空時跑)
 
@@ -55,23 +64,35 @@
 
 #### 方向 B:S7 架構/資安 audit(memory `project_s7_next.md` 排定的工作)
 
-範圍(read-only review,產 audit report):
+**已 pre-scanned 過**:`docs/superpowers/specs/2026-05-28-supabase-advisors-snapshot.md` 已抓到 ~80% 的 RLS / perf 問題,S7 spec 可以從這延伸:
+
+剩下要做的 audit(advisor 沒覆蓋的):
 - 耦合度檢查
 - 檔案大小分布
 - Test coverage gaps
-- RLS audit(每張表 + 每條 policy 驗證)
 - Open-redirect 殘留掃描(S5 加的 `safePath` 是 baseline)
 - 權限矩陣交叉檢查(platform / tenant_owner / tenant_staff / customer × 各路由)
 - Storage 規則交叉檢查
 - Hard-coded secrets / API keys 掃描
 
-產出主要為**audit report**(在 `docs/superpowers/specs/`)+ 高優先 fix。
+高優先 fix(從 advisor 來):
+- 120 `multiple_permissive_policies` 重寫 — availability_* + customer_purchases + service_packages + tenant_photos 多條 PERMISSIVE 合 OR
+- 10 `auth_rls_initplan` 修 — `auth.uid()` 包 `(select ...)` 給 Postgres cache
+- 14 個 SECURITY DEFINER RPC 逐個 review caller-guard(book_with_purchase / reschedule_booking_purchase / cancel_booking_refund 等)
+- 1-click in Dashboard: 開「Prevent sign up with leaked passwords」
 
-#### 方向 C:小清理
+產出主要為 **S7 audit report**(在 `docs/superpowers/specs/`)+ 高優先 fix。
 
-- **supabase types regen**:跑 `supabase gen types`(需要 `SUPABASE_ACCESS_TOKEN`),移除 P1+P4 手動補進 `src/lib/supabase/types.ts` 的欄位
-- **`claudeDesign/`** 還是 untracked。決定要 commit 或加到 `.gitignore`
-- 既有 lint warnings(`<img>` vs `<Image>` 在幾個地方、unused vars 在 `calendar/rules/actions.ts` 等)集中清掉
+#### 方向 C:小清理 / 延伸
+
+- **supabase types regen**:跑 `npm run db:types`(需要 `SUPABASE_ACCESS_TOKEN`),移除 P1+P4 手動補進 `src/lib/supabase/types.ts` 的欄位
+- **更多 Playwright tests**:
+  - 真實 booking flow(學員選時段 → 進 /book → 確認 → 看 /my-bookings)
+  - 改期 flow(my-bookings 點改期 → 公開頁 reschedule mode → 選新時段)
+  - Coach create booking from calendar(slot popover → 確認預約)
+  - GitHub Actions workflow 跑 e2e on PR
+- **`/notifications` persistent read state**:加 `notification_log.read_at` column + mark-read action(取代現在 24h cosmetic)
+- **`coach-media` bucket** 進一步收緊 — 看 advisor 是否還能挑 owner-only path-scoped SELECT(目前是純 public,沒 SELECT policy)
 
 ## 重要原則(給 Claude 看的)
 
