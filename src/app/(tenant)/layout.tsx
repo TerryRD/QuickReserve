@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { ExternalLink, LogOut } from 'lucide-react'
-import { requireTenantMember } from '@/lib/auth/get-session'
+import { getSession, requireTenantMember } from '@/lib/auth/get-session'
 import { getTenantContext } from '@/lib/auth/get-tenant-context'
 import { QRMark } from '@/components/brand/qr-mark'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -8,6 +9,12 @@ import SidebarNav from './sidebar-nav'
 import MobileSidebar from './mobile-sidebar'
 
 export default async function TenantLayout({ children }: { children: React.ReactNode }) {
+  // Redirect users in the wrong role group BEFORE throwing inside requireTenantMember.
+  // Middleware only enforces auth; role-mismatch redirect is the layout's job.
+  const pre = await getSession()
+  if (pre && pre.role === 'customer') redirect('/my-bookings')
+  if (pre && pre.role === 'platform_admin') redirect('/platform/dashboard')
+
   const session = await requireTenantMember()
   const tenant = await getTenantContext(session.tenantId)
 

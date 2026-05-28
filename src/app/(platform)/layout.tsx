@@ -1,11 +1,15 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { LogOut } from 'lucide-react'
-import { requirePlatformAdmin } from '@/lib/auth/get-session'
+import { getSession, requirePlatformAdmin } from '@/lib/auth/get-session'
 import { QRMark } from '@/components/brand/qr-mark'
 import { ThemeToggle } from '@/components/theme-toggle'
 import PlatformSidebarNav from './platform-sidebar-nav'
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
+  const pre = await getSession()
+  if (pre && pre.role === 'customer') redirect('/my-bookings')
+  if (pre && (pre.role === 'tenant_owner' || pre.role === 'tenant_staff')) redirect('/dashboard')
   await requirePlatformAdmin()
   return (
     <div className="md:grid md:min-h-screen md:grid-cols-[240px_1fr]">
