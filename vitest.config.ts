@@ -7,7 +7,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['node_modules', 'legacy', '.next', 'dist'],
+    exclude: ['node_modules', 'legacy', '.next', 'dist', 'tests/e2e/**'],
     passWithNoTests: true,
     coverage: { reporter: ['text', 'html'] },
   },
