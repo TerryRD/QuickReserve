@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { createRecurringRuleAction } from './recurring-actions'
+import { createRecurringRuleAction, previewRecurringRuleAction } from './recurring-actions'
 
 type Service = { id: string; name: string; duration_minutes: number }
 
@@ -49,16 +49,73 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
   const [conflicts, setConflicts] = useState<ConflictDetail[]>([])
   const [skipMode, setSkipMode] = useState(false)
 
-  // Rough preview count (frontend approximation, real count computed server-side)
-  const previewCount = useMemo(() => {
-    if (freq === 'weekly') {
-      const occPerWeek = byWeekday.length
-      if (endCondition === 'count') return Number(endCount) || 0
-      return occPerWeek * 12 // visual estimate
+  // Server-computed preview (debounced as the form changes). Falls back to a
+  // dash on first render / while the request is in flight / on error.
+  const [preview, setPreview] = useState<{
+    occurrencesCount: number
+    conflictsCount: number
+    availabilitySkippedCount: number
+  } | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+
+  // Stable payload for the preview effect — depends only on form params.
+  const previewPayload = useMemo(
+    () => ({
+      serviceId,
+      freq,
+      intervalN,
+      byWeekday: freq === 'weekly' ? byWeekday : undefined,
+      byMonthDay: freq === 'monthly' ? Number(byMonthDay) : undefined,
+      startDate,
+      startTime,
+      endTime,
+      endCondition,
+      endCount: endCondition === 'count' ? Number(endCount) : undefined,
+      endUntil: endCondition === 'until' ? endUntil : undefined,
+    }),
+    [
+      serviceId,
+      freq,
+      intervalN,
+      byWeekday,
+      byMonthDay,
+      startDate,
+      startTime,
+      endTime,
+      endCondition,
+      endCount,
+      endUntil,
+    ],
+  )
+
+  // Debounced live preview. Skips the call while the dialog is closed (cheap
+  // gate) or when required form bits are obviously incomplete.
+  useEffect(() => {
+    if (!open) return
+    if (!previewPayload.serviceId) return
+    if (previewPayload.freq === 'weekly' && (!previewPayload.byWeekday || previewPayload.byWeekday.length === 0)) return
+    if (previewPayload.endCondition === 'count' && !previewPayload.endCount) return
+    if (previewPayload.endCondition === 'until' && !previewPayload.endUntil) return
+
+    let cancelled = false
+    setPreviewLoading(true)
+    const handle = setTimeout(() => {
+      previewRecurringRuleAction(previewPayload)
+        .then((res) => {
+          if (cancelled) return
+          if (res?.data) setPreview(res.data)
+          setPreviewLoading(false)
+        })
+        .catch(() => {
+          if (cancelled) return
+          setPreviewLoading(false)
+        })
+    }, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(handle)
     }
-    if (endCondition === 'count') return Number(endCount) || 0
-    return 30 // fallback estimate
-  }, [freq, byWeekday, endCondition, endCount])
+  }, [open, previewPayload])
 
   const { execute, isPending } = useAction(createRecurringRuleAction, {
     onSuccess: ({ data }) => {
@@ -336,8 +393,37 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
             <span className="font-mono mr-2 text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
               PREVIEW · 預覽
             </span>
-            將建立約{' '}
-            <strong className="font-display tabular-nums">{previewCount}</strong> 個時段
+            {previewLoading && !preview ? (
+              <span className="text-muted-foreground">計算中…</span>
+            ) : preview ? (
+              <span className={previewLoading ? 'opacity-60' : ''}>
+                共{' '}
+                <strong className="font-display tabular-nums">
+                  {preview.occurrencesCount}
+                </strong>{' '}
+                個時段
+                {preview.conflictsCount > 0 && (
+                  <>
+                    {' · 其中 '}
+                    <strong className="font-display tabular-nums text-destructive">
+                      {preview.conflictsCount}
+                    </strong>{' '}
+                    個衝突
+                  </>
+                )}
+                {preview.availabilitySkippedCount > 0 && (
+                  <>
+                    {' · '}
+                    <strong className="font-display tabular-nums">
+                      {preview.availabilitySkippedCount}
+                    </strong>{' '}
+                    個落在作息外
+                  </>
+                )}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">填齊欄位後自動預估</span>
+            )}
           </div>
 
           {conflicts.length > 0 && (
