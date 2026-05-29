@@ -82,18 +82,21 @@ S6 之後再做的一次完整 UI 對齊到 `claudeDesign/` mockup,Direction C(B
 | P3 Coach 7 頁 | /dashboard 黑底 hero+4 KPI+timeline+pending / /calendar 三視圖 / /services tab+grid / /customers 搜尋+Sheet drawer / /packages 分組+POPULAR / /packages/pending KPI / /notifications log inbox | `0ffbc36`~`37c2b46` |
 | P4 Settings 4 頁 | SubNav 跨頁共用 / /settings/profile 6 sections+sticky save+hero inputs / /settings/notifications 新建(matrix+quiet hours,無 email) / /calendar/availability+/rules SectionHead polish | `960d7a8`~`e7a8e4e` |
 
-## 已知 deferred(Phase 2 backlog)
+## Phase 2 backlog(2026-05-29 全部完成)
 
-- Web Push 真實訂閱完整 service worker 流程(現只 UI 殼 + 既存 PushOptIn)
-- **Email 通知整套**(成本/流量限制決策,本期不做)
-- `/book/<slotId>` 互動式套裝選擇(`book_with_purchase` RPC 無 `p_purchase_id` 參數,需 RPC 擴充)
-- Public page slot picker group capacity / full state(`/api/public/slots` 沒返回 group_filled / group_capacity)
-- /<slug>/packages 第 3 種付款狀態 `部份付` + receipt note(DB CHECK constraint / 欄位缺)
-- /signup invite mode banner 顯示 tenant_name(需要新公開 API endpoint /api/invite/resolve)
-- /notifications persistent read state(需要新 read_at column;現以 sent_at 24h 內 cosmetic 黃側條替代)
-- /calendar slot popover live conflict-detection inline preview(需要 overlap pre-flight query)
-- /settings/profile services 拖曳排序(需要新 server action + DnD lib)
-- 原 S7 audit report(架構/資安 review)
+| 條目 | 結果 |
+|---|---|
+| `/book/<slotId>` 互動式套裝選擇 | ✅ A-1。`book_with_purchase` 加 `p_purchase_id`,radio enabled,新 error `PURCHASE_INVALID`。3/3 integration test。 |
+| Public page slot picker group capacity | ✅ A-6。`/api/public/slots` 回傳 `max_capacity` + `current_bookings`,`TimeChip state='group'`。同 commit 修底層 slot lifecycle 3 RPC(`booked` 只在 capacity 滿才標)。 |
+| `/<slug>/packages` 部份付 + receipt note | ✅ A-4。CHECK 加 `'partial_paid'`,新 `receipt_note text` column,form 加條件 textarea,coach pending 顯示 RECEIPT block。 |
+| `/signup` invite banner tenant_name | ✅ A-7。新公開 endpoint `/api/invite/resolve`,debounced useEffect 抓 tenant 名。 |
+| `/notifications` persistent read state | ✅ A-5。`read_at timestamptz` + RLS UPDATE policy(self only)+ partial unread index;per-row click + 「全部標為已讀」bulk button。 |
+| recurring rule live conflict-detection | ✅ A-3。抽 `computeRulePreview` helper,`previewRecurringRuleAction` 無 DB writes,dialog 300ms debounce 顯示「共 N 個時段 · 其中 K 個衝突 · M 個落在作息外」。 |
+| Services 拖曳排序 | ✅ A-9。`services.display_order` + dnd-kit + `reorderServicesAction`(owner only + cross-tenant count guard);只在 ALL tab + 啟用 view + >1 service 才開 drag。 |
+| **Email 通知** | ⚠️ 不做。Owner 決定,memory `project_claudedesign_ui_alignment.md` 已標。 |
+| Web Push 真實訂閱 | ✅ 復查確認已完整 wired(早於本期);剩下純手動驗。 |
+| S7 audit report | ✅ `docs/superpowers/specs/2026-05-28-s7-audit-report.md` + 後續 RPC caller-guard audit(`2026-05-29-security-definer-rpc-audit.md`)+ P0 fix(commit `a96cf02`,擋 cross-customer booking 攻擊)。 |
+| zxcvbn password strength | ✅ HIBP 鎖 Pro Plan 的 mitigation(commit `382791e`,Score≥2 threshold)。
 
 ## 對齊 token / 規則(全站已套)
 

@@ -302,6 +302,20 @@ QuickReserve 把「單堂課」與「套裝」用同一張表（`customer_purcha
 - 第 3 個學員 book 後 → 所有 pending bookings auto-confirmed
 - 開課前 24h 仍 < 3 人 → cron 取消 slot、退課數、通知所有人
 
+**Slot lifecycle（2026-05-29 重寫,A-6）:**
+
+```
+available  = 0 active bookings
+pending    = 1 ≤ count < max_capacity     ← 團班還可加人
+booked     = count ≥ max_capacity         ← 滿了
+```
+
+Booking row state(`bookings.status` pending / confirmed / cancelled / completed)獨立於 slot state。`book_with_purchase` 在 `count + 1 >= min_attendance` 時 bulk auto-confirm 全部 pending bookings(slot 狀態不變),只在 `count + 1 >= max_capacity` 才把 slot 設 `booked`。`cancel_booking` / `reschedule_booking` 重算剩餘人數決定 slot 變 `pending` 或 `available`。1-on-1 服務(max=1, min=1)外觀行為完全不變(count=1=max → 直接 booked)。
+
+**公開頁 group capacity:**
+- `/api/public/slots` 回傳 `max_capacity` + `current_bookings`
+- `SlotPicker` 用 `TimeChip state='group'` 顯示 N/M(`max_capacity > 1` 才出現),滿了的 slot 由 status filter + count guard 雙重排除
+
 Cron 排程：**Vercel Hobby plan 只支援 daily**（`0 0 * * *`），所以 auto-cancel 最多 24h 延遲。若需更短粒度（例如 hourly 對 `cancel_deadline_hours = 1` 才即時）必須升級 Pro 後改 `0 * * * *`。
 
 ## 教練介紹頁（S5）
@@ -430,9 +444,25 @@ Storage RLS（policies on `storage.objects`）：
 - `/calendar/availability`:SubNav + 3 個 SectionHead-包覆 sections(TEMPLATES / EVENTS / PREVIEW)+ Card token polish(移除 hardcoded emerald/blue/amber)
 - `/calendar/rules`:SubNav + 4 種重複類型 segmented control + 動態參數區 + 結束條件 segmented + dialog 視覺對齊 token
 
-**Phase 2 backlog(本期不做):** Web Push 真實訂閱完整流程、Email 通知、Service 排序拖曳、live conflict detection inline preview、`/notifications` persistent read state、Dashboard 進階分析、原 S7 audit report
+**Phase 2 backlog 全部完成（2026-05-29 一日 sweep）:**
 
-下一階段（Plan 5）:Final QA 跨 17 頁 + 文件收尾。
+| 條目 | Commit | 摘要 |
+|---|---|---|
+| 互動式套裝選擇 on /book | A-1 | `book_with_purchase` 加 4th arg `p_purchase_id`,radio 變 interactive,新 error `PURCHASE_INVALID` |
+| zxcvbn password strength on signup | `382791e` | mitigation for HIBP 鎖在 Supabase Pro Plan;score≥2 threshold |
+| signup invite banner 顯示 tenant_name | `42ef8e5` | 新公開 endpoint `/api/invite/resolve`,debounced fetch |
+| `/notifications` persistent read state | `922e281` | `notification_log.read_at` + RLS UPDATE policy + per-row click + bulk mark-read |
+| `/<slug>/packages` 部份付 + receipt note | `b5349a4` | CHECK 加 `partial_paid`,新 `receipt_note text`,coach pending 顯示 RECEIPT block |
+| group slot lifecycle 修正 + capacity counter | `03944b3` | `book/cancel/reschedule` 三 RPC 重寫狀態機:`booked` 只在滿了才標、cancel 重算 pending vs available、reschedule 接受 pending 目的地。`/api/public/slots` 加 `current_bookings`,TimeChip `state='group'` |
+| recurring rule live conflict-detection preview | `b96d027` | 抽 `computeRulePreview` helper,加 `previewRecurringRuleAction`(無 DB writes),dialog 用 300ms debounce |
+| services drag-reorder | `53d7bb2` | `services.display_order` + dnd-kit + `reorderServicesAction`,只在 ALL tab+owner 啟用 |
+| S7 audit report + P0 fixes | 多 commit | SECURITY DEFINER caller-guard 9/9 OK、cross-customer attack 阻擋、RPC revoke、3 個 Playwright booking flow |
+
+**Email 通知**:Owner 決定不做(成本/流量),memory `project_claudedesign_ui_alignment.md` 已標,不在 backlog。
+
+**Web Push**:復查確認已完整 wired(`PushOptIn` 元件 + `/api/push/subscribe` POST+DELETE + `public/sw.js` push+click handler + `notify-booking` 7 處呼叫 + 3 cron route),只剩手動驗(真 browser 訂閱 + 觸發 booking event 看 toast)。
+
+下一階段:無立即 backlog,進入 maintenance / 新需求 explore 階段。
 
 ## 部署
 
@@ -484,9 +514,12 @@ UUID 可以在 Supabase Dashboard → Authentication → Users 找到。
 ```
 
 關鍵 RPC 函式：
-- `book_slot_atomic(slot_id, customer_id, notes)` — 原子性預約建立（SELECT FOR UPDATE）
+- `book_with_purchase(slot_id, customer_id, notes, purchase_id?)` — 原子性預約建立 + 消耗一堂套裝餘額。`purchase_id` 為 null 時 fallback 至 oldest-expiring;有值時驗證 ownership + service 一致 + 仍有效,失敗 raise `PURCHASE_INVALID`(P0001)。SECURITY DEFINER 內部第一道 guard 驗 `auth.uid() = customer_id`,擋 cross-customer 攻擊。
 - `confirm_booking(booking_id)` — 教練確認
-- `cancel_booking(booking_id)` — 客戶或教練取消
+- `cancel_booking(booking_id)` — 客戶或教練取消;refunds 一堂 classes_used,**重算 slot.status**(remaining > 0 → `pending`, else → `available`)
+- `reschedule_booking(old_booking_id, new_slot_id)` — 同一 tenant 內 atomically cancel old + create new;接受 `available` 或 `pending` 目的 slot(後者支援改期進團班),帶過原 purchase_id 不重複扣堂
+- `auto_cancel_group_slot(slot_id)` — service_role only,團班 min_attendance 不足時 cron 用,refund 所有 bookings + 通知扇出
+- `book_slot_atomic(slot_id, customer_id, notes)` — **legacy**,已從 `authenticated` revoke(`20260529100100`);data layer 受 `bookings.purchase_id NOT NULL` 卡死,實際 dead code,留定義但無 callers
 
 ---
 
