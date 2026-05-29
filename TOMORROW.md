@@ -97,8 +97,13 @@
   - GitHub Actions workflow 跑 e2e on PR
 - **`/notifications` persistent read state**:加 `notification_log.read_at` column + mark-read action(取代現在 24h cosmetic)
 - **`coach-media` bucket** 進一步收緊 — 看 advisor 是否還能挑 owner-only path-scoped SELECT(目前是純 public,沒 SELECT policy)
-- **修 `atomic-booking.test.ts`** — S4 後就 broken(`bookings.purchase_id` NOT NULL 卡死 `book_slot_atomic` 的 insert),3 個 test 一直紅。建議 rewrite 對 `book_with_purchase` OR 直接刪掉(已被新 `rpc-cross-customer-guard.test.ts` 涵蓋)
-- **revoke `book_slot_atomic` from `authenticated`** — app code 已不再呼叫(只剩 `book_with_purchase`),follow-up migration 可以縮 attack surface
+- ~~**修 `atomic-booking.test.ts`**~~ — ✅ 2026-05-29 rewrite,改測 `book_with_purchase + cancel_booking` lifecycle (4/4 green)
+- ~~**revoke `book_slot_atomic` from `authenticated`**~~ — ✅ migration `20260529100100_revoke_book_slot_atomic.sql`
+- ~~**supabase types regen**~~ — ✅ no-op (yesterday `9361940` 已 sync)
+- **更多 Playwright booking flow tests**(下次開新 batch 寫;需設計 drift-safe + no-submit 慣例,因為這些都是 mutate prod):
+  - 學員選時段 → `/book/<slotId>` chrome 渲染 + 確認 button enable(no-submit)
+  - reschedule mode 公開頁的 new-slot picker 渲染(no-submit)
+  - Coach `/calendar?view=week` slot popover 彈出 + "add booking" action 可見(no-submit)
 
 ## 重要原則(給 Claude 看的)
 
