@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAction } from 'next-safe-action/hooks'
@@ -20,6 +20,23 @@ function SignupForm() {
   const [email, setEmail] = useState(presetEmail)
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [inviteTenantName, setInviteTenantName] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!inviteToken) return
+    const ac = new AbortController()
+    void fetch(`/api/invite/resolve?token=${encodeURIComponent(inviteToken)}`, {
+      signal: ac.signal,
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { ok: boolean; tenant_name?: string } | null) => {
+        if (j?.ok && j.tenant_name) setInviteTenantName(j.tenant_name)
+      })
+      .catch(() => {
+        /* user can still sign up; banner just falls back to generic text */
+      })
+    return () => ac.abort()
+  }, [inviteToken])
 
   const { execute, isPending } = useAction(signupAction, {
     onError: ({ error }) => {
@@ -30,17 +47,14 @@ function SignupForm() {
   return (
     <div className="flex w-full flex-col gap-6 self-center sm:max-w-[480px]">
       {inviteToken && (
-        // TODO(src/app/(auth)/signup/page.tsx:34): Fetch tenant_name via a new
-        // public-by-token endpoint (e.g. /api/invite/resolve?token=...) and
-        // render "您被 {tenant_name} 邀請加入". Currently this is a client
-        // component so the admin lookup in /invite/[token]/page.tsx is not
-        // reusable here without a new server endpoint.
         <div className="rounded-2xl border border-accent bg-accent/30 p-4">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground">
-            INVITED ·
+            INVITED{inviteTenantName ? ` · ${inviteTenantName.toUpperCase()}` : ' ·'}
           </div>
           <div className="font-cjk mt-1 text-sm text-foreground">
-            您正在接受教練邀請，完成註冊後將自動接受邀請、可立即購買該教練的套裝。
+            {inviteTenantName
+              ? `您正在接受 ${inviteTenantName} 的教練邀請，完成註冊後將自動接受邀請、可立即購買該教練的套裝。`
+              : '您正在接受教練邀請，完成註冊後將自動接受邀請、可立即購買該教練的套裝。'}
           </div>
         </div>
       )}

@@ -57,14 +57,17 @@
 
 依優先建議:
 1. ~~互動式套裝選擇 on `/book`~~ — ✅ 2026-05-29 ship。`book_with_purchase` RPC 加 4th arg `p_purchase_id`;page.tsx 的 disabled radio 搬進 `book-form.tsx` 變 interactive;3/3 integration test 涵蓋 explicit pick / used-up / cross-customer。
-2. **Web Push 真實訂閱完整流程** — service worker 註冊 + Notification permission flow + 後端 push API hook(VAPID keys 應該已經有)
-3. **slot popover live conflict-detection inline** — 建 recurring rule 時即時顯示「會跟 N 個現有時段重疊」
-4. **`/<slug>/packages` 第 3 種付款狀態 `部份付` + receipt note** — 需要 alter `customer_purchases.payment_self_reported` CHECK + 加 `receipt_note` column
-5. **`/notifications` persistent read state** — 加 `notification_log.read_at` column + mark-read action
-6. **public page slot picker group capacity** — `/api/public/slots` 補 group_filled / group_capacity 欄位讓 TimeChip 顯示真實 N/M
-7. **`/signup` invite mode banner 顯示 tenant_name** — 新建 `/api/invite/resolve?token=` public endpoint
-8. **Email 通知**(等成本/流量決策)
-9. **`/settings/profile` services 拖曳排序** — 加 `display_order` column + DnD library + reorder server action
+2. ~~**Web Push 真實訂閱完整流程**~~ — ✅ 已經完整 wired 過(2026-05-29 復查)。`PushOptIn` 元件 in `/my-bookings` `/settings/notifications` + tenant 端、`/api/push/subscribe` POST+DELETE、`public/sw.js` push+click handler、`notify-booking` 7 處 + 3 cron route 都呼叫 `pushToUser`。剩下純手動驗(用真 browser 訂閱 + trigger booking event 看是否收到 notification)。
+3. **slot popover live conflict-detection inline** — 建 recurring rule 時即時顯示「會跟 N 個現有時段重疊」。需要 debounce + `/api/calendar/conflict-preview` endpoint + useEffect。Medium 工程,需走 brainstorm→spec→plan。
+4. **`/<slug>/packages` 第 3 種付款狀態 `部份付` + receipt note** — 需要 alter `customer_purchases.payment_self_reported` CHECK + 加 `receipt_note` column。
+5. **`/notifications` persistent read state** — 加 `notification_log.read_at` column + mark-read action(取代現在 24h cosmetic)。
+6. **public page slot picker group capacity** — `/api/public/slots` 補 group_filled / group_capacity 欄位讓 TimeChip 顯示真實 N/M。⚠️ 但 group booking 本身有 bug:`book_with_purchase` 在 `min_attendance` 後把 slot 設 `booked`,第 3 個 booker 撞 SLOT_UNAVAILABLE 即使 capacity 沒滿(`booked` 不在 `('available','pending')`)。應該先修底層,A-6 才有意義。
+7. ~~**`/signup` invite mode banner 顯示 tenant_name**~~ — ✅ 2026-05-29 ship(下個 commit 處理)。
+8. **Email 通知**(等成本/流量決策 — Owner 已決定**不做**,memory `project_claudedesign_ui_alignment.md` 已標)。
+9. **`/settings/profile` services 拖曳排序** — 加 `display_order` column + DnD library + reorder server action。
+
+**2026-05-29 補:**
+- ~~**zxcvbn password strength check**~~ — ✅ commit `382791e`。`src/lib/password-strength.ts` 包 `@zxcvbn-ts/core`,score≥2 threshold,signup Zod refine 接入,6 unit test。Mitigation for Supabase HIBP 鎖在 Pro Plan。
 
 #### 方向 B:S7 架構/資安 audit(memory `project_s7_next.md` 排定的工作)
 
