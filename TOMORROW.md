@@ -83,7 +83,7 @@
 - ✅ 120 `multiple_permissive_policies` 重寫(commit `64bd953`,2026-05-28)
 - ✅ 10 `auth_rls_initplan` wrap auth.uid()(同 commit)
 - ✅ SECURITY DEFINER RPC caller-guard 9/9 OK(2026-05-29):audit 報告 `docs/superpowers/specs/2026-05-29-security-definer-rpc-audit.md`;**P0 fix shipped** — `book_slot_atomic` + `book_with_purchase` 加 `auth.uid()` guard 阻擋 cross-customer 攻擊;3/3 integration test green
-- 🔴 **WAITING ON YOU** — 1-click in Dashboard: 開「Prevent sign up with leaked passwords」(Supabase Dashboard → Authentication → Policies → Password Settings)
+- ⚠️ **HIBP leaked-password 鎖在 Pro Plan**(2026-05-29 試 Management API PATCH 回 `HTTP 402`)— advisor 那條 WARN 在 Free Plan 永遠關不掉。替代方案:在 signup action 加 application-layer password strength check(zxcvbn 或類似),或升 Pro。memory `project_supabase_free_plan_limits.md` 已記
 
 產出主要為 **S7 audit report**(在 `docs/superpowers/specs/`)+ 高優先 fix。
 
