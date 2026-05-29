@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import ServiceFormDialog from './service-form-dialog'
 import ServiceActionsRow from './service-actions-row'
+import SortableServicesGrid from './sortable-services-grid'
 
 type Tab = 'all' | '1on1' | 'group'
 
@@ -41,7 +42,8 @@ export default async function ServicesPage({
     )
     .eq('tenant_id', session.tenantId)
     .eq('is_active', !showArchived)
-    .order('created_at', { ascending: false })
+    .order('display_order', { ascending: true })
+    .order('name', { ascending: true })
 
   const all = (services as Service[] | null) ?? []
   const filtered = all.filter((s) => {
@@ -116,6 +118,39 @@ export default async function ServicesPage({
             {showArchived ? '所有服務都在使用中' : '尚無符合的服務'}
           </p>
         </div>
+      ) : canEdit && !showArchived && tab === 'all' && filtered.length > 1 ? (
+        <>
+          <p className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground">
+            DRAG · 拖曳卡片右上角的把手調整公開頁顯示順序
+          </p>
+          <SortableServicesGrid
+            items={filtered.map((s) => ({
+              id: s.id,
+              node: <ServiceCard service={s} canEdit={canEdit} />,
+            }))}
+          />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <ServiceFormDialog
+              mode="create"
+              trigger={
+                <button
+                  type="button"
+                  className="grid min-h-[180px] place-items-center rounded-2xl border-[1.5px] border-dashed border-border bg-muted/40 p-6 text-center transition hover:border-foreground/40 hover:bg-muted/60"
+                >
+                  <div className="space-y-2">
+                    <div className="mx-auto grid size-12 place-items-center rounded-full bg-secondary text-muted-foreground">
+                      <Plus className="size-5" />
+                    </div>
+                    <div className="font-cjk text-sm font-semibold">新增服務</div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                      CREATE NEW
+                    </div>
+                  </div>
+                </button>
+              }
+            />
+          </div>
+        </>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((s) => (

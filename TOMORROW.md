@@ -64,7 +64,7 @@
 6. ~~**public page slot picker group capacity** + group booking 底層 bug~~ — ✅ 2026-05-29 ship。Migration `20260529140000_group_slot_lifecycle_fix.sql` 修 3 個 RPC 的 slot 狀態機(book / cancel / reschedule),`booked` 只在 `count >= max_capacity` 才標、cancel 重算剩餘人數、reschedule 接受 pending 目的 slot。`/api/public/slots` 加 `max_capacity` + `current_bookings`,slot-picker 用 TimeChip `state='group'` 顯示 N/M。新 8-case integration test (`group-slot-lifecycle.test.ts`) 全綠;48 既有 integration test regression 無問題。
 7. ~~**`/signup` invite mode banner 顯示 tenant_name**~~ — ✅ 2026-05-29 ship(下個 commit 處理)。
 8. **Email 通知**(等成本/流量決策 — Owner 已決定**不做**,memory `project_claudedesign_ui_alignment.md` 已標)。
-9. **`/settings/profile` services 拖曳排序** — 加 `display_order` column + DnD library + reorder server action。
+9. ~~**services 拖曳排序**~~ — ✅ 2026-05-29 ship。Migration `20260529150000_services_display_order.sql` 加 `display_order int` + 一次性 alphabetical backfill + index。`@dnd-kit/core+sortable+utilities` install,client `SortableServicesGrid` 包卡片(grip handle 在右上,activation distance=6 避免誤觸 action buttons)。`reorderServicesAction` 用 count check 擋跨 tenant,bulk update display_order(parallel,RLS per row)。`/services` ALL tab + owner + filtered>1 才 enable drag;`/<slug>` 公開頁 order 改 `display_order asc, name asc`。3/3 integration test 涵蓋 reverse / public ordering / cross-tenant guard。
 
 **2026-05-29 補:**
 - ~~**zxcvbn password strength check**~~ — ✅ commit `382791e`。`src/lib/password-strength.ts` 包 `@zxcvbn-ts/core`,score≥2 threshold,signup Zod refine 接入,6 unit test。Mitigation for Supabase HIBP 鎖在 Pro Plan。

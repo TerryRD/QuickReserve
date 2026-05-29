@@ -674,6 +674,7 @@ export type Database = {
           cancel_deadline_hours: number
           created_at: string
           description: string | null
+          display_order: number
           duration_minutes: number
           extended_properties: Json | null
           id: string
@@ -689,6 +690,7 @@ export type Database = {
           cancel_deadline_hours?: number
           created_at?: string
           description?: string | null
+          display_order?: number
           duration_minutes: number
           extended_properties?: Json | null
           id?: string
@@ -704,6 +706,7 @@ export type Database = {
           cancel_deadline_hours?: number
           created_at?: string
           description?: string | null
+          display_order?: number
           duration_minutes?: number
           extended_properties?: Json | null
           id?: string

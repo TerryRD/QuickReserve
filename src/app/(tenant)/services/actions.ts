@@ -117,3 +117,39 @@ export const restoreServiceAction = actionClient
     revalidatePath('/services')
     return { ok: true }
   })
+
+const ReorderSchema = z.object({
+  orderedIds: z.array(z.string().uuid()).min(1),
+})
+
+export const reorderServicesAction = actionClient
+  .inputSchema(ReorderSchema)
+  .action(async ({ parsedInput }) => {
+    const session = await requireTenantOwner()
+    const supabase = await createSupabaseServerClient()
+
+    // Verify every id belongs to this tenant — single round-trip, count check
+    // catches both wrong-tenant and unknown ids.
+    const { count } = await supabase
+      .from('services')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', session.tenantId)
+      .in('id', parsedInput.orderedIds)
+    if ((count ?? 0) !== parsedInput.orderedIds.length) {
+      throw new AppError('SERVICE_NOT_FOUND', '服務不存在或不屬於此教練')
+    }
+
+    // Bulk update: each id gets its position in the array as display_order.
+    // Doing this client-side as a loop would be N round-trips; instead we
+    // issue them in parallel within the same transaction window — RLS still
+    // gates each row by tenant.
+    await Promise.all(
+      parsedInput.orderedIds.map((id, idx) =>
+        supabase.from('services').update({ display_order: idx }).eq('id', id),
+      ),
+    )
+
+    revalidatePath('/services')
+    revalidatePath('/[tenantSlug]', 'page')
+    return { ok: true }
+  })

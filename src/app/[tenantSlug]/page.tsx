@@ -74,7 +74,8 @@ export default async function TenantPublicPage({
         .select('id, name, description, duration_minutes, price')
         .eq('tenant_id', tenant.id)
         .eq('is_active', true)
-        .order('name'),
+        .order('display_order', { ascending: true })
+        .order('name', { ascending: true }),
       supabase
         .from('tenant_photos')
         .select('id, storage_path, caption')
