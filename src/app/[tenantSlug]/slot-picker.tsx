@@ -9,7 +9,13 @@ import { DateRibbon } from '@/components/booking/date-ribbon'
 import { TimeChip } from '@/components/booking/time-chip'
 import { Button } from '@/components/ui/button'
 
-type Slot = { id: string; start_at: string; end_at: string }
+type Slot = {
+  id: string
+  start_at: string
+  end_at: string
+  max_capacity: number
+  current_bookings: number
+}
 
 type SlotPickerProps = {
   tenantSlug: string
@@ -176,11 +182,17 @@ export default function SlotPicker({
             {slots.map((s) => {
               const start = toLocal(s.start_at)
               const isSelected = s.id === selectedSlotId
+              const isGroup = s.max_capacity > 1
+              const state = isSelected ? 'selected' : isGroup ? 'group' : 'open'
+              const group = isGroup
+                ? { filled: s.current_bookings, capacity: s.max_capacity }
+                : undefined
               return (
                 <TimeChip
                   key={s.id}
                   time={format(start, 'HH:mm')}
-                  state={isSelected ? 'selected' : 'open'}
+                  state={state}
+                  group={group}
                   onSelect={() => setSelectedSlotId(s.id)}
                 />
               )
