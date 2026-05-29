@@ -313,6 +313,7 @@ export type Database = {
           id: string
           package_id: string | null
           payment_self_reported: string
+          receipt_note: string | null
           rejected_reason: string | null
           service_id: string
           tenant_id: string
@@ -329,6 +330,7 @@ export type Database = {
           id?: string
           package_id?: string | null
           payment_self_reported: string
+          receipt_note?: string | null
           rejected_reason?: string | null
           service_id: string
           tenant_id: string
@@ -345,6 +347,7 @@ export type Database = {
           id?: string
           package_id?: string | null
           payment_self_reported?: string
+          receipt_note?: string | null
           rejected_reason?: string | null
           service_id?: string
           tenant_id?: string

@@ -18,6 +18,8 @@ import {
 import { cn } from '@/lib/utils'
 import { approvePurchaseAction, rejectPurchaseAction } from './purchase-actions'
 
+type PaymentStatus = 'claimed_paid' | 'awaiting_payment' | 'partial_paid'
+
 type Props = {
   purchase: {
     id: string
@@ -25,10 +27,23 @@ type Props = {
     serviceName: string
     packageName: string
     classesTotal: number
-    paymentSelfReported: 'claimed_paid' | 'awaiting_payment'
+    paymentSelfReported: PaymentStatus
+    receiptNote?: string | null
     createdAt: string
   }
   emphasized?: boolean
+}
+
+const PAID_LABEL: Record<PaymentStatus, string> = {
+  claimed_paid: '學員自報：已付款',
+  awaiting_payment: '學員自報：未付款',
+  partial_paid: '學員自報：部分付款',
+}
+
+const PAID_COLOR: Record<PaymentStatus, string> = {
+  claimed_paid: 'bg-emerald-100 text-emerald-800',
+  awaiting_payment: 'bg-amber-100 text-amber-800',
+  partial_paid: 'bg-sky-100 text-sky-800',
 }
 
 export default function PurchaseRow({ purchase, emphasized = false }: Props) {
@@ -47,12 +62,8 @@ export default function PurchaseRow({ purchase, emphasized = false }: Props) {
     onError: ({ error }) => toast.error(error.serverError?.message ?? '失敗'),
   })
 
-  const paidLabel =
-    purchase.paymentSelfReported === 'claimed_paid' ? '學員自報：已付款' : '學員自報：未付款'
-  const paidColor =
-    purchase.paymentSelfReported === 'claimed_paid'
-      ? 'bg-emerald-100 text-emerald-800'
-      : 'bg-amber-100 text-amber-800'
+  const paidLabel = PAID_LABEL[purchase.paymentSelfReported]
+  const paidColor = PAID_COLOR[purchase.paymentSelfReported]
 
   return (
     <Card
@@ -73,6 +84,12 @@ export default function PurchaseRow({ purchase, emphasized = false }: Props) {
             <span className="text-muted-foreground">想買：</span>
             {purchase.serviceName} · {purchase.packageName}（{purchase.classesTotal} 堂）
           </div>
+          {purchase.receiptNote && (
+            <div className="mt-1.5 rounded-lg bg-muted/60 px-2.5 py-1.5 text-xs leading-relaxed">
+              <span className="font-mono mr-1.5 tracking-wider text-muted-foreground">RECEIPT</span>
+              {purchase.receiptNote}
+            </div>
+          )}
           <div className="mt-0.5 text-xs text-muted-foreground">申請於 {purchase.createdAt}</div>
         </div>
         <div className="flex items-center gap-2">

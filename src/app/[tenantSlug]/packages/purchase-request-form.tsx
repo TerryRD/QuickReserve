@@ -17,10 +17,11 @@ type Props = {
   loginHref: string
 }
 
-type PaymentChoice = 'claimed_paid' | 'awaiting_payment'
+type PaymentChoice = 'claimed_paid' | 'awaiting_payment' | 'partial_paid'
 
 const PAYMENT_OPTIONS: { value: PaymentChoice; label: string }[] = [
   { value: 'claimed_paid', label: '已轉帳 / 已付款' },
+  { value: 'partial_paid', label: '已部分付款' },
   { value: 'awaiting_payment', label: '未付款(預約後再付)' },
 ]
 
@@ -32,6 +33,7 @@ export default function PurchaseRequestForm({
 }: Props) {
   const [open, setOpen] = useState(false)
   const [paid, setPaid] = useState<PaymentChoice>('claimed_paid')
+  const [receiptNote, setReceiptNote] = useState('')
 
   const { execute, isPending } = useAction(requestPurchaseAction, {
     onSuccess: () => {
@@ -107,6 +109,30 @@ export default function PurchaseRequestForm({
         </div>
       </div>
 
+      {paid !== 'awaiting_payment' && (
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="receipt-note"
+            className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground"
+          >
+            RECEIPT · 付款備註(選填)
+          </label>
+          <textarea
+            id="receipt-note"
+            value={receiptNote}
+            onChange={(e) => setReceiptNote(e.target.value)}
+            maxLength={500}
+            rows={2}
+            placeholder={
+              paid === 'partial_paid'
+                ? '例如:已付 5000 / 剩 5000 預約後再付'
+                : '例如:銀行轉帳末四碼 1234'
+            }
+            className="font-cjk min-h-[64px] rounded-xl border border-border bg-card px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          />
+        </div>
+      )}
+
       <div className="flex flex-wrap justify-end gap-2.5 pt-1">
         <Button
           type="button"
@@ -119,7 +145,13 @@ export default function PurchaseRequestForm({
         </Button>
         <PrimaryCta
           size="md"
-          onClick={() => execute({ packageId, paymentSelfReported: paid })}
+          onClick={() =>
+            execute({
+              packageId,
+              paymentSelfReported: paid,
+              receiptNote: paid === 'awaiting_payment' ? null : (receiptNote || null),
+            })
+          }
           disabled={isPending}
         >
           {isPending ? '送出中…' : '送出申請'}

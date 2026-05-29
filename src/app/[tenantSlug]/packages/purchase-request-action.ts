@@ -9,7 +9,8 @@ import { AppError, NotFoundError } from '@/lib/errors'
 
 const RequestSchema = z.object({
   packageId: z.string().uuid(),
-  paymentSelfReported: z.enum(['claimed_paid', 'awaiting_payment']),
+  paymentSelfReported: z.enum(['claimed_paid', 'awaiting_payment', 'partial_paid']),
+  receiptNote: z.string().trim().max(500).optional().nullable(),
 })
 
 export const requestPurchaseAction = actionClient
@@ -33,6 +34,13 @@ export const requestPurchaseAction = actionClient
         { onConflict: 'tenant_id,customer_id' },
       )
 
+    // receipt_note only meaningful when caller reports a payment;
+    // for awaiting_payment we discard any stray text to keep data clean.
+    const receiptNote =
+      parsedInput.paymentSelfReported === 'awaiting_payment'
+        ? null
+        : (parsedInput.receiptNote?.trim() || null)
+
     const { error } = await supabase.from('customer_purchases').insert({
       tenant_id: pkg.tenant_id,
       customer_id: session.userId,
@@ -41,6 +49,7 @@ export const requestPurchaseAction = actionClient
       classes_total: pkg.class_count,
       classes_used: 0,
       payment_self_reported: parsedInput.paymentSelfReported,
+      receipt_note: receiptNote,
       approval_status: 'pending_review',
     })
     if (error) throw new AppError('REQUEST_FAILED', error.message)

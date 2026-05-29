@@ -20,7 +20,7 @@ export default async function PendingPurchasesPage() {
     supabase
       .from('customer_purchases')
       .select(
-        'id, customer_id, classes_total, payment_self_reported, created_at, services(name), service_packages(name), customers(display_name)',
+        'id, customer_id, classes_total, payment_self_reported, receipt_note, created_at, services(name), service_packages(name), customers(display_name)',
       )
       .eq('tenant_id', session.tenantId)
       .eq('approval_status', 'pending_review')
@@ -130,7 +130,9 @@ export default async function PendingPurchasesPage() {
                   classesTotal: p.classes_total,
                   paymentSelfReported: p.payment_self_reported as
                     | 'claimed_paid'
-                    | 'awaiting_payment',
+                    | 'awaiting_payment'
+                    | 'partial_paid',
+                  receiptNote: p.receipt_note,
                   createdAt: format(new Date(p.created_at), 'yyyy/MM/dd HH:mm'),
                 }}
               />
