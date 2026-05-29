@@ -6,10 +6,14 @@ import { actionClient } from '@/lib/safe-action'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError } from '@/lib/errors'
 import { safePath } from '@/lib/safe-path'
+import { checkPasswordStrength } from '@/lib/password-strength'
 
 const SignupSchema = z.object({
   email: z.string().email('Email 格式不正確'),
-  password: z.string().min(8, '密碼至少 8 個字'),
+  password: z
+    .string()
+    .min(8, '密碼至少 8 個字')
+    .refine((p) => checkPasswordStrength(p).ok, '密碼太弱，請避免常見字典詞、純數字或鍵盤序列'),
   displayName: z.string().min(1, '請輸入姓名').max(50),
   inviteToken: z.string().optional(),
   redirectTo: z.string().optional(),
