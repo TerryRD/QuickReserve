@@ -82,8 +82,8 @@
 高優先 fix(從 advisor 來):
 - ✅ 120 `multiple_permissive_policies` 重寫(commit `64bd953`,2026-05-28)
 - ✅ 10 `auth_rls_initplan` wrap auth.uid()(同 commit)
-- 14 個 SECURITY DEFINER RPC 逐個 review caller-guard(book_with_purchase / reschedule_booking_purchase / cancel_booking_refund 等)
-- 1-click in Dashboard: 開「Prevent sign up with leaked passwords」
+- ✅ SECURITY DEFINER RPC caller-guard 9/9 OK(2026-05-29):audit 報告 `docs/superpowers/specs/2026-05-29-security-definer-rpc-audit.md`;**P0 fix shipped** — `book_slot_atomic` + `book_with_purchase` 加 `auth.uid()` guard 阻擋 cross-customer 攻擊;3/3 integration test green
+- 🔴 **WAITING ON YOU** — 1-click in Dashboard: 開「Prevent sign up with leaked passwords」(Supabase Dashboard → Authentication → Policies → Password Settings)
 
 產出主要為 **S7 audit report**(在 `docs/superpowers/specs/`)+ 高優先 fix。
 
@@ -97,6 +97,8 @@
   - GitHub Actions workflow 跑 e2e on PR
 - **`/notifications` persistent read state**:加 `notification_log.read_at` column + mark-read action(取代現在 24h cosmetic)
 - **`coach-media` bucket** 進一步收緊 — 看 advisor 是否還能挑 owner-only path-scoped SELECT(目前是純 public,沒 SELECT policy)
+- **修 `atomic-booking.test.ts`** — S4 後就 broken(`bookings.purchase_id` NOT NULL 卡死 `book_slot_atomic` 的 insert),3 個 test 一直紅。建議 rewrite 對 `book_with_purchase` OR 直接刪掉(已被新 `rpc-cross-customer-guard.test.ts` 涵蓋)
+- **revoke `book_slot_atomic` from `authenticated`** — app code 已不再呼叫(只剩 `book_with_purchase`),follow-up migration 可以縮 attack surface
 
 ## 重要原則(給 Claude 看的)
 
