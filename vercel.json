@@ -3,7 +3,7 @@
   "buildCommand": "next build",
   "installCommand": "npm install",
   "outputDirectory": ".next",
-  "regions": ["icn1"],
+  "regions": ["hnd1"],
   "crons": [
     {
       "path": "/api/cron/materialize-recurring",
