@@ -36,6 +36,24 @@ test.describe('coach owner (王教練)', () => {
     await expect(page.getByRole('button', { name: /MONTH/ })).toBeVisible()
   })
 
+  test('calendar slot popover opens with details (drift-safe)', async ({ page }) => {
+    await page.goto('/calendar?view=week')
+    // Each slot in the week grid is a <button> containing an HH:mm time label.
+    // Filter to buttons that look like slot tiles (mono time inside the cell).
+    const slotButtons = page.locator('.grid button').filter({ hasText: /^\s*[\d⚠]/ }).filter({ hasText: /\d{2}:\d{2}/ })
+    const count = await slotButtons.count()
+    if (count === 0) {
+      test.info().annotations.push({ type: 'skip-reason', description: 'no slots in coach calendar for current week' })
+      return
+    }
+    await slotButtons.first().click()
+    // SlotPopover dialog renders rows labelled 時間 / 負責成員 / 狀態
+    await expect(page.getByText('時間').first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('負責成員').first()).toBeVisible()
+    await expect(page.getByText('狀態').first()).toBeVisible()
+    // Do NOT click delete — would mutate prod data.
+  })
+
   test('services page shows tab + placeholder card', async ({ page }) => {
     await page.goto('/services')
     // Tab pill (segmented)

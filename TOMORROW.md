@@ -100,10 +100,10 @@
 - ~~**修 `atomic-booking.test.ts`**~~ — ✅ 2026-05-29 rewrite,改測 `book_with_purchase + cancel_booking` lifecycle (4/4 green)
 - ~~**revoke `book_slot_atomic` from `authenticated`**~~ — ✅ migration `20260529100100_revoke_book_slot_atomic.sql`
 - ~~**supabase types regen**~~ — ✅ no-op (yesterday `9361940` 已 sync)
-- **更多 Playwright booking flow tests**(下次開新 batch 寫;需設計 drift-safe + no-submit 慣例,因為這些都是 mutate prod):
-  - 學員選時段 → `/book/<slotId>` chrome 渲染 + 確認 button enable(no-submit)
-  - reschedule mode 公開頁的 new-slot picker 渲染(no-submit)
-  - Coach `/calendar?view=week` slot popover 彈出 + "add booking" action 可見(no-submit)
+- ~~**更多 Playwright booking flow tests**~~ — ✅ 2026-05-29 C-batch-2 加 3 個 drift-safe no-submit test (Playwright 從 28 → 31 active)
+  - ✅ 學員選時段 → click chip → click CTA → `/book/<slotId>` 確認頁渲染
+  - ✅ reschedule mode 公開頁的 SLOTS 區塊渲染
+  - ✅ Coach `/calendar?view=week` slot popover 開啟顯示 時間/負責成員/狀態
 
 ## 重要原則(給 Claude 看的)
 

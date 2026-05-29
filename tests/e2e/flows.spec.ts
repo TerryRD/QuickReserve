@@ -61,6 +61,34 @@ test.describe('public booking flow (王教練, no submit)', () => {
     // Don't actually click — slot picker click navigates to /book. Just verify chips render.
     expect(count).toBeGreaterThan(0)
   })
+
+  test('customer reaches /book confirm page from slot picker (no-submit)', async ({ page }) => {
+    await login(page, ACCOUNTS.studentMing.email)
+    await page.goto(`/${ACCOUNTS.coachWang.slug}`)
+
+    // Find TimeChip buttons (rendered as buttons with aria-pressed; time format HH:mm)
+    const chips = page.locator('button[aria-pressed]').filter({ hasText: /^\d{2}:\d{2}$/ })
+    const count = await chips.count()
+    if (count === 0) {
+      test.info().annotations.push({ type: 'skip-reason', description: 'no open slots in prod' })
+      return
+    }
+
+    // Click first chip → selected recap bar with /book/<id> CTA link appears
+    await chips.first().click()
+    const bookLink = page.locator('a[href*="/book/"]').first()
+    await expect(bookLink).toBeVisible({ timeout: 5_000 })
+
+    // Navigate via CTA — /book is read-only render, no mutation
+    await bookLink.click()
+    await page.waitForURL(/\/book\//, { timeout: 10_000 })
+
+    // Either the confirm SectionHead OR the empty-state when student has no purchase.
+    // Both confirm /book chrome rendered correctly.
+    const confirmOrEmpty = page.getByText(/預約確認|尚無可用套裝/).first()
+    await expect(confirmOrEmpty).toBeVisible({ timeout: 5_000 })
+    // Do NOT click submit; that would create a real booking.
+  })
 })
 
 test.describe('reschedule flow (no submit)', () => {
@@ -81,6 +109,13 @@ test.describe('reschedule flow (no submit)', () => {
     await page.waitForURL((url) => url.searchParams.has('reschedule'), { timeout: 10_000 })
     // Reschedule banner should appear
     await expect(page.getByText(/改期模式/)).toBeVisible()
+
+    // New-slot picker should still render in reschedule mode (no-submit;
+    // selecting a chip + clicking the CTA would trigger a real reschedule).
+    // Just confirm the picker section is present — chips OR the empty
+    // "NO SLOTS" placeholder both count as the picker having rendered.
+    const pickerArea = page.getByText(/SLOTS|NO SLOTS/).first()
+    await expect(pickerArea).toBeVisible({ timeout: 5_000 })
   })
 })
 
