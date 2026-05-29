@@ -1,0 +1,1622 @@
+[
+  {
+    "path": "/",
+    "role": "anon",
+    "label": "landing",
+    "warmTtfb": 20,
+    "warmResponseEnd": 403,
+    "warmFcp": null,
+    "warmDcl": 425,
+    "warmLoad": 425,
+    "warmServerTiming": null,
+    "coldLoad": 2366,
+    "runs": [
+      {
+        "ttfb": 85,
+        "responseEnd": 850,
+        "domContentLoaded": 1930,
+        "load": 2366,
+        "fcp": 2016,
+        "wallMs": 2374,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 184,
+        "domContentLoaded": 187,
+        "load": 220,
+        "fcp": null,
+        "wallMs": 227,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 21,
+        "responseEnd": 571,
+        "domContentLoaded": 575,
+        "load": 590,
+        "fcp": null,
+        "wallMs": 595,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 403,
+        "domContentLoaded": 425,
+        "load": 425,
+        "fcp": null,
+        "wallMs": 431,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 196,
+        "domContentLoaded": 200,
+        "load": 209,
+        "fcp": null,
+        "wallMs": 222,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/login",
+    "role": "anon",
+    "label": "auth-login",
+    "warmTtfb": 20,
+    "warmResponseEnd": 88,
+    "warmFcp": null,
+    "warmDcl": 93,
+    "warmLoad": 105,
+    "warmServerTiming": null,
+    "coldLoad": 864,
+    "runs": [
+      {
+        "ttfb": 19,
+        "responseEnd": 484,
+        "domContentLoaded": 538,
+        "load": 864,
+        "fcp": 568,
+        "wallMs": 873,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 90,
+        "domContentLoaded": 97,
+        "load": 113,
+        "fcp": null,
+        "wallMs": 121,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 88,
+        "domContentLoaded": 95,
+        "load": 105,
+        "fcp": null,
+        "wallMs": 116,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 88,
+        "domContentLoaded": 93,
+        "load": 105,
+        "fcp": null,
+        "wallMs": 112,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 83,
+        "domContentLoaded": 91,
+        "load": 102,
+        "fcp": null,
+        "wallMs": 113,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/signup",
+    "role": "anon",
+    "label": "auth-signup",
+    "warmTtfb": 19,
+    "warmResponseEnd": 88,
+    "warmFcp": null,
+    "warmDcl": 96,
+    "warmLoad": 103,
+    "warmServerTiming": null,
+    "coldLoad": 541,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 450,
+        "domContentLoaded": 506,
+        "load": 541,
+        "fcp": 532,
+        "wallMs": 586,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 86,
+        "domContentLoaded": 95,
+        "load": 111,
+        "fcp": null,
+        "wallMs": 119,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 98,
+        "domContentLoaded": 106,
+        "load": 113,
+        "fcp": null,
+        "wallMs": 127,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 88,
+        "domContentLoaded": 96,
+        "load": 103,
+        "fcp": null,
+        "wallMs": 115,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 86,
+        "domContentLoaded": 93,
+        "load": 102,
+        "fcp": null,
+        "wallMs": 111,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/demo-wang-coach",
+    "role": "anon",
+    "label": "public-tenant",
+    "warmTtfb": 20,
+    "warmResponseEnd": 213,
+    "warmFcp": null,
+    "warmDcl": 215,
+    "warmLoad": 215,
+    "warmServerTiming": null,
+    "coldLoad": 724,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 579,
+        "domContentLoaded": 581,
+        "load": 724,
+        "fcp": null,
+        "wallMs": 727,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 222,
+        "domContentLoaded": 224,
+        "load": 225,
+        "fcp": null,
+        "wallMs": 229,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 222,
+        "domContentLoaded": 225,
+        "load": 225,
+        "fcp": null,
+        "wallMs": 227,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 212,
+        "domContentLoaded": 213,
+        "load": 213,
+        "fcp": null,
+        "wallMs": 216,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 213,
+        "domContentLoaded": 215,
+        "load": 215,
+        "fcp": null,
+        "wallMs": 218,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/demo-wang-coach/packages",
+    "role": "anon",
+    "label": "public-packages",
+    "warmTtfb": 20,
+    "warmResponseEnd": 229,
+    "warmFcp": null,
+    "warmDcl": 230,
+    "warmLoad": 230,
+    "warmServerTiming": null,
+    "coldLoad": 707,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 486,
+        "domContentLoaded": 494,
+        "load": 707,
+        "fcp": null,
+        "wallMs": 712,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 241,
+        "domContentLoaded": 243,
+        "load": 244,
+        "fcp": null,
+        "wallMs": 248,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 229,
+        "domContentLoaded": 230,
+        "load": 230,
+        "fcp": null,
+        "wallMs": 233,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 248,
+        "domContentLoaded": 249,
+        "load": 249,
+        "fcp": null,
+        "wallMs": 253,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 225,
+        "domContentLoaded": 227,
+        "load": 228,
+        "fcp": null,
+        "wallMs": 232,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/my-bookings",
+    "role": "student",
+    "label": "my-bookings",
+    "warmTtfb": 20,
+    "warmResponseEnd": 552,
+    "warmFcp": 544,
+    "warmDcl": 553,
+    "warmLoad": 553,
+    "warmServerTiming": null,
+    "coldLoad": 1250,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 995,
+        "domContentLoaded": 1019,
+        "load": 1250,
+        "fcp": 992,
+        "wallMs": 1256,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 643,
+        "domContentLoaded": 644,
+        "load": 644,
+        "fcp": 416,
+        "wallMs": 647,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 400,
+        "domContentLoaded": 401,
+        "load": 402,
+        "fcp": 380,
+        "wallMs": 404,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 552,
+        "domContentLoaded": 553,
+        "load": 553,
+        "fcp": 544,
+        "wallMs": 555,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 664,
+        "domContentLoaded": 665,
+        "load": 665,
+        "fcp": 660,
+        "wallMs": 668,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": false
+  },
+  {
+    "path": "/account/notifications",
+    "role": "student",
+    "label": "account-notifications",
+    "warmTtfb": 20,
+    "warmResponseEnd": 407,
+    "warmFcp": null,
+    "warmDcl": 408,
+    "warmLoad": 408,
+    "warmServerTiming": null,
+    "coldLoad": 932,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 631,
+        "domContentLoaded": 716,
+        "load": 932,
+        "fcp": 692,
+        "wallMs": 939,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 373,
+        "domContentLoaded": 376,
+        "load": 398,
+        "fcp": null,
+        "wallMs": 404,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 434,
+        "domContentLoaded": 436,
+        "load": 438,
+        "fcp": 424,
+        "wallMs": 441,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 359,
+        "domContentLoaded": 371,
+        "load": 375,
+        "fcp": null,
+        "wallMs": 379,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 407,
+        "domContentLoaded": 408,
+        "load": 408,
+        "fcp": 396,
+        "wallMs": 410,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/demo-wang-coach/purchases",
+    "role": "student",
+    "label": "tenant-purchases",
+    "warmTtfb": 20,
+    "warmResponseEnd": 415,
+    "warmFcp": null,
+    "warmDcl": 416,
+    "warmLoad": 416,
+    "warmServerTiming": null,
+    "coldLoad": 957,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 809,
+        "domContentLoaded": 810,
+        "load": 957,
+        "fcp": null,
+        "wallMs": 961,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 416,
+        "domContentLoaded": 417,
+        "load": 417,
+        "fcp": null,
+        "wallMs": 420,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 415,
+        "domContentLoaded": 416,
+        "load": 416,
+        "fcp": null,
+        "wallMs": 418,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 422,
+        "domContentLoaded": 422,
+        "load": 422,
+        "fcp": null,
+        "wallMs": 426,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 370,
+        "domContentLoaded": 371,
+        "load": 371,
+        "fcp": null,
+        "wallMs": 374,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/dashboard",
+    "role": "coach",
+    "label": "coach-dashboard",
+    "warmTtfb": 20,
+    "warmResponseEnd": 564,
+    "warmFcp": 532,
+    "warmDcl": 566,
+    "warmLoad": 566,
+    "warmServerTiming": null,
+    "coldLoad": 955,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 699,
+        "domContentLoaded": 739,
+        "load": 955,
+        "fcp": 696,
+        "wallMs": 962,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 507,
+        "domContentLoaded": 510,
+        "load": 511,
+        "fcp": 500,
+        "wallMs": 520,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 630,
+        "domContentLoaded": 632,
+        "load": 632,
+        "fcp": 600,
+        "wallMs": 636,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 564,
+        "domContentLoaded": 566,
+        "load": 566,
+        "fcp": 532,
+        "wallMs": 569,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 403,
+        "domContentLoaded": 404,
+        "load": 404,
+        "fcp": 380,
+        "wallMs": 407,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": false
+  },
+  {
+    "path": "/calendar",
+    "role": "coach",
+    "label": "coach-calendar",
+    "warmTtfb": 20,
+    "warmResponseEnd": 491,
+    "warmFcp": 444,
+    "warmDcl": 492,
+    "warmLoad": 492,
+    "warmServerTiming": null,
+    "coldLoad": 1839,
+    "runs": [
+      {
+        "ttfb": 21,
+        "responseEnd": 784,
+        "domContentLoaded": 811,
+        "load": 1839,
+        "fcp": 772,
+        "wallMs": 1852,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 449,
+        "domContentLoaded": 450,
+        "load": 450,
+        "fcp": 368,
+        "wallMs": 453,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 21,
+        "responseEnd": 477,
+        "domContentLoaded": 479,
+        "load": 479,
+        "fcp": 420,
+        "wallMs": 484,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 594,
+        "domContentLoaded": 595,
+        "load": 595,
+        "fcp": 508,
+        "wallMs": 598,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 491,
+        "domContentLoaded": 492,
+        "load": 492,
+        "fcp": 444,
+        "wallMs": 494,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/calendar/availability",
+    "role": "coach",
+    "label": "coach-calendar-avail",
+    "warmTtfb": 20,
+    "warmResponseEnd": 420,
+    "warmFcp": null,
+    "warmDcl": 424,
+    "warmLoad": 441,
+    "warmServerTiming": null,
+    "coldLoad": 991,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 685,
+        "domContentLoaded": 693,
+        "load": 991,
+        "fcp": 768,
+        "wallMs": 1001,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 456,
+        "domContentLoaded": 460,
+        "load": 482,
+        "fcp": 472,
+        "wallMs": 491,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 464,
+        "domContentLoaded": 468,
+        "load": 484,
+        "fcp": null,
+        "wallMs": 492,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 403,
+        "domContentLoaded": 407,
+        "load": 422,
+        "fcp": null,
+        "wallMs": 429,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 420,
+        "domContentLoaded": 424,
+        "load": 441,
+        "fcp": null,
+        "wallMs": 450,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/calendar/rules",
+    "role": "coach",
+    "label": "coach-calendar-rules",
+    "warmTtfb": 19,
+    "warmResponseEnd": 449,
+    "warmFcp": null,
+    "warmDcl": 450,
+    "warmLoad": 451,
+    "warmServerTiming": null,
+    "coldLoad": 944,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 674,
+        "domContentLoaded": 682,
+        "load": 944,
+        "fcp": 744,
+        "wallMs": 953,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 471,
+        "domContentLoaded": 472,
+        "load": 473,
+        "fcp": 456,
+        "wallMs": 476,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 449,
+        "domContentLoaded": 450,
+        "load": 451,
+        "fcp": 436,
+        "wallMs": 454,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 454,
+        "domContentLoaded": 457,
+        "load": 472,
+        "fcp": null,
+        "wallMs": 481,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 430,
+        "domContentLoaded": 432,
+        "load": 433,
+        "fcp": 416,
+        "wallMs": 438,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/services",
+    "role": "coach",
+    "label": "coach-services",
+    "warmTtfb": 20,
+    "warmResponseEnd": 364,
+    "warmFcp": null,
+    "warmDcl": 365,
+    "warmLoad": 365,
+    "warmServerTiming": null,
+    "coldLoad": 1004,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 688,
+        "domContentLoaded": 736,
+        "load": 1004,
+        "fcp": 696,
+        "wallMs": 1014,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 478,
+        "domContentLoaded": 481,
+        "load": 481,
+        "fcp": 456,
+        "wallMs": 491,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 388,
+        "domContentLoaded": 391,
+        "load": 407,
+        "fcp": null,
+        "wallMs": 416,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 364,
+        "domContentLoaded": 365,
+        "load": 365,
+        "fcp": 344,
+        "wallMs": 368,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 320,
+        "domContentLoaded": 324,
+        "load": 340,
+        "fcp": null,
+        "wallMs": 348,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/packages",
+    "role": "coach",
+    "label": "coach-packages",
+    "warmTtfb": 20,
+    "warmResponseEnd": 476,
+    "warmFcp": null,
+    "warmDcl": 479,
+    "warmLoad": 497,
+    "warmServerTiming": null,
+    "coldLoad": 1160,
+    "runs": [
+      {
+        "ttfb": 19,
+        "responseEnd": 755,
+        "domContentLoaded": 765,
+        "load": 1160,
+        "fcp": 852,
+        "wallMs": 1167,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 431,
+        "domContentLoaded": 435,
+        "load": 460,
+        "fcp": null,
+        "wallMs": 468,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 513,
+        "domContentLoaded": 517,
+        "load": 534,
+        "fcp": null,
+        "wallMs": 543,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 427,
+        "domContentLoaded": 431,
+        "load": 446,
+        "fcp": null,
+        "wallMs": 455,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 476,
+        "domContentLoaded": 479,
+        "load": 497,
+        "fcp": null,
+        "wallMs": 506,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/packages/pending",
+    "role": "coach",
+    "label": "coach-packages-pending",
+    "warmTtfb": 20,
+    "warmResponseEnd": 366,
+    "warmFcp": null,
+    "warmDcl": 384,
+    "warmLoad": 384,
+    "warmServerTiming": null,
+    "coldLoad": 1180,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 890,
+        "domContentLoaded": 898,
+        "load": 1180,
+        "fcp": 980,
+        "wallMs": 1189,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 464,
+        "domContentLoaded": 467,
+        "load": 490,
+        "fcp": 484,
+        "wallMs": 499,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 441,
+        "domContentLoaded": 445,
+        "load": 460,
+        "fcp": null,
+        "wallMs": 470,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 366,
+        "domContentLoaded": 384,
+        "load": 384,
+        "fcp": null,
+        "wallMs": 392,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 359,
+        "domContentLoaded": 367,
+        "load": 367,
+        "fcp": null,
+        "wallMs": 375,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/customers",
+    "role": "coach",
+    "label": "coach-customers",
+    "warmTtfb": 20,
+    "warmResponseEnd": 448,
+    "warmFcp": null,
+    "warmDcl": 452,
+    "warmLoad": 452,
+    "warmServerTiming": null,
+    "coldLoad": 1031,
+    "runs": [
+      {
+        "ttfb": 21,
+        "responseEnd": 699,
+        "domContentLoaded": 780,
+        "load": 1031,
+        "fcp": 736,
+        "wallMs": 1039,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 481,
+        "domContentLoaded": 504,
+        "load": 505,
+        "fcp": null,
+        "wallMs": 513,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 448,
+        "domContentLoaded": 452,
+        "load": 452,
+        "fcp": 436,
+        "wallMs": 455,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 544,
+        "domContentLoaded": 552,
+        "load": 552,
+        "fcp": 540,
+        "wallMs": 556,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 433,
+        "domContentLoaded": 434,
+        "load": 434,
+        "fcp": null,
+        "wallMs": 438,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/bookings",
+    "role": "coach",
+    "label": "coach-bookings",
+    "warmTtfb": 20,
+    "warmResponseEnd": 458,
+    "warmFcp": null,
+    "warmDcl": 462,
+    "warmLoad": 470,
+    "warmServerTiming": null,
+    "coldLoad": 960,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 675,
+        "domContentLoaded": 684,
+        "load": 960,
+        "fcp": 772,
+        "wallMs": 970,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 927,
+        "domContentLoaded": 930,
+        "load": 953,
+        "fcp": 944,
+        "wallMs": 960,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 21,
+        "responseEnd": 458,
+        "domContentLoaded": 462,
+        "load": 470,
+        "fcp": null,
+        "wallMs": 487,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 471,
+        "domContentLoaded": 475,
+        "load": 489,
+        "fcp": null,
+        "wallMs": 498,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 355,
+        "domContentLoaded": 372,
+        "load": 373,
+        "fcp": 372,
+        "wallMs": 380,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/staff",
+    "role": "coach",
+    "label": "coach-staff",
+    "warmTtfb": 20,
+    "warmResponseEnd": 387,
+    "warmFcp": null,
+    "warmDcl": 407,
+    "warmLoad": 408,
+    "warmServerTiming": null,
+    "coldLoad": 973,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 686,
+        "domContentLoaded": 700,
+        "load": 973,
+        "fcp": 816,
+        "wallMs": 977,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 407,
+        "domContentLoaded": 411,
+        "load": 434,
+        "fcp": 428,
+        "wallMs": 442,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 417,
+        "domContentLoaded": 424,
+        "load": 437,
+        "fcp": null,
+        "wallMs": 446,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 387,
+        "domContentLoaded": 407,
+        "load": 408,
+        "fcp": null,
+        "wallMs": 417,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 377,
+        "domContentLoaded": 388,
+        "load": 397,
+        "fcp": null,
+        "wallMs": 406,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/notifications",
+    "role": "coach",
+    "label": "coach-notifications",
+    "warmTtfb": 19,
+    "warmResponseEnd": 463,
+    "warmFcp": null,
+    "warmDcl": 466,
+    "warmLoad": 478,
+    "warmServerTiming": null,
+    "coldLoad": 1050,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 749,
+        "domContentLoaded": 757,
+        "load": 1050,
+        "fcp": 812,
+        "wallMs": 1061,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 397,
+        "domContentLoaded": 401,
+        "load": 419,
+        "fcp": null,
+        "wallMs": 427,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 338,
+        "domContentLoaded": 342,
+        "load": 354,
+        "fcp": null,
+        "wallMs": 363,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 464,
+        "domContentLoaded": 467,
+        "load": 481,
+        "fcp": 480,
+        "wallMs": 489,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 463,
+        "domContentLoaded": 466,
+        "load": 478,
+        "fcp": null,
+        "wallMs": 486,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/settings/profile",
+    "role": "coach",
+    "label": "coach-settings-profile",
+    "warmTtfb": 19,
+    "warmResponseEnd": 406,
+    "warmFcp": null,
+    "warmDcl": 424,
+    "warmLoad": 430,
+    "warmServerTiming": null,
+    "coldLoad": 1359,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 785,
+        "domContentLoaded": 798,
+        "load": 1359,
+        "fcp": 900,
+        "wallMs": 1369,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 510,
+        "domContentLoaded": 514,
+        "load": 544,
+        "fcp": 532,
+        "wallMs": 554,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 399,
+        "domContentLoaded": 424,
+        "load": 424,
+        "fcp": 424,
+        "wallMs": 433,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 421,
+        "domContentLoaded": 427,
+        "load": 445,
+        "fcp": null,
+        "wallMs": 452,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 406,
+        "domContentLoaded": 411,
+        "load": 430,
+        "fcp": null,
+        "wallMs": 439,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/settings/notifications",
+    "role": "coach",
+    "label": "coach-settings-notifications",
+    "warmTtfb": 20,
+    "warmResponseEnd": 364,
+    "warmFcp": null,
+    "warmDcl": 374,
+    "warmLoad": 385,
+    "warmServerTiming": null,
+    "coldLoad": 981,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 668,
+        "domContentLoaded": 803,
+        "load": 981,
+        "fcp": 780,
+        "wallMs": 990,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 309,
+        "domContentLoaded": 336,
+        "load": 336,
+        "fcp": null,
+        "wallMs": 347,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 21,
+        "responseEnd": 364,
+        "domContentLoaded": 374,
+        "load": 385,
+        "fcp": null,
+        "wallMs": 395,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 354,
+        "domContentLoaded": 358,
+        "load": 358,
+        "fcp": null,
+        "wallMs": 367,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 475,
+        "domContentLoaded": 478,
+        "load": 493,
+        "fcp": null,
+        "wallMs": 500,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/platform/dashboard",
+    "role": "platform",
+    "label": "platform-dashboard",
+    "warmTtfb": 20,
+    "warmResponseEnd": 385,
+    "warmFcp": null,
+    "warmDcl": 400,
+    "warmLoad": 400,
+    "warmServerTiming": null,
+    "coldLoad": 1323,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 1024,
+        "domContentLoaded": 1073,
+        "load": 1323,
+        "fcp": 1120,
+        "wallMs": 1332,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 387,
+        "domContentLoaded": 391,
+        "load": 411,
+        "fcp": 400,
+        "wallMs": 416,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 21,
+        "responseEnd": 385,
+        "domContentLoaded": 400,
+        "load": 400,
+        "fcp": null,
+        "wallMs": 405,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 501,
+        "domContentLoaded": 503,
+        "load": 503,
+        "fcp": 484,
+        "wallMs": 506,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 374,
+        "domContentLoaded": 387,
+        "load": 388,
+        "fcp": null,
+        "wallMs": 394,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/platform/tenants",
+    "role": "platform",
+    "label": "platform-tenants",
+    "warmTtfb": 20,
+    "warmResponseEnd": 384,
+    "warmFcp": null,
+    "warmDcl": 385,
+    "warmLoad": 385,
+    "warmServerTiming": null,
+    "coldLoad": 1149,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 742,
+        "domContentLoaded": 819,
+        "load": 1149,
+        "fcp": 780,
+        "wallMs": 1166,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 21,
+        "responseEnd": 429,
+        "domContentLoaded": 434,
+        "load": 465,
+        "fcp": null,
+        "wallMs": 472,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 384,
+        "domContentLoaded": 385,
+        "load": 385,
+        "fcp": 360,
+        "wallMs": 387,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 467,
+        "domContentLoaded": 471,
+        "load": 471,
+        "fcp": 444,
+        "wallMs": 475,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 335,
+        "domContentLoaded": 338,
+        "load": 354,
+        "fcp": null,
+        "wallMs": 359,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/platform/tenants/d752a8b5-3fa0-4d32-b0ff-c420af19b268",
+    "role": "platform",
+    "label": "platform-tenant-detail",
+    "warmTtfb": 20,
+    "warmResponseEnd": 446,
+    "warmFcp": 396,
+    "warmDcl": 451,
+    "warmLoad": 451,
+    "warmServerTiming": null,
+    "coldLoad": 949,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 645,
+        "domContentLoaded": 698,
+        "load": 949,
+        "fcp": 692,
+        "wallMs": 954,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 391,
+        "domContentLoaded": 392,
+        "load": 393,
+        "fcp": 372,
+        "wallMs": 396,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 446,
+        "domContentLoaded": 455,
+        "load": 473,
+        "fcp": 472,
+        "wallMs": 479,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 399,
+        "domContentLoaded": 400,
+        "load": 400,
+        "fcp": 384,
+        "wallMs": 403,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 448,
+        "domContentLoaded": 451,
+        "load": 451,
+        "fcp": 396,
+        "wallMs": 457,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/platform/bookings",
+    "role": "platform",
+    "label": "platform-bookings",
+    "warmTtfb": 20,
+    "warmResponseEnd": 361,
+    "warmFcp": null,
+    "warmDcl": 364,
+    "warmLoad": 373,
+    "warmServerTiming": null,
+    "coldLoad": 908,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 616,
+        "domContentLoaded": 624,
+        "load": 908,
+        "fcp": 720,
+        "wallMs": 916,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 308,
+        "domContentLoaded": 311,
+        "load": 329,
+        "fcp": 324,
+        "wallMs": 335,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 361,
+        "domContentLoaded": 364,
+        "load": 373,
+        "fcp": null,
+        "wallMs": 385,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 344,
+        "domContentLoaded": 348,
+        "load": 360,
+        "fcp": 360,
+        "wallMs": 367,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 364,
+        "domContentLoaded": 374,
+        "load": 381,
+        "fcp": null,
+        "wallMs": 387,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/platform/bookings?status=pending",
+    "role": "platform",
+    "label": "platform-bookings-pending",
+    "warmTtfb": 20,
+    "warmResponseEnd": 361,
+    "warmFcp": null,
+    "warmDcl": 382,
+    "warmLoad": 382,
+    "warmServerTiming": null,
+    "coldLoad": 541,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 420,
+        "domContentLoaded": 493,
+        "load": 541,
+        "fcp": 500,
+        "wallMs": 550,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 21,
+        "responseEnd": 352,
+        "domContentLoaded": 377,
+        "load": 378,
+        "fcp": 372,
+        "wallMs": 382,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 328,
+        "domContentLoaded": 339,
+        "load": 346,
+        "fcp": null,
+        "wallMs": 351,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 361,
+        "domContentLoaded": 382,
+        "load": 382,
+        "fcp": null,
+        "wallMs": 387,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 439,
+        "domContentLoaded": 450,
+        "load": 457,
+        "fcp": null,
+        "wallMs": 463,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  },
+  {
+    "path": "/platform/bookings?status=confirmed",
+    "role": "platform",
+    "label": "platform-bookings-confirmed",
+    "warmTtfb": 20,
+    "warmResponseEnd": 366,
+    "warmFcp": null,
+    "warmDcl": 383,
+    "warmLoad": 383,
+    "warmServerTiming": null,
+    "coldLoad": 454,
+    "runs": [
+      {
+        "ttfb": 20,
+        "responseEnd": 323,
+        "domContentLoaded": 410,
+        "load": 454,
+        "fcp": 412,
+        "wallMs": 464,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 21,
+        "responseEnd": 338,
+        "domContentLoaded": 361,
+        "load": 362,
+        "fcp": 356,
+        "wallMs": 367,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 334,
+        "domContentLoaded": 349,
+        "load": 349,
+        "fcp": null,
+        "wallMs": 355,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 20,
+        "responseEnd": 366,
+        "domContentLoaded": 383,
+        "load": 383,
+        "fcp": null,
+        "wallMs": 389,
+        "serverTimingMs": null
+      },
+      {
+        "ttfb": 19,
+        "responseEnd": 376,
+        "domContentLoaded": 391,
+        "load": 391,
+        "fcp": null,
+        "wallMs": 397,
+        "serverTimingMs": null
+      }
+    ],
+    "meetsBaseline": true
+  }
+]
