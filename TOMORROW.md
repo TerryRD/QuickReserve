@@ -56,7 +56,7 @@
 #### 方向 A:Phase 2 backlog(挑幾項補)
 
 依優先建議:
-1. **互動式套裝選擇 on `/book`** — 現在 RPC 強制選最近到期的;改成 user 可選需要 `book_with_purchase` RPC 加 `p_purchase_id` 參數 + 修改 booking action
+1. ~~互動式套裝選擇 on `/book`~~ — ✅ 2026-05-29 ship。`book_with_purchase` RPC 加 4th arg `p_purchase_id`;page.tsx 的 disabled radio 搬進 `book-form.tsx` 變 interactive;3/3 integration test 涵蓋 explicit pick / used-up / cross-customer。
 2. **Web Push 真實訂閱完整流程** — service worker 註冊 + Notification permission flow + 後端 push API hook(VAPID keys 應該已經有)
 3. **slot popover live conflict-detection inline** — 建 recurring rule 時即時顯示「會跟 N 個現有時段重疊」
 4. **`/<slug>/packages` 第 3 種付款狀態 `部份付` + receipt note** — 需要 alter `customer_purchases.payment_self_reported` CHECK + 加 `receipt_note` column

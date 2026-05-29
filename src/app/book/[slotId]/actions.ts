@@ -15,6 +15,7 @@ const CreateBookingSchema = z.object({
   slotId: z.string().uuid(),
   customerNotes: z.string().max(500).optional().nullable(),
   rescheduleFrom: z.string().uuid().optional().nullable(),
+  purchaseId: z.string().uuid().optional().nullable(),
 })
 
 export const createBookingAction = actionClient
@@ -57,6 +58,7 @@ export const createBookingAction = actionClient
       p_slot_id: parsedInput.slotId,
       p_customer_id: session.userId,
       p_customer_notes: parsedInput.customerNotes ?? undefined,
+      p_purchase_id: parsedInput.purchaseId ?? undefined,
     })
     if (error) {
       if (error.message?.includes('SLOT_UNAVAILABLE')) throw new SlotUnavailableError()
@@ -68,6 +70,8 @@ export const createBookingAction = actionClient
         throw new AppError('SLOT_PAST', '此時段已過')
       if (error.message?.includes('NO_BALANCE'))
         throw new AppError('NO_BALANCE', '需先購買套裝才能預約')
+      if (error.message?.includes('PURCHASE_INVALID'))
+        throw new AppError('PURCHASE_INVALID', '選擇的套裝不可用，請重新選擇')
       if (error.message?.includes('CUSTOMER_BLOCKED'))
         throw new AppError('CUSTOMER_BLOCKED', '此教練已封鎖您的預約')
       throw new AppError('BOOKING_FAILED', error.message)

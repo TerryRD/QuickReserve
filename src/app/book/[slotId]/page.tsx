@@ -192,58 +192,6 @@ export default async function BookConfirmPage({
           ) : null}
         </Card>
 
-        {/* Package balance picker (radio cards; oldest-expiring auto-selected) */}
-        <section>
-          <SectionHead
-            kicker="PACKAGE · 套裝餘額"
-            title="本次將扣除"
-            eng="DEDUCT"
-            hint="系統自動從最快到期的套裝扣 1 堂。"
-          />
-          <div className="grid gap-3">
-            {activePurchases.map((p) => {
-              const remaining = p.classes_total - p.classes_used
-              const total = p.classes_total
-              const percent = total > 0 ? (remaining / total) * 100 : 0
-              const isSelected = p.id === activePurchase.id
-              const pkgName = p.service_packages?.name ?? '套裝'
-              return (
-                <label
-                  key={p.id}
-                  className="flex cursor-pointer items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors has-[:checked]:border-foreground has-[:checked]:bg-accent has-[:checked]:text-accent-foreground"
-                >
-                  <input
-                    type="radio"
-                    name="package-display"
-                    value={p.id}
-                    defaultChecked={isSelected}
-                    disabled
-                    className="size-4 accent-foreground"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="font-cjk truncate text-sm font-semibold">{pkgName}</div>
-                    <div className="font-mono mt-1 text-xs tracking-wider text-muted-foreground">
-                      {remaining}/{total} 堂
-                      {p.expires_at ? (
-                        <>
-                          {' · '}期限 {format(new Date(p.expires_at), 'yyyy/MM/dd')}
-                        </>
-                      ) : null}
-                    </div>
-                    <div className="bg-muted mt-2 h-1 overflow-hidden rounded-full">
-                      <div
-                        className="bg-foreground h-full"
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="font-display text-2xl leading-none">{remaining}</div>
-                </label>
-              )
-            })}
-          </div>
-        </section>
-
         {/* Cancellation policy */}
         <div className="rounded-2xl border border-border bg-muted/40 p-5">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -259,7 +207,12 @@ export default async function BookConfirmPage({
         </div>
 
         {/* Submit (preserves existing server action via BookForm) */}
-        <BookForm slotId={slotId} rescheduleFrom={rescheduleFrom ?? null} />
+        <BookForm
+          slotId={slotId}
+          rescheduleFrom={rescheduleFrom ?? null}
+          purchases={activePurchases}
+          defaultPurchaseId={activePurchase.id}
+        />
       </main>
     </div>
   )

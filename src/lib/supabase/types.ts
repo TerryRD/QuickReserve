@@ -992,6 +992,7 @@ export type Database = {
         Args: {
           p_customer_id: string
           p_customer_notes?: string
+          p_purchase_id?: string
           p_slot_id: string
         }
         Returns: {
