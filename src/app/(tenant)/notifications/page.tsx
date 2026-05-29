@@ -8,6 +8,8 @@ import { SectionHead } from '@/components/ui/section-head'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import NotificationItem from './notification-item'
+import MarkAllReadButton from './mark-all-read-button'
 
 type TabKey = 'all' | 'bookings' | 'packages' | 'system'
 
@@ -39,8 +41,6 @@ const TYPE_LABEL: Record<string, string> = {
   recovery: '帳號回復',
 }
 
-const UNREAD_WINDOW_MS = 24 * 3600 * 1000
-
 export default async function NotificationsPage({
   searchParams,
 }: {
@@ -52,15 +52,14 @@ export default async function NotificationsPage({
 
   const { data: logs } = await supabase
     .from('notification_log')
-    .select('id, type, related_id, channel, status, sent_at, error_message')
+    .select('id, type, related_id, channel, status, sent_at, read_at, error_message')
     .eq('user_id', session.userId)
     .order('sent_at', { ascending: false })
     .limit(100)
 
   const tabDef = TABS.find(t => t.key === tab) ?? TABS[0]!
   const filtered = (logs ?? []).filter(l => tabDef.matcher(l.type))
-
-  const now = Date.now()
+  const unreadCount = (logs ?? []).filter(l => l.read_at === null).length
 
   return (
     <div className="space-y-6">
@@ -71,11 +70,14 @@ export default async function NotificationsPage({
           eng="INBOX"
           className="mb-0"
         />
-        <Link href="/settings/notifications">
-          <Button variant="outline" size="sm">
-            <Settings className="size-3.5" /> 推播偏好
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <MarkAllReadButton unreadCount={unreadCount} />
+          <Link href="/settings/notifications">
+            <Button variant="outline" size="sm">
+              <Settings className="size-3.5" /> 推播偏好
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="inline-flex rounded-full border border-border bg-card p-1">
@@ -107,15 +109,17 @@ export default async function NotificationsPage({
         <div className="space-y-2">
           {filtered.map(l => {
             const ts = new Date(l.sent_at)
-            const isUnread = now - ts.getTime() < UNREAD_WINDOW_MS
+            const isUnread = l.read_at === null
             const label = TYPE_LABEL[l.type] ?? l.type
             return (
-              <div
+              <NotificationItem
                 key={l.id}
+                id={l.id}
+                isUnread={isUnread}
                 className={cn(
-                  'relative flex items-center gap-3 rounded-2xl border bg-card p-4',
+                  'relative flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left',
                   isUnread
-                    ? 'border-border pl-5 before:absolute before:top-3 before:bottom-3 before:left-0 before:w-1 before:rounded-r-full before:bg-accent before:content-[""]'
+                    ? 'border-border pl-5 before:absolute before:top-3 before:bottom-3 before:left-0 before:w-1 before:rounded-r-full before:bg-accent before:content-[""] hover:bg-muted/40'
                     : 'border-border opacity-70',
                 )}
               >
@@ -145,7 +149,7 @@ export default async function NotificationsPage({
                 <time className="font-mono text-[10px] text-muted-foreground shrink-0">
                   {format(ts, 'M/d HH:mm')}
                 </time>
-              </div>
+              </NotificationItem>
             )
           })}
         </div>

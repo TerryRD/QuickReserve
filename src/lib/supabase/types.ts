@@ -406,6 +406,7 @@ export type Database = {
           channel: string
           error_message: string | null
           id: string
+          read_at: string | null
           related_id: string | null
           scheduled_for: string | null
           sent_at: string
@@ -417,6 +418,7 @@ export type Database = {
           channel?: string
           error_message?: string | null
           id?: string
+          read_at?: string | null
           related_id?: string | null
           scheduled_for?: string | null
           sent_at?: string
@@ -428,6 +430,7 @@ export type Database = {
           channel?: string
           error_message?: string | null
           id?: string
+          read_at?: string | null
           related_id?: string | null
           scheduled_for?: string | null
           sent_at?: string

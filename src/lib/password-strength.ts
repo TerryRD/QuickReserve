@@ -1,11 +1,11 @@
 import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core'
-import zxcvbnCommonPackage from '@zxcvbn-ts/language-common'
+import { adjacencyGraphs, dictionary } from '@zxcvbn-ts/language-common'
 
 // Initialize once at module load (idempotent if reimported).
 // We only read result.score, not result.feedback — translations omitted.
 zxcvbnOptions.setOptions({
-  graphs: zxcvbnCommonPackage.adjacencyGraphs,
-  dictionary: { ...zxcvbnCommonPackage.dictionary },
+  graphs: adjacencyGraphs,
+  dictionary: { ...dictionary },
 })
 
 // zxcvbn returns a score 0–4: 0 = trivially guessable, 4 = very strong.
