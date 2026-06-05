@@ -7,8 +7,7 @@ import { test as base, expect, type Page } from '@playwright/test'
 
 const BANNER_ID = '__tutorial_banner__'
 
-/** 在畫面頂端注入/更新中文字幕橫幅，停頓 ms 讓觀眾讀完。 */
-export async function narrate(page: Page, title: string, desc = '', ms = 1800) {
+async function injectBanner(page: Page, title: string, desc: string) {
   await page.evaluate(
     ({ id, title, desc }) => {
       let el = document.getElementById(id)
@@ -37,6 +36,24 @@ export async function narrate(page: Page, title: string, desc = '', ms = 1800) {
     },
     { id: BANNER_ID, title, desc }
   )
+}
+
+/** 等頁面穩定（含可能的 client 端導頁），避免注入時 context 被銷毀。 */
+async function settle(page: Page) {
+  await page.waitForLoadState('domcontentloaded').catch(() => {})
+  await page.waitForTimeout(250)
+}
+
+/** 在畫面頂端注入/更新中文字幕橫幅，停頓 ms 讓觀眾讀完。對導頁中途具韌性（重試一次）。 */
+export async function narrate(page: Page, title: string, desc = '', ms = 1800) {
+  await settle(page)
+  try {
+    await injectBanner(page, title, desc)
+  } catch {
+    // 注入時若正好在導頁（context destroyed），等穩定後重試一次
+    await settle(page)
+    await injectBanner(page, title, desc).catch(() => {})
+  }
   await page.waitForTimeout(ms)
 }
 

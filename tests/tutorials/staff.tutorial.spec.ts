@@ -8,6 +8,9 @@ const visited: string[] = []
 /** 造訪一個 (tenant) 頁面；若被導離則字幕標示「權限不足」。 */
 async function visit(page: Page, path: string, title: string, desc: string) {
   await page.goto(path)
+  // 等可能的 client 端權限導頁完成，再讀取最終 URL
+  await page.waitForLoadState('domcontentloaded').catch(() => {})
+  await page.waitForTimeout(400)
   const landed = new URL(page.url()).pathname
   visited.push(landed)
   if (landed === path) {
