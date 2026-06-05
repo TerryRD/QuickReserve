@@ -94,14 +94,28 @@ test('教練完整操作教學', async ({ page }) => {
     await narrate(page, '（目前無待確認預約）', '學員送出預約後會顯示於此')
   }
 
-  // ── 9. 助教管理 + 邀請頁覆蓋 ──
+  // ── 9. 助教管理 + 真實邀請流程 ──
   await go(page, '/staff')
   await narrate(page, '步驟 9：助教管理', '邀請與管理助教')
-  // 覆蓋 invite/[token]：以一個示意 token 造訪邀請頁（不接受，僅呈現畫面）
-  await page.goto('/invite/demo-preview-token')
-  visited.push('/invite/demo-preview-token')
-  await narrate(page, '步驟 9-1：邀請連結頁', '受邀者點開連結後看到的加入畫面')
-  await pace(page)
+  // 實際填寫 email 並送出，產生一組「有效」邀請連結（不是示意 token）
+  await page.locator('#staff-email').fill('demo-invitee@example.com')
+  await narrate(page, '步驟 9-1：送出邀請', '輸入助教 Email 後送出，系統產生專屬邀請連結')
+  await highlight(page, 'button:has-text("送出邀請")')
+  await page.getByRole('button', { name: '送出邀請' }).click()
+  const code = page.locator('code').first()
+  await expect(code).toBeVisible({ timeout: 8000 })
+  await pace(page, 1200)
+  // 取出真實 token，造訪受邀者實際會看到的「接受邀請」畫面（僅呈現，不點接受）
+  const inviteUrl = (await code.textContent())?.trim() ?? ''
+  const token = inviteUrl.split('/invite/')[1] ?? ''
+  if (token) {
+    await page.goto(`/invite/${token}`)
+    visited.push(`/invite/${token}`)
+    await narrate(page, '步驟 9-2：受邀者畫面', '受邀者開啟連結後看到的接受邀請畫面')
+    // 斷言接受邀請按鈕存在 = 有效邀請畫面（避開字幕橫幅造成的 strict-mode 衝突）
+    await expect(page.getByRole('button', { name: '接受邀請' })).toBeVisible({ timeout: 8000 })
+    await pace(page)
+  }
 
   // ── 10. 通知收件匣 ──
   await go(page, '/notifications')
