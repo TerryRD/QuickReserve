@@ -85,3 +85,6 @@ legacy/**/node_modules/
 
 .vercel
 .env*.local
+
+# Tutorial recordings (binary artifacts — do not version)
+/tutorials/
