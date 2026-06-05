@@ -13,7 +13,8 @@
 - **涵蓋全部 26 個路由頁面**（見 §4 覆蓋對照表），不漏頁。
 - 中文字幕橫幅（畫面內注入），每步驟有可讀說明 + 停頓。
 - 真實操作（寫入資料）：學員送出預約、教練確認預約等，全程只動 `demo-` 測試租戶。
-- 一鍵流程：`npm run tutorial:record` 先重置 seed → 再錄製 → 影片進 `tutorials/`。
+- 一鍵流程：`npm run tutorial:record` 先重置 seed → 再錄製 → **自動轉檔成 `.mp4`** → 影片進 `tutorials/`。
+- **最終成品為 `.mp4`**（相容性最佳：Windows 內建播放器、PowerPoint、手機、LINE、各平台皆可直接播放/上傳）。
 
 ### 不做（YAGNI）
 - 真人旁白配音（影片為無聲 + 字幕；之後可另行配音）。
@@ -63,10 +64,12 @@ outputDir: './tutorials/.raw'              // Playwright 原始輸出
 
 ### 2.4 流程編排 `npm run tutorial:record`
 順序：
-1. `node scripts/seed-test-data.mjs` — 重置 demo 資料到已知狀態（冪等，只清 `demo-` 租戶）。
-2. （新增）為 小明 預先 seed 一筆有效 purchase/套裝，使其可直接送出預約（避免影片卡在「先去申請套裝」；申請套裝另在學員流程中單獨示範一段）。
-3. `playwright test -c playwright.tutorial.config.ts`。
-4. 影片整理到 `tutorials/`。
+1. **前置檢查**：偵測 `ffmpeg` 是否在 PATH；缺少則**中止並提示安裝方式**（ffmpeg 為必要前置，因最終成品為 `.mp4`）。
+2. `node scripts/seed-test-data.mjs` — 重置 demo 資料到已知狀態（冪等，只清 `demo-` 租戶）。
+3. （新增）為 小明 預先 seed 一筆有效 purchase/套裝，使其可直接送出預約（避免影片卡在「先去申請套裝」；申請套裝另在學員流程中單獨示範一段）。
+4. `playwright test -c playwright.tutorial.config.ts` — 產出原始 `.webm`。
+5. **轉檔**：以 ffmpeg 將每支 `.webm` 轉成 `.mp4`（H.264 + AAC，容器/編碼轉換近乎無損），輸出到 `tutorials/`。
+6. 清理 `.raw/` 原始 `.webm`。
 
 可分角色錄製：`npm run tutorial:record -- customer` 之類（傳給 playwright 的檔名過濾）。
 
@@ -137,12 +140,13 @@ outputDir: './tutorials/.raw'              // Playwright 原始輸出
 
 ## 5. 成品與輸出
 
-- `tutorials/01-教練-完整操作.webm`
-- `tutorials/02-助教-完整操作.webm`
-- `tutorials/03-學員-完整操作.webm`
-- `tutorials/04-平台-完整操作.webm`
-- 可選：偵測到本機有 `ffmpeg` 時，加 `npm run tutorial:mp4` 轉成 `.mp4`；無 ffmpeg 則略過並提示安裝方式。
-- `tutorials/.raw/` 與 `tutorials/.gitignore`：影片產物加入 `.gitignore`，不進版控。
+- `tutorials/01-教練-完整操作.mp4`
+- `tutorials/02-助教-完整操作.mp4`
+- `tutorials/03-學員-完整操作.mp4`
+- `tutorials/04-平台-完整操作.mp4`
+- 最終成品**統一為 `.mp4`**（H.264 + AAC）。原始 `.webm` 為轉檔中間產物，轉檔後清除。
+- ffmpeg 為**必要前置**：`tutorial:record` 開頭偵測，缺少則中止並提示安裝（Windows：`winget install ffmpeg` 或 `choco install ffmpeg`）。
+- `tutorials/.raw/`（中間 `.webm`）與整個 `tutorials/` 影片產物加入 `.gitignore`，不進版控。
 
 ---
 
@@ -165,6 +169,7 @@ outputDir: './tutorials/.raw'              // Playwright 原始輸出
 | signup / invite 會產生真實資料 | signup 不最終送出或事後清除；invite token 由教練流程即時產生、用後失效 |
 | slowMo + 字幕停頓使影片偏長 | 每支控制在合理長度；`narrate` 停頓時間可調參數 |
 | 既有頁面結構與 e2e 斷言漂移 | 沿用 `tests/e2e` 已驗證過的 selector，降低脆弱度 |
+| 本機未裝 ffmpeg | `tutorial:record` 前置檢查即中止並提示安裝指令，不會錄到一半才失敗 |
 
 ---
 
