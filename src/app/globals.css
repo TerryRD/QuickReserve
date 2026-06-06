@@ -68,7 +68,7 @@
   --accent-foreground: oklch(0.14 0 0);
   --destructive: oklch(0.55 0.22 25);
   --border: oklch(0.86 0 0);
-  --input: oklch(0.90 0 0);
+  --input: oklch(0.9 0 0);
   --ring: oklch(0.16 0 0);
   --chart-1: oklch(0.91 0.19 102);
   --chart-2: oklch(0.55 0.15 240);
@@ -98,15 +98,15 @@
   --primary-foreground: oklch(0.135 0 0);
   --secondary: oklch(0.23 0 0);
   --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.20 0 0);
-  --muted-foreground: oklch(0.70 0 0);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.7 0 0);
   --accent: oklch(0.91 0.19 102);
   --accent-foreground: oklch(0.135 0 0);
   --destructive: oklch(0.66 0.22 25);
   --border: oklch(0.28 0 0);
   --input: oklch(0.25 0 0);
   --ring: oklch(0.91 0.19 102);
-  --sidebar: oklch(0.10 0 0);
+  --sidebar: oklch(0.1 0 0);
   --sidebar-foreground: oklch(0.95 0 0);
   --sidebar-primary: oklch(0.91 0.19 102);
   --sidebar-primary-foreground: oklch(0.14 0 0);
@@ -154,5 +154,33 @@
     background-image: radial-gradient(currentColor 1px, transparent 1px);
     background-size: 24px 24px;
     background-position: 0 0;
+  }
+
+  /* Thin, chromeless scrollbars — transparent track (no white overlap),
+     translucent thumb derived from currentColor (so it adapts to the dark
+     sidebar vs light content), and no up/down stepper buttons. */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklch, currentColor 22%, transparent);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklch, currentColor 38%, transparent);
+  }
+  ::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, currentColor 28%, transparent) transparent;
   }
 }

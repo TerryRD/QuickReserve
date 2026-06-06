@@ -3,9 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { addDays, format, parseISO, startOfDay } from 'date-fns'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { DateRibbon } from '@/components/booking/date-ribbon'
+import { addMonths, format, parseISO, startOfDay, startOfMonth } from 'date-fns'
+import { BookingCalendar } from '@/components/booking/booking-calendar'
 import { TimeChip } from '@/components/booking/time-chip'
 import { Button } from '@/components/ui/button'
 
@@ -25,7 +24,6 @@ type SlotPickerProps = {
   serviceDuration: number
   servicePrice: number
   initialDate: string
-  fromOffset: number
   rescheduleFrom: string | null
 }
 
@@ -40,24 +38,46 @@ export default function SlotPicker({
   serviceDuration,
   servicePrice,
   initialDate,
-  fromOffset,
   rescheduleFrom,
 }: SlotPickerProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [date, setDate] = useState(initialDate)
+  const [monthAnchor, setMonthAnchor] = useState(() =>
+    format(startOfMonth(parseISO(initialDate)), 'yyyy-MM-dd'),
+  )
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
   const [slots, setSlots] = useState<Slot[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [dayCounts, setDayCounts] = useState<Record<string, number> | null>(null)
 
-  const today = startOfDay(new Date())
-  const stripStart = addDays(today, fromOffset)
-  const days = useMemo(
-    () => Array.from({ length: 14 }, (_, i) => format(addDays(stripStart, i), 'yyyy-MM-dd')),
-    [stripStart],
-  )
+  const today = useMemo(() => format(startOfDay(new Date()), 'yyyy-MM-dd'), [])
 
+  // Fetch which days in the visible month have bookable slots.
+  useEffect(() => {
+    let cancelled = false
+    setDayCounts(null)
+    const usp = new URLSearchParams({ tenantId, serviceId, month: monthAnchor })
+    fetch(`/api/public/slot-days?${usp.toString()}`)
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json() as Promise<{ days: Record<string, number> }>
+      })
+      .then(({ days }) => {
+        if (!cancelled) setDayCounts(days)
+      })
+      .catch(() => {
+        // On failure, fall back to an empty map so days simply aren't dotted;
+        // the per-day slot fetch below remains the source of truth.
+        if (!cancelled) setDayCounts({})
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [tenantId, serviceId, monthAnchor])
+
+  // Fetch the time slots for the selected day.
   useEffect(() => {
     let cancelled = false
     setLoading(true)
@@ -92,56 +112,36 @@ export default function SlotPicker({
     router.replace(`/${tenantSlug}?${usp.toString()}`, { scroll: false })
   }
 
+  function shiftMonth(delta: number) {
+    setMonthAnchor(format(addMonths(parseISO(monthAnchor), delta), 'yyyy-MM-dd'))
+  }
+
+  function goToday() {
+    setMonthAnchor(format(startOfMonth(new Date()), 'yyyy-MM-dd'))
+    selectDate(today)
+  }
+
   const selectedSlot = useMemo(
     () => slots?.find((s) => s.id === selectedSlotId) ?? null,
     [slots, selectedSlotId],
   )
 
-  const slotCountByDate: Record<string, number> = useMemo(() => {
-    if (!slots) return {}
-    return { [date]: slots.length }
-  }, [slots, date])
-
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-          WEEK · {format(stripStart, 'yyyy.MM.dd')} — {format(addDays(stripStart, 13), 'MM.dd')}
-        </div>
-        <div className="flex items-center gap-1.5">
-          {fromOffset > 0 && (
-            <Link
-              href={`/${tenantSlug}?service=${serviceId}&from=${Math.max(0, fromOffset - 7)}${rescheduleFrom ? `&reschedule=${rescheduleFrom}` : ''}`}
-              className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-card px-3 font-mono text-xs font-medium hover:bg-muted"
-            >
-              <ChevronLeft className="size-3" />
-              上週
-            </Link>
-          )}
-          <Link
-            href={`/${tenantSlug}?service=${serviceId}&from=0${rescheduleFrom ? `&reschedule=${rescheduleFrom}` : ''}`}
-            className="inline-flex h-8 items-center rounded-full border border-border bg-card px-3 font-mono text-xs font-medium hover:bg-muted"
-          >
-            今天
-          </Link>
-          <Link
-            href={`/${tenantSlug}?service=${serviceId}&from=${fromOffset + 7}${rescheduleFrom ? `&reschedule=${rescheduleFrom}` : ''}`}
-            className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-card px-3 font-mono text-xs font-medium hover:bg-muted"
-          >
-            再 7 天
-            <ChevronRight className="size-3" />
-          </Link>
-        </div>
-      </header>
-
-      <DateRibbon
-        dates={days}
+    <div className="grid gap-7 lg:grid-cols-[320px_1fr] lg:gap-9">
+      {/* Calendar — pick a day */}
+      <BookingCalendar
+        monthAnchor={monthAnchor}
         selected={date}
+        dayCounts={dayCounts}
+        minDate={today}
         onSelect={selectDate}
-        slotCountByDate={slotCountByDate}
+        onPrevMonth={() => shiftMonth(-1)}
+        onNextMonth={() => shiftMonth(1)}
+        onToday={goToday}
       />
 
-      <section>
+      {/* Time slots for the selected day */}
+      <section className="min-w-0">
         <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
           <h4 className="font-display text-2xl uppercase leading-none tracking-tight sm:text-3xl">
             {format(parseISO(date), 'M/d')}
@@ -199,32 +199,33 @@ export default function SlotPicker({
             })}
           </div>
         )}
-      </section>
 
-      {selectedSlot && (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-primary px-5 py-4 text-primary-foreground sm:px-6 sm:py-5">
-          <div className="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-1">
-            <span className="font-display text-2xl font-normal sm:text-3xl">
-              {format(parseISO(date), 'M/d')} · {format(toLocal(selectedSlot.start_at), 'HH:mm')}
-            </span>
-            <span className="font-cjk text-xs opacity-70 sm:text-sm">
-              · {serviceName} · {serviceDuration} 分鐘 · NT$ {Number(servicePrice ?? 0).toLocaleString()}
-            </span>
+        {selectedSlot && (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-primary px-5 py-4 text-primary-foreground sm:px-6 sm:py-5">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-1">
+              <span className="font-display text-2xl font-normal sm:text-3xl">
+                {format(parseISO(date), 'M/d')} · {format(toLocal(selectedSlot.start_at), 'HH:mm')}
+              </span>
+              <span className="font-cjk text-xs opacity-70 sm:text-sm">
+                · {serviceName} · {serviceDuration} 分鐘 · NT${' '}
+                {Number(servicePrice ?? 0).toLocaleString()}
+              </span>
+            </div>
+            <Button
+              variant="accent"
+              size="pill"
+              withArrow="inline"
+              render={
+                <Link
+                  href={`/book/${selectedSlot.id}${rescheduleFrom ? `?reschedule=${rescheduleFrom}` : ''}`}
+                />
+              }
+            >
+              {rescheduleFrom ? '改期到此時段' : '前往預約'}
+            </Button>
           </div>
-          <Button
-            variant="accent"
-            size="pill"
-            withArrow="inline"
-            render={
-              <Link
-                href={`/book/${selectedSlot.id}${rescheduleFrom ? `?reschedule=${rescheduleFrom}` : ''}`}
-              />
-            }
-          >
-            {rescheduleFrom ? '改期到此時段' : '前往預約'}
-          </Button>
-        </div>
-      )}
+        )}
+      </section>
     </div>
   )
 }
