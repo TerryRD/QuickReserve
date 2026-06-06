@@ -38,13 +38,12 @@ export default async function TenantPublicPage({
   searchParams,
 }: {
   params: Promise<{ tenantSlug: string }>
-  searchParams: Promise<{ service?: string; date?: string; from?: string; reschedule?: string }>
+  searchParams: Promise<{ service?: string; date?: string; reschedule?: string }>
 }) {
   const { tenantSlug } = await params
   const {
     service: selectedServiceId,
     date: selectedDate,
-    from: fromOffset,
     reschedule: rescheduleFrom,
   } = await searchParams
   const tenant = await getTenantBySlug(tenantSlug)
@@ -86,9 +85,7 @@ export default async function TenantPublicPage({
       rescheduleFrom
         ? supabase
             .from('bookings')
-            .select(
-              'id, status, services(name), availability_slots(start_at)',
-            )
+            .select('id, status, services(name), availability_slots(start_at)')
             .eq('id', rescheduleFrom)
             .maybeSingle()
         : Promise.resolve({ data: null as RescheduleBookingRow | null }),
@@ -257,7 +254,12 @@ export default async function TenantPublicPage({
         {tenant.intro_video_url && (
           <section className="px-5 py-12 sm:px-10 sm:py-16 lg:px-[72px]">
             <div className="grid items-start gap-8 lg:grid-cols-[280px_1fr] lg:gap-12">
-              <SectionHead kicker="VIDEO · 介紹影片" title="介紹影片" eng="" hint="了解我的訓練風格" />
+              <SectionHead
+                kicker="VIDEO · 介紹影片"
+                title="介紹影片"
+                eng=""
+                hint="了解我的訓練風格"
+              />
               <div className="max-w-[720px]">
                 <VideoEmbed url={tenant.intro_video_url} />
               </div>
@@ -374,7 +376,6 @@ export default async function TenantPublicPage({
                   serviceDuration={activeService.duration_minutes}
                   servicePrice={Number(activeService.price ?? 0)}
                   initialDate={dateStr}
-                  fromOffset={Math.max(0, parseInt(fromOffset ?? '0', 10) || 0)}
                   rescheduleFrom={rescheduleFrom ?? null}
                 />
               </Suspense>
