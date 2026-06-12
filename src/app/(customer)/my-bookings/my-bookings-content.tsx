@@ -7,6 +7,8 @@ import { StatusBadge, type StatusType } from '@/components/ui/badge'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { DateStrip, type DateStripGroup } from '@/components/bookings/date-strip'
 import CancelMyBookingButton from './cancel-button'
+import CheckinButton from './checkin-button'
+import { canCheckIn } from '@/lib/checkin-window'
 
 const TZ_OFFSET_HOURS = 8
 const toLocal = (iso: string) =>
@@ -23,6 +25,7 @@ type BookingRow = {
   customer_notes: string | null
   created_at: string
   service_id: string
+  checked_in_at: string | null
   tenants: { name: string; slug: string } | null
   services: { name: string; duration_minutes: number } | null
   availability_slots: { start_at: string; end_at: string } | null
@@ -61,6 +64,13 @@ function BookingCard({ b }: { b: BookingRow }) {
     (b.status === 'pending' || b.status === 'confirmed') &&
     slot &&
     new Date(slot.start_at) > new Date()
+
+  const slotForCheckin = b.availability_slots
+  const canDoCheckin =
+    b.status === 'confirmed' &&
+    !b.checked_in_at &&
+    !!slotForCheckin &&
+    canCheckIn(new Date(), slotForCheckin.start_at, slotForCheckin.end_at)
 
   const start = slot ? toLocal(slot.start_at) : null
   const day = start?.getDate()
@@ -123,6 +133,7 @@ function BookingCard({ b }: { b: BookingRow }) {
 
         {canCancel ? (
           <div className="mt-2 flex flex-wrap items-center gap-2">
+            {canDoCheckin && <CheckinButton bookingId={b.id} />}
             {tenant && b.service_id && (
               <Button
                 variant="secondary"
@@ -148,10 +159,16 @@ function BookingCard({ b }: { b: BookingRow }) {
               </Button>
             )}
           </div>
+        ) : canDoCheckin ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <CheckinButton bookingId={b.id} />
+          </div>
         ) : (
           <div className="font-mono mt-2 text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
             {b.status === 'completed'
-              ? '已完成 · 期待下次見面'
+              ? b.checked_in_at
+                ? `已簽到 · ${format(toLocal(b.checked_in_at), 'HH:mm')} 完課`
+                : '已完成 · 期待下次見面'
               : b.status === 'cancelled'
                 ? '已取消 · 不會佔用套裝堂數'
                 : ''}
@@ -178,7 +195,7 @@ export default async function MyBookingsContent({ userId }: { userId: string }) 
     supabase
       .from('bookings')
       .select(
-        'id, status, customer_notes, created_at, service_id, tenants(name, slug), services(name, duration_minutes), availability_slots(start_at, end_at)',
+        'id, status, customer_notes, created_at, service_id, checked_in_at, tenants(name, slug), services(name, duration_minutes), availability_slots(start_at, end_at)',
       )
       .eq('customer_id', userId)
       .order('created_at', { ascending: false }),

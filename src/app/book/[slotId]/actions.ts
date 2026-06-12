@@ -9,6 +9,7 @@ import { requireSession } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError, SlotUnavailableError } from '@/lib/errors'
 import { notifyBookingChange, notifyGroupAutoConfirm } from '@/lib/notify-booking'
+import { notifyCheckinDone } from '@/lib/notify-checkin'
 import { publicSlotsTag } from '@/lib/cache-tags'
 
 const CreateBookingSchema = z.object({
@@ -114,5 +115,27 @@ export const cancelMyBookingAction = actionClient
     void notifyBookingChange(parsedInput.bookingId, 'cancelled', session.userId)
     revalidatePath('/my-bookings')
     if (tenantId) revalidateTag(publicSlotsTag(tenantId))
+    return { ok: true }
+  })
+
+const CheckinBookingSchema = z.object({ bookingId: z.string().uuid() })
+
+export const checkinBookingAction = actionClient
+  .inputSchema(CheckinBookingSchema)
+  .action(async ({ parsedInput }) => {
+    await requireSession()
+    const supabase = await createSupabaseServerClient()
+    const { error } = await supabase.rpc('checkin_booking', { p_booking_id: parsedInput.bookingId })
+    if (error) {
+      if (error.message?.includes('BOOKING_NOT_FOUND')) throw new AppError('BOOKING_NOT_FOUND', '預約不存在')
+      if (error.message?.includes('FORBIDDEN')) throw new AppError('FORBIDDEN', '無權限')
+      if (error.message?.includes('ALREADY_CHECKED_IN')) throw new AppError('ALREADY_CHECKED_IN', '已簽到過了')
+      if (error.message?.includes('NOT_CONFIRMED')) throw new AppError('NOT_CONFIRMED', '此預約尚未確認，無法簽到')
+      if (error.message?.includes('CHECKIN_TOO_EARLY')) throw new AppError('CHECKIN_TOO_EARLY', '尚未開放簽到（開課前 30 分鐘起）')
+      if (error.message?.includes('CHECKIN_CLOSED')) throw new AppError('CHECKIN_CLOSED', '課程已結束，無法簽到')
+      throw new AppError('CHECKIN_FAILED', error.message)
+    }
+    void notifyCheckinDone(parsedInput.bookingId)
+    revalidatePath('/my-bookings')
     return { ok: true }
   })
