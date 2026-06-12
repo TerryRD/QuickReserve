@@ -141,6 +141,7 @@ npm run dev      # http://localhost:3000
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push 公鑰 | 否 |
 | `VAPID_PRIVATE_KEY` | Web Push 私鑰 | **是** |
 | `VAPID_SUBJECT` | `mailto:` 聯絡信箱 | 否 |
+| `SUPABASE_DB_PASSWORD` | Supabase 資料庫密碼（`npm run db:types` 直連 DB 需要；Dashboard → Project Settings → Database） | **是** |
 
 ---
 
@@ -157,7 +158,7 @@ npm run test             # Unit tests (Vitest)
 npm run test:integration # 對 live Supabase 跑整合測試
 npm run db:push          # 套 migrations 到 cloud
 npm run db:diff          # 看 cloud vs local schema diff
-npm run db:types         # 從 cloud schema 重新產生 src/lib/supabase/types.ts
+npm run db:types         # 從 cloud schema 重新產生 src/lib/supabase/types.ts（需 .env.local 內有 SUPABASE_DB_PASSWORD；若無法設定，可改用 Supabase MCP 的 generate_typescript_types 工具）
 npm run db:reset         # 重置 cloud DB（小心！）
 ```
 
