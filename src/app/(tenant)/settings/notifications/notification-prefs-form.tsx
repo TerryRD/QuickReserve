@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
@@ -12,6 +12,7 @@ import {
 import { QuietHoursInput } from '@/components/settings/quiet-hours-input'
 import { SectionHead } from '@/components/ui/section-head'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   saveNotificationPrefsAction,
   removePushDeviceAction,
@@ -46,8 +47,9 @@ export default function NotificationPrefsForm({
   const [quietStart, setQuietStart] = useState<string | null>(initialQuietStart)
   const [quietEnd, setQuietEnd] = useState<string | null>(initialQuietEnd)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
-  const [checkinEnabled, setCheckinEnabled] = useState(checkinReminderMinutes !== null)
-  const [checkinMinutes, setCheckinMinutes] = useState<number>(checkinReminderMinutes ?? 15)
+  const [minutes, setMinutes] = useState<number | null>(checkinReminderMinutes)
+  const [draft, setDraft] = useState<string>(String(checkinReminderMinutes ?? 15))
+  const lastSavedCheckin = useRef<number | null>(checkinReminderMinutes)
 
   const { execute: executeSave, isPending: savePending } = useAction(
     saveNotificationPrefsAction,
@@ -61,14 +63,24 @@ export default function NotificationPrefsForm({
     },
   )
 
-  const { execute: saveCheckin, isPending: checkinPending } = useAction(
-    updateCheckinReminderAction,
-    {
-      onSuccess: () => toast.success('已更新簽到提醒設定'),
-      onError: ({ error }) =>
-        toast.error(error.serverError?.message ?? '更新失敗'),
+  const { execute: saveCheckin } = useAction(updateCheckinReminderAction, {
+    onSuccess: () => toast.success('已更新簽到提醒設定'),
+    onError: ({ error }) => {
+      // revert optimistic state to the last persisted value
+      setMinutes(lastSavedCheckin.current)
+      setDraft(String(lastSavedCheckin.current ?? 15))
+      toast.error(error.serverError?.message ?? '更新失敗')
     },
-  )
+  })
+
+  const clampMinutes = (v: number) => Math.min(180, Math.max(1, v))
+
+  function persistCheckin(next: number | null) {
+    if (next === lastSavedCheckin.current) return // no-op: avoids redundant saves
+    lastSavedCheckin.current = next
+    setMinutes(next)
+    saveCheckin({ minutes: next })
+  }
 
   const { execute: executeRemove, isPending: removePending } = useAction(
     removePushDeviceAction,
@@ -201,39 +213,35 @@ export default function NotificationPrefsForm({
             <label className="flex items-center gap-2 font-cjk text-sm font-semibold">
               <input
                 type="checkbox"
-                checked={checkinEnabled}
-                disabled={checkinPending}
+                checked={minutes !== null}
                 onChange={(e) => {
-                  const next = e.target.checked
-                  setCheckinEnabled(next)
-                  saveCheckin({ minutes: next ? checkinMinutes : null })
+                  if (e.target.checked) {
+                    const n = clampMinutes(parseInt(draft, 10) || 15)
+                    setDraft(String(n))
+                    persistCheckin(n)
+                  } else {
+                    persistCheckin(null)
+                  }
                 }}
                 className="size-4 accent-foreground"
               />
               課前提醒學員簽到
             </label>
-            {checkinEnabled && (
+            {minutes !== null && (
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                <input
+                <Input
                   type="number"
                   min={1}
                   max={180}
-                  step={1}
-                  value={checkinMinutes}
-                  disabled={checkinPending}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value, 10)
-                    if (!isNaN(val) && val >= 1 && val <= 180) {
-                      setCheckinMinutes(val)
-                    }
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onBlur={() => {
+                    const parsed = parseInt(draft, 10)
+                    const n = Number.isNaN(parsed) ? (minutes ?? 15) : clampMinutes(parsed)
+                    setDraft(String(n))
+                    persistCheckin(n)
                   }}
-                  onBlur={(e) => {
-                    const val = parseInt(e.target.value, 10)
-                    const clamped = isNaN(val) ? 15 : Math.min(180, Math.max(1, val))
-                    setCheckinMinutes(clamped)
-                    saveCheckin({ minutes: clamped })
-                  }}
-                  className="font-mono w-20 rounded-md border border-border bg-background px-3 py-2 text-sm disabled:opacity-40"
+                  className="w-20"
                 />
                 <span className="font-cjk text-sm text-muted-foreground">分鐘前</span>
               </div>
