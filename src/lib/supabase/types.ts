@@ -1022,6 +1022,13 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      checkin_booking: {
+        Args: { p_booking_id: string }
+        Returns: {
+          booking_id: string
+          checked_in_at: string
+        }[]
+      }
       confirm_booking: {
         Args: { p_booking_id: string }
         Returns: {
