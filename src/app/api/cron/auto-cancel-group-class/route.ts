@@ -23,6 +23,7 @@ export async function GET(request: Request) {
     .neq('status', 'cancelled')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  const pending: Promise<void>[] = []
   let cancelled = 0
   let evaluated = 0
   for (const slot of slots ?? []) {
@@ -60,15 +61,16 @@ export async function GET(request: Request) {
       service_name: string
       slot_start_at: string
     }>) {
-      void notifyGroupAutoCancel(
+      pending.push(notifyGroupAutoCancel(
         row.affected_customer_id,
         row.affected_member_user_id,
         row.service_name,
         row.slot_start_at,
-      )
+      ))
     }
   }
 
+  await Promise.all(pending)
   return NextResponse.json({
     evaluated,
     cancelled,
