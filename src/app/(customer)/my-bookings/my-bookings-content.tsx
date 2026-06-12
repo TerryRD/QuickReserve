@@ -65,12 +65,12 @@ function BookingCard({ b }: { b: BookingRow }) {
     slot &&
     new Date(slot.start_at) > new Date()
 
-  const slotForCheckin = b.availability_slots
+  // Render-time visibility gate only; checkin_booking RPC is the authoritative check.
   const canDoCheckin =
     b.status === 'confirmed' &&
     !b.checked_in_at &&
-    !!slotForCheckin &&
-    canCheckIn(new Date(), slotForCheckin.start_at, slotForCheckin.end_at)
+    !!slot &&
+    canCheckIn(new Date(), slot.start_at, slot.end_at)
 
   const start = slot ? toLocal(slot.start_at) : null
   const day = start?.getDate()
