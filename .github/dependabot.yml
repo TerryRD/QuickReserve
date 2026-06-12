@@ -36,7 +36,3 @@ updates:
       - dependency-name: '@vitest/coverage-v8'
         update-types:
           - version-update:semver-major
-
-# legacy/WebApp 為已停用的 Vue 3 prototype（保留 git 歷史，但不再維護依賴）。
-# Dependabot 只掃 root package.json，不會自動掃子資料夾，所以無需顯式排除；
-# 此處不為 legacy/ 加 entry 即等同排除。

@@ -45,7 +45,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Visual Studio (still needed for legacy/)
+# Visual Studio / Rider editor artifacts
 *.suo
 *.user
 *.userosscache
@@ -77,12 +77,6 @@ next-env.d.ts
 # Supabase local
 supabase/.branches
 supabase/.temp
-
-# Legacy project artifacts
-legacy/**/bin/
-legacy/**/obj/
-legacy/**/node_modules/
-
 .vercel
 .env*.local
 
