@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       availability_slots: {
@@ -217,6 +192,8 @@ export type Database = {
         Row: {
           cancelled_at: string | null
           cancelled_by: string | null
+          checked_in_at: string | null
+          checked_in_by: string | null
           created_at: string
           customer_id: string
           customer_notes: string | null
@@ -233,6 +210,8 @@ export type Database = {
         Insert: {
           cancelled_at?: string | null
           cancelled_by?: string | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           created_at?: string
           customer_id: string
           customer_notes?: string | null
@@ -249,6 +228,8 @@ export type Database = {
         Update: {
           cancelled_at?: string | null
           cancelled_by?: string | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           created_at?: string
           customer_id?: string
           customer_notes?: string | null
@@ -863,6 +844,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio_html: string | null
+          checkin_reminder_minutes: number | null
           city: string | null
           contact_email: string | null
           contact_line_id: string | null
@@ -882,6 +864,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio_html?: string | null
+          checkin_reminder_minutes?: number | null
           city?: string | null
           contact_email?: string | null
           contact_line_id?: string | null
@@ -901,6 +884,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio_html?: string | null
+          checkin_reminder_minutes?: number | null
           city?: string | null
           contact_email?: string | null
           contact_line_id?: string | null
@@ -977,6 +961,8 @@ export type Database = {
         Returns: {
           cancelled_at: string | null
           cancelled_by: string | null
+          checked_in_at: string | null
+          checked_in_by: string | null
           created_at: string
           customer_id: string
           customer_notes: string | null
@@ -1014,6 +1000,8 @@ export type Database = {
         Returns: {
           cancelled_at: string | null
           cancelled_by: string | null
+          checked_in_at: string | null
+          checked_in_by: string | null
           created_at: string
           customer_id: string
           customer_notes: string | null
@@ -1039,6 +1027,8 @@ export type Database = {
         Returns: {
           cancelled_at: string | null
           cancelled_by: string | null
+          checked_in_at: string | null
+          checked_in_by: string | null
           created_at: string
           customer_id: string
           customer_notes: string | null
@@ -1067,6 +1057,8 @@ export type Database = {
         Returns: {
           cancelled_at: string | null
           cancelled_by: string | null
+          checked_in_at: string | null
+          checked_in_by: string | null
           created_at: string
           customer_id: string
           customer_notes: string | null
@@ -1215,9 +1207,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
