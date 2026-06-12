@@ -12,6 +12,7 @@ type Row = {
   id: string
   slot_id: string
   customer_id: string
+  tenant_id: string
   status: string
   checked_in_at: string | null
   customers: { display_name: string | null } | null
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
   const { data, error } = await admin
     .from('bookings')
     .select(
-      'id, slot_id, customer_id, status, checked_in_at, customers(display_name), services(name), tenants(checkin_reminder_minutes), availability_slots!inner(start_at, tenant_members(user_id))',
+      'id, slot_id, customer_id, tenant_id, status, checked_in_at, customers(display_name), services(name), tenants(checkin_reminder_minutes), availability_slots!inner(start_at, tenant_members(user_id))',
     )
     .eq('status', 'confirmed')
     .is('checked_in_at', null)
@@ -78,19 +79,43 @@ export async function GET(request: Request) {
     }
   }
 
+  // Resolve tenant owner(s) for all slots with missing check-ins in one batched query.
+  // Each slot then notifies the slot's coach + tenant owner(s), deduped (coach==owner sends only once).
+  const tenantIds = [...new Set([...missingBySlot.values()].map((rows) => rows[0]!.tenant_id))]
+  const ownersByTenant = new Map<string, string[]>()
+  if (tenantIds.length > 0) {
+    const { data: ownerRows } = await admin
+      .from('tenant_members')
+      .select('tenant_id, user_id')
+      .eq('role', 'owner')
+      .eq('status', 'active')
+      .in('tenant_id', tenantIds)
+    for (const row of ownerRows ?? []) {
+      if (!row.user_id) continue
+      const list = ownersByTenant.get(row.tenant_id) ?? []
+      list.push(row.user_id)
+      ownersByTenant.set(row.tenant_id, list)
+    }
+  }
+
   let coachAlerts = 0
   for (const [slotId, slotRows] of missingBySlot) {
     const first = slotRows[0]!
     const coachUserId = first.availability_slots?.tenant_members?.user_id ?? null
-    if (!coachUserId) continue
+    const ownerUserIds = ownersByTenant.get(first.tenant_id) ?? []
+
+    // Build a deduped set of target user ids: coach + all active owners for the tenant.
+    const targets = new Set<string>()
+    if (coachUserId) targets.add(coachUserId)
+    for (const uid of ownerUserIds) targets.add(uid)
+    if (targets.size === 0) continue
+
     const names = slotRows.map((r) => r.customers?.display_name ?? '學員')
-    pending.push(notifyCheckinMissingCoach(
-      coachUserId,
-      first.services?.name ?? '課程',
-      first.availability_slots!.start_at,
-      slotId,
-      names,
-    ))
+    const svcName = first.services?.name ?? '課程'
+    const startAt = first.availability_slots!.start_at
+    for (const targetUserId of targets) {
+      pending.push(notifyCheckinMissingCoach(targetUserId, svcName, startAt, slotId, names))
+    }
     coachAlerts++
   }
 
