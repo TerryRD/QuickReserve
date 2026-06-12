@@ -7,8 +7,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const admin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 )
 const ts = Date.now()
@@ -19,7 +21,10 @@ const ctx: {
   memberIds: string[]
   serviceId?: string
   customerId?: string
-} = { memberIds: [] }
+  customer2Id?: string
+  customer2Email: string
+  customer2Password: string
+} = { memberIds: [], customer2Email: `cust2-ci-${Date.now()}@example.com`, customer2Password: 'TestPass123!' }
 
 let slotIndex = 0
 async function makeSlot(startOffsetMin: number, durationMin: number) {
@@ -56,8 +61,8 @@ describe('checkin_booking RPC', () => {
     const { data: t } = await admin.from('tenants').insert({ slug: `ci-${ts}`, name: 'CI Tenant' }).select().single()
     ctx.tenantId = t!.id
 
-    // Create 5 coach users + members (one per test slot) to avoid EXCLUDE collisions.
-    for (let i = 0; i < 5; i++) {
+    // Create 6 coach users + members (one per test slot) to avoid EXCLUDE collisions.
+    for (let i = 0; i < 6; i++) {
       const { data: u } = await admin.auth.admin.createUser({
         email: `coach-ci-${ts}-${i}@example.com`, password: 'TestPass123!', email_confirm: true,
       })
@@ -77,6 +82,12 @@ describe('checkin_booking RPC', () => {
     })
     ctx.customerId = cu!.user!.id
     await admin.from('customers').insert({ id: ctx.customerId, display_name: 'CI Cust' })
+
+    const { data: cu2 } = await admin.auth.admin.createUser({
+      email: ctx.customer2Email, password: ctx.customer2Password, email_confirm: true,
+    })
+    ctx.customer2Id = cu2!.user!.id
+    await admin.from('customers').insert({ id: ctx.customer2Id, display_name: 'CI Cust2' })
   })
 
   afterAll(async () => {
@@ -121,5 +132,21 @@ describe('checkin_booking RPC', () => {
     const booking = await makeBooking(slot, 'confirmed')
     const { error } = await admin.rpc('checkin_booking', { p_booking_id: booking })
     expect(error?.message).toContain('CHECKIN_CLOSED')
+  })
+
+  it('rejects a different customer trying to check in (FORBIDDEN)', async () => {
+    // Booking owned by ctx.customerId; caller is ctx.customer2Id (a different user).
+    const slot = await makeSlot(-5, 60) // started 5 min ago, ongoing
+    const booking = await makeBooking(slot, 'confirmed')
+
+    const otherClient = createClient<Database>(SUPABASE_URL, ANON_KEY)
+    const { error: signInErr } = await otherClient.auth.signInWithPassword({
+      email: ctx.customer2Email,
+      password: ctx.customer2Password,
+    })
+    expect(signInErr).toBeNull()
+
+    const { error } = await otherClient.rpc('checkin_booking', { p_booking_id: booking })
+    expect(error?.message).toContain('FORBIDDEN')
   })
 })

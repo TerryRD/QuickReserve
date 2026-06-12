@@ -35,6 +35,7 @@ begin
     raise exception 'NOT_CONFIRMED' using errcode = 'P0001';
   end if;
 
+  -- slot times are immutable after creation, so no FOR UPDATE lock is needed here
   select s.start_at, s.end_at into v_slot
     from public.availability_slots s
     where s.id = v_booking.slot_id;
@@ -58,4 +59,5 @@ begin
 end;
 $$;
 
+revoke execute on function public.checkin_booking(uuid) from public;
 grant execute on function public.checkin_booking(uuid) to authenticated;
