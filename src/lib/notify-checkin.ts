@@ -5,7 +5,7 @@ import { pushToUser } from '@/lib/push'
 const tzLabel = (iso: string) =>
   new Date(new Date(iso).getTime() + 8 * 3600 * 1000).toLocaleString('zh-TW')
 
-/** Flow 1: student checked in -> notify the slot's coach. Called from the check-in action. */
+/** Flow 1: student checked in -> notify the slot's coach. Called from the check-in action. Repeated calls produce repeated log rows/pushes; the browser `tag` dedups the visible notification. */
 export async function notifyCheckinDone(bookingId: string): Promise<void> {
   try {
     const admin = createSupabaseAdminClient()
@@ -88,7 +88,7 @@ export async function notifyCheckinMissingStudent(
   }
 }
 
-/** Flow 3b: not-checked-in escalation to one coach/owner, batched per slot. names = un-checked-in student names. */
+/** Flow 3b: not-checked-in escalation to one coach/owner, batched per slot. names = un-checked-in student names. Deduped per (coach, slotId, start) — once sent for a slot, a later retry with an updated `names` list will be suppressed, so do not rely on re-delivery to reflect students who checked in after the first send. */
 export async function notifyCheckinMissingCoach(
   coachUserId: string,
   serviceName: string,
