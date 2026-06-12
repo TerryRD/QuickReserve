@@ -27,8 +27,9 @@ export async function GET(request: Request) {
   }
   const admin = createSupabaseAdminClient()
   const now = new Date()
+  const pending: Promise<void>[] = []
   const from = new Date(now.getTime() - 2 * 3600 * 1000).toISOString()
-  const to = new Date(now.getTime() + 3 * 3600 * 1000).toISOString()
+  const to = new Date(now.getTime() + 3 * 3600 * 1000).toISOString() // +3h must cover the max reminder lead (tenants.checkin_reminder_minutes is DB-capped at 180)
 
   const { data, error } = await admin
     .from('bookings')
@@ -64,12 +65,13 @@ export async function GET(request: Request) {
     if (!r || !r.availability_slots) continue
     const svcName = r.services?.name ?? '課程'
     const startAt = r.availability_slots.start_at
+    // checkin_reminder / checkin_missing are intentionally not gated by notification_preferences in v1 (always sent)
     if (action.kind === 'reminder') {
-      void notifyCheckinReminder(r.customer_id, svcName, startAt, r.id)
+      pending.push(notifyCheckinReminder(r.customer_id, svcName, startAt, r.id))
       reminders++
     } else {
       // student gets an individual nudge; coach notification is batched per slot below
-      void notifyCheckinMissingStudent(r.customer_id, svcName, startAt, r.id)
+      pending.push(notifyCheckinMissingStudent(r.customer_id, svcName, startAt, r.id))
       const arr = missingBySlot.get(r.slot_id) ?? []
       arr.push(r)
       missingBySlot.set(r.slot_id, arr)
@@ -82,15 +84,17 @@ export async function GET(request: Request) {
     const coachUserId = first.availability_slots?.tenant_members?.user_id ?? null
     if (!coachUserId) continue
     const names = slotRows.map((r) => r.customers?.display_name ?? '學員')
-    void notifyCheckinMissingCoach(
+    pending.push(notifyCheckinMissingCoach(
       coachUserId,
       first.services?.name ?? '課程',
       first.availability_slots!.start_at,
       slotId,
       names,
-    )
+    ))
     coachAlerts++
   }
+
+  await Promise.all(pending)
 
   return NextResponse.json({
     scanned: rows.length,
