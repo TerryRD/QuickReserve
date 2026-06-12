@@ -81,6 +81,7 @@ API
   /api/cron/daily-reminder           每小時 06-12 UTC+8（hourly cron）
   /api/cron/pre-event-reminder       每分鐘（需 Vercel Pro）
   /api/cron/auto-cancel-group-class  每小時 xx:00（團班人數不足 auto cancel + 退課數）
+  /api/cron/checkin-reminder         每分鐘（由 Supabase pg_cron 驅動，post-deploy 設定）
   /api/push/subscribe                Web Push 訂閱
 ```
 
@@ -317,6 +318,39 @@ Booking row state(`bookings.status` pending / confirmed / cancelled / completed)
 - `SlotPicker` 用 `TimeChip state='group'` 顯示 N/M(`max_capacity > 1` 才出現),滿了的 slot 由 status filter + count guard 雙重排除
 
 Cron 排程：**Vercel Hobby plan 只支援 daily**（`0 0 * * *`），所以 auto-cancel 最多 24h 延遲。若需更短粒度（例如 hourly 對 `cancel_deadline_hours = 1` 才即時）必須升級 Pro 後改 `0 * * * *`。
+
+## 學員簽到機制（Student Check-in）
+
+學員在課程時間窗（`start_at − 30 分鐘` 至 `end_at`）內可自助簽到；簽到即視為完課。
+
+### 資料模型
+
+- `bookings.checked_in_at` (`timestamptz`) — 簽到時間；`null` = 未簽到。
+- `bookings.checked_in_by` (`uuid → auth.users`) — 簽到者（通常 = 學員本人；保留代簽彈性）。
+- 簽到後 `bookings.status` 轉為 `completed`。
+- `tenants.checkin_reminder_minutes` (`int`, default 15, range 1–180, `null` = 停用) — 課前提醒提前量，Owner 可在 `/settings/profile` 調整。
+
+### RPC
+
+`checkin_booking(p_booking_id uuid)` — 學員自助簽到。`SECURITY DEFINER`，內部依序驗證：呼叫者擁有權、booking 為 `confirmed`、尚未簽到（冪等保護）、`now()` 在時間窗內。成功後觸發 `checkin_done` 推播給開課教練。
+
+### 通知類型
+
+| type | 觸發 | 對象 |
+|------|------|------|
+| `checkin_done` | 學員完成簽到（RPC 內） | 開課教練 |
+| `checkin_reminder` | 課前 N 分（cron） | 學員 |
+| `checkin_missing` | `start_at` 已過、仍未簽到（cron） | 學員 + 開課教練 + 租戶 owner；團班時給教練/owner 的提醒**每 slot 彙整一則**（related_id = slot_id） |
+
+### 排程架構
+
+`/api/cron/checkin-reminder` 由 **Supabase pg_cron**（`* * * * *`，每分鐘）透過 `pg_net.http_post` 呼叫，繞開 Vercel Hobby 的每日 cron 限制。Route 沿用既有 `CRON_SECRET` Bearer 驗證。
+
+pg_cron 所需的 Vault secrets：`app_base_url`（應用 base URL）、`cron_secret`（與 `CRON_SECRET` env var 同值）。
+
+> **Post-deploy 步驟（尚未完成）：** pg_cron 排程尚未設定。需在部署後執行專屬 migration（`supabase/migrations/20260614000000_schedule_checkin_cron.sql`），在 Vault 寫入兩個 secret 並建立 `cron.schedule`。Tasks 1–8 已實作；Task 9（pg_cron migration）待部署後設定。
+
+---
 
 ## 教練介紹頁（S5）
 
