@@ -34,7 +34,7 @@ async function makeSlot(startOffsetMin: number, durationMin: number) {
   const { data, error } = await admin
     .from('availability_slots')
     .insert({
-      tenant_id: ctx.tenantId!, member_id: memberId, service_id: ctx.serviceId!,
+      tenant_id: ctx.tenantId!, member_id: memberId!, service_id: ctx.serviceId!,
       start_at: start.toISOString(), end_at: end.toISOString(), status: 'booked',
     })
     .select().single()
@@ -99,7 +99,7 @@ describe('checkin_booking RPC', () => {
     const booking = await makeBooking(slot, 'confirmed')
     const { data, error } = await admin.rpc('checkin_booking', { p_booking_id: booking })
     expect(error).toBeNull()
-    expect((data as Array<{ booking_id: string }>)[0].booking_id).toBe(booking)
+    expect((data as Array<{ booking_id: string }>)[0]!.booking_id).toBe(booking)
     const { data: b } = await admin.from('bookings').select('status, checked_in_at').eq('id', booking).single()
     expect(b!.status).toBe('completed')
     expect(b!.checked_in_at).not.toBeNull()
