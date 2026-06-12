@@ -4,7 +4,7 @@
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { actionClient } from '@/lib/safe-action'
-import { requireSession } from '@/lib/auth/get-session'
+import { requireSession, requireTenantOwner } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError } from '@/lib/errors'
 
@@ -55,6 +55,25 @@ export const saveNotificationPrefsAction = actionClient
 const RemoveDeviceSchema = z.object({
   id: z.string().uuid(),
 })
+
+const UpdateCheckinReminderSchema = z.object({
+  // null = disabled; otherwise minutes-before-start (1..180, matches the DB CHECK constraint)
+  minutes: z.number().int().min(1).max(180).nullable(),
+})
+
+export const updateCheckinReminderAction = actionClient
+  .inputSchema(UpdateCheckinReminderSchema)
+  .action(async ({ parsedInput }) => {
+    const session = await requireTenantOwner()
+    const supabase = await createSupabaseServerClient()
+    const { error } = await supabase
+      .from('tenants')
+      .update({ checkin_reminder_minutes: parsedInput.minutes })
+      .eq('id', session.tenantId)
+    if (error) throw new AppError('CHECKIN_REMINDER_UPDATE_FAILED', error.message)
+    revalidatePath('/settings/notifications')
+    return { ok: true }
+  })
 
 export const removePushDeviceAction = actionClient
   .inputSchema(RemoveDeviceSchema)

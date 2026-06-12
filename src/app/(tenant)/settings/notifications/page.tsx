@@ -58,7 +58,7 @@ export default async function SettingsNotificationsPage() {
   const session = await requireTenantMember()
   const supabase = await createSupabaseServerClient()
 
-  const [{ data: prefs }, { data: deviceRows }] = await Promise.all([
+  const [{ data: prefs }, { data: deviceRows }, { data: tenantRow }] = await Promise.all([
     supabase
       .from('notification_preferences')
       .select('channels, quiet_hours_start, quiet_hours_end')
@@ -69,6 +69,11 @@ export default async function SettingsNotificationsPage() {
       .select('id, user_agent, last_used_at')
       .eq('user_id', session.userId)
       .order('last_used_at', { ascending: false }),
+    supabase
+      .from('tenants')
+      .select('checkin_reminder_minutes')
+      .eq('id', session.tenantId)
+      .maybeSingle(),
   ])
 
   const channelsRaw = prefs?.channels as
@@ -123,6 +128,8 @@ export default async function SettingsNotificationsPage() {
         initialChannels={channels}
         initialQuietStart={quietStart}
         initialQuietEnd={quietEnd}
+        checkinReminderMinutes={tenantRow?.checkin_reminder_minutes ?? null}
+        isOwner={session.role === 'tenant_owner'}
       />
     </div>
   )
