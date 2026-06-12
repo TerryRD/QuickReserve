@@ -20,7 +20,7 @@
     "db:push": "supabase db push",
     "db:diff": "supabase db diff",
     "db:reset": "supabase db reset --linked",
-    "db:types": "supabase gen types typescript --linked > src/lib/supabase/types.ts"
+    "db:types": "dotenv -e .env.local -- supabase gen types typescript --linked > src/lib/supabase/types.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

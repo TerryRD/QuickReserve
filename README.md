@@ -158,7 +158,7 @@ npm run test             # Unit tests (Vitest)
 npm run test:integration # 對 live Supabase 跑整合測試
 npm run db:push          # 套 migrations 到 cloud
 npm run db:diff          # 看 cloud vs local schema diff
-npm run db:types         # 從 cloud schema 重新產生 src/lib/supabase/types.ts（需 .env.local 內有 SUPABASE_DB_PASSWORD；若無法設定，可改用 Supabase MCP 的 generate_typescript_types 工具）
+npm run db:types         # 從 cloud schema 重新產生 src/lib/supabase/types.ts（需先 `npx supabase login` 並在 .env.local 設 SUPABASE_DB_PASSWORD；script 已自動載入 .env.local。若不想設定，可改用 Supabase MCP 的 generate_typescript_types 工具重生型別）
 npm run db:reset         # 重置 cloud DB（小心！）
 ```
 
