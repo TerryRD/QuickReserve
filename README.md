@@ -280,9 +280,17 @@ QuickReserve 把「單堂課」與「套裝」用同一張表（`customer_purcha
    - 拒絕 → status 變 `rejected`，留下 `rejected_reason`
 4. 預約消費：`book_with_purchase` RPC 自動找最快過期的 active purchase，increment `classes_used`，attach 到 booking 的 `purchase_id`
 
-**取消：**
-- 學員 / 教練取消 booking → purchase.classes_used--（退一堂）
-- 團班 auto-cancel → 同上、所有 booking 學員一起退
+**取消與退費（取消期限唯一決定，2026-06-13）：**
+- 退費僅由服務的 `cancel_deadline_hours` 決定——堂數在預約當下就扣，是否退還只看取消時機。
+- 學員取消：在 `start_at − cancel_deadline_hours` 之前（含當下）取消才退一堂；超過期限取消仍會取消預約並釋出時段，但**不退**（堂數作廢）。
+- 教練 / 管理者取消：**一律退**一堂，不受期限限制。
+- 團班 auto-cancel → 視同教練取消，所有 booking 學員一起退。
+- 取消對話框與成功 toast 會依 `isWithinCancelDeadline`（client 端，與 RPC 同輸入）顯示「會 / 不會退還堂數」；RPC 為伺服器端唯一真實來源。
+
+**未到場（no_show，2026-06-13）：**
+- `checkin-reminder` cron 每分鐘掃描：`confirmed` + 未簽到 + slot 已結束的預約 → 標記 `no_show`（僅標籤，回應含 `noShowMarked`）。
+- 純標籤、**不動 `classes_used`**：該堂在預約時已扣、因未在期限內取消而作廢。30 天下限避免首次執行掃描遠古資料。
+- `/my-bookings` 顯示「未到場」徽章與「未到場 · 未退還此堂」說明。
 
 **過期：**
 - `expires_at` 為 null = 永久；非 null = 該時間後不可用於新預約
@@ -551,7 +559,7 @@ UUID 可以在 Supabase Dashboard → Authentication → Users 找到。
 關鍵 RPC 函式：
 - `book_with_purchase(slot_id, customer_id, notes, purchase_id?)` — 原子性預約建立 + 消耗一堂套裝餘額。`purchase_id` 為 null 時 fallback 至 oldest-expiring;有值時驗證 ownership + service 一致 + 仍有效,失敗 raise `PURCHASE_INVALID`(P0001)。SECURITY DEFINER 內部第一道 guard 驗 `auth.uid() = customer_id`,擋 cross-customer 攻擊。
 - `confirm_booking(booking_id)` — 教練確認
-- `cancel_booking(booking_id)` — 客戶或教練取消;refunds 一堂 classes_used,**重算 slot.status**(remaining > 0 → `pending`, else → `available`)
+- `cancel_booking(booking_id)` — 客戶或教練取消;退費依取消期限決定（教練/管理者一律退、客戶僅在 `cancel_deadline_hours` 內退),**重算 slot.status**(尚有未取消 booking → `pending`, else → `available`);拒絕重複取消終結狀態(`cancelled`/`completed`/`no_show`)
 - `reschedule_booking(old_booking_id, new_slot_id)` — 同一 tenant 內 atomically cancel old + create new;接受 `available` 或 `pending` 目的 slot(後者支援改期進團班),帶過原 purchase_id 不重複扣堂
 - `auto_cancel_group_slot(slot_id)` — service_role only,團班 min_attendance 不足時 cron 用,refund 所有 bookings + 通知扇出
 - `book_slot_atomic(slot_id, customer_id, notes)` — **legacy**,已從 `authenticated` revoke(`20260529100100`);data layer 受 `bookings.purchase_id NOT NULL` 卡死,實際 dead code,留定義但無 callers
