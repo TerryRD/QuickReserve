@@ -9,12 +9,13 @@ import { DateStrip, type DateStripGroup } from '@/components/bookings/date-strip
 import CancelMyBookingButton from './cancel-button'
 import CheckinButton from './checkin-button'
 import { canCheckIn } from '@/lib/checkin-window'
+import { isWithinCancelDeadline } from '@/lib/cancel-deadline'
 
 const TZ_OFFSET_HOURS = 8
 const toLocal = (iso: string) =>
   new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
-const STATUS_TYPES: ReadonlyArray<StatusType> = ['pending', 'confirmed', 'cancelled', 'completed']
+const STATUS_TYPES: ReadonlyArray<StatusType> = ['pending', 'confirmed', 'cancelled', 'completed', 'no_show']
 function asStatus(s: string): StatusType {
   return (STATUS_TYPES as readonly string[]).includes(s) ? (s as StatusType) : 'pending'
 }
@@ -27,7 +28,7 @@ type BookingRow = {
   service_id: string
   checked_in_at: string | null
   tenants: { name: string; slug: string } | null
-  services: { name: string; duration_minutes: number } | null
+  services: { name: string; duration_minutes: number; cancel_deadline_hours: number } | null
   availability_slots: { start_at: string; end_at: string } | null
 }
 
@@ -147,7 +148,14 @@ function BookingCard({ b }: { b: BookingRow }) {
                 <Calendar className="size-3" /> 改期
               </Button>
             )}
-            <CancelMyBookingButton bookingId={b.id} />
+            <CancelMyBookingButton
+              bookingId={b.id}
+              willRefund={
+                !!slot &&
+                !!service &&
+                isWithinCancelDeadline(new Date(), slot.start_at, service.cancel_deadline_hours)
+              }
+            />
             {tenant && (
               <Button
                 variant="ghost"
@@ -171,7 +179,9 @@ function BookingCard({ b }: { b: BookingRow }) {
                 : '已完成 · 期待下次見面'
               : b.status === 'cancelled'
                 ? '已取消 · 不會佔用套裝堂數'
-                : ''}
+                : b.status === 'no_show'
+                  ? '未到場 · 未退還此堂'
+                  : ''}
           </div>
         )}
       </div>
@@ -195,7 +205,7 @@ export default async function MyBookingsContent({ userId }: { userId: string }) 
     supabase
       .from('bookings')
       .select(
-        'id, status, customer_notes, created_at, service_id, checked_in_at, tenants(name, slug), services(name, duration_minutes), availability_slots(start_at, end_at)',
+        'id, status, customer_notes, created_at, service_id, checked_in_at, tenants(name, slug), services(name, duration_minutes, cancel_deadline_hours), availability_slots(start_at, end_at)',
       )
       .eq('customer_id', userId)
       .order('created_at', { ascending: false }),

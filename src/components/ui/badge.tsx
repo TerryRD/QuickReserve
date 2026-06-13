@@ -35,13 +35,14 @@ export function Badge({ children, icon, className, variant, ...rest }: Props) {
   )
 }
 
-export type StatusType = 'pending' | 'confirmed' | 'cancelled' | 'completed'
+export type StatusType = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'
 
 const STATUS_VARIANT: Record<StatusType, Props['variant']> = {
   pending: 'yellow',
   confirmed: 'black',
   cancelled: 'outline',
   completed: 'mutedOutline',
+  no_show: 'outline',
 }
 
 const STATUS_LABEL: Record<StatusType, string> = {
@@ -49,6 +50,7 @@ const STATUS_LABEL: Record<StatusType, string> = {
   confirmed: '已確認',
   cancelled: '已取消',
   completed: '已完成',
+  no_show: '未到場',
 }
 
 export function StatusBadge({ status, className }: { status: StatusType; className?: string }) {
