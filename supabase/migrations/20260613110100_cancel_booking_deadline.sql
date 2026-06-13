@@ -14,21 +14,22 @@ declare
   v_is_customer boolean;
   v_is_member boolean;
   v_is_admin boolean;
-  v_remaining int;
-  v_slot record;
   v_refund boolean;
 begin
   select * into v_booking from public.bookings where id = p_booking_id for update;
   if not found then raise exception 'BOOKING_NOT_FOUND' using errcode = 'P0002'; end if;
 
   v_is_customer := (v_booking.customer_id = auth.uid());
-  select exists (
-    select 1 from public.tenant_members
-    where tenant_id = v_booking.tenant_id and user_id = auth.uid() and status = 'active'
-  ) into v_is_member;
-  v_is_admin := public.is_platform_admin();
-  if not v_is_customer and not v_is_member and not v_is_admin then
-    raise exception 'FORBIDDEN' using errcode = '42501';
+  -- Short-circuit: only query membership/admin tables when the customer check fails.
+  if not v_is_customer then
+    select exists (
+      select 1 from public.tenant_members
+      where tenant_id = v_booking.tenant_id and user_id = auth.uid() and status = 'active'
+    ) into v_is_member;
+    v_is_admin := public.is_platform_admin();
+    if not v_is_member and not v_is_admin then
+      raise exception 'FORBIDDEN' using errcode = '42501';
+    end if;
   end if;
 
   if v_booking.status in ('cancelled', 'completed', 'no_show') then
@@ -36,15 +37,15 @@ begin
   end if;
 
   -- Refund eligibility: staff/admin always refund; customer only within deadline.
-  if v_is_member or v_is_admin then
+  if coalesce(v_is_member, false) or coalesce(v_is_admin, false) then
     v_refund := true;
   else
-    select s.start_at as start_at, sv.cancel_deadline_hours as deadline_hours
-      into v_slot
+    -- v_is_customer is true here (only path that skips the member/admin block).
+    select now() <= s.start_at - sv.cancel_deadline_hours * interval '1 hour'
+      into v_refund
       from public.availability_slots s
       join public.services sv on sv.id = s.service_id
       where s.id = v_booking.slot_id;
-    v_refund := now() <= v_slot.start_at - (v_slot.deadline_hours || ' hours')::interval;
   end if;
 
   if v_refund then
@@ -58,11 +59,15 @@ begin
     where id = p_booking_id
     returning * into v_booking;
 
-  select count(*) into v_remaining
-    from public.bookings
-    where slot_id = v_booking.slot_id and status <> 'cancelled';
+  -- Rebuild slot status; EXISTS short-circuits on the first active booking found.
   update public.availability_slots
-    set status = case when v_remaining = 0 then 'available' else 'pending' end
+    set status = case
+      when exists (
+        select 1 from public.bookings
+        where slot_id = v_booking.slot_id and status <> 'cancelled'
+      ) then 'pending'
+      else 'available'
+    end
     where id = v_booking.slot_id;
 
   return v_booking;
