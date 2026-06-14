@@ -66,6 +66,7 @@
 
 (customer) — 學員後台
   /my-bookings                 我的預約 + 4 KpiCard + DateStrip 群組 + 改期 link
+  /account                     個人帳號設定（姓名 / 密碼 / Email）
   /account/notifications       通知偏好（學員端,獨立於 tenant /settings/notifications）
 
 [tenantSlug] — 公開預約頁
@@ -358,6 +359,20 @@ Cron 排程：**Vercel Hobby plan 只支援 daily**（`0 0 * * *`），所以 au
 pg_cron 所需的 Vault secrets：`app_base_url`（應用 base URL）、`cron_secret`（與 `CRON_SECRET` env var 同值）。
 
 > **Post-deploy 步驟（尚未完成）：** pg_cron 排程尚未設定。需在部署後執行專屬 migration（`supabase/migrations/20260614000000_schedule_checkin_cron.sql`），在 Vault 寫入兩個 secret 並建立 `cron.schedule`。Tasks 1–8 已實作；Task 9（pg_cron migration）待部署後設定。
+
+---
+
+## 個人帳號設定（/account）
+
+所有登入者（教練 Owner / Staff、學員、平台管理員）皆可使用 `/account` 自助修改個人資料：
+
+| 欄位 | 說明 |
+|------|------|
+| **姓名** | 顯示於各介面側欄／頂部（透過 `AccountChip`）。儲存至 Supabase Auth `user_metadata.full_name`；學員另同步 `customers.display_name`（教練端學員清單的顯示來源）。 |
+| **密碼** | 變更前需先輸入目前密碼驗證身分。 |
+| **Email**（登入帳號） | 變更前需驗證目前密碼；目前以 service-role 管理員 API 即時變更，不寄確認信。 |
+
+> **待辦**：待 email 寄信管道上線後，email 變更改走標準確認信流程。
 
 ---
 
