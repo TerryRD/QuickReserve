@@ -23,12 +23,12 @@ export const updateDisplayNameAction = actionClient
     })
     if (error) throw new AppError('PROFILE_UPDATE_FAILED', error.message)
 
-    // customer 的姓名另存在 customers.display_name（教練端清單顯示來源），保持同步
+    // customer 的姓名另存在 customers.display_name（教練端清單顯示來源），保持同步。
+    // 用 upsert：尚未預約過的客戶可能還沒有 customers 列。
     if (session.role === 'customer') {
       const { error: cErr } = await supabase
         .from('customers')
-        .update({ display_name: parsedInput.fullName })
-        .eq('id', session.userId)
+        .upsert({ id: session.userId, display_name: parsedInput.fullName }, { onConflict: 'id' })
       if (cErr) throw new AppError('PROFILE_UPDATE_FAILED', cErr.message)
     }
 
@@ -39,7 +39,7 @@ export const updateDisplayNameAction = actionClient
 const PasswordSchema = z
   .object({
     currentPassword: z.string().min(1, '請輸入目前密碼'),
-    newPassword: z.string().min(6, '新密碼至少 6 個字'),
+    newPassword: z.string().min(6, '新密碼至少 6 個字').max(72, '新密碼過長（上限 72 字）'),
   })
   .refine((v) => v.newPassword !== v.currentPassword, {
     path: ['newPassword'],
