@@ -45,6 +45,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
             displayName={session.displayName}
             email={session.email}
             roleLabel="Platform Admin"
+            href="/platform/account"
           />
           <div className="px-1">
             <ThemeToggle className="w-full justify-center" />

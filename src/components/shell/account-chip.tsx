@@ -10,11 +10,13 @@ export function AccountChip({
   email,
   roleLabel,
   tone = 'sidebar',
+  href = '/account',
 }: {
   displayName: string | null
   email: string | null
   roleLabel?: string
   tone?: 'sidebar' | 'light'
+  href?: string
 }) {
   const name = resolveDisplayName({ displayName, email })
   const initial = name.slice(0, 1).toUpperCase()
@@ -22,7 +24,7 @@ export function AccountChip({
   if (tone === 'light') {
     return (
       <Link
-        href="/account"
+        href={href}
         aria-label={`帳號設定 – ${name}`}
         className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-slate-100"
       >
@@ -39,7 +41,7 @@ export function AccountChip({
 
   return (
     <Link
-      href="/account"
+      href={href}
       aria-label={`帳號設定 – ${name}`}
       className="flex items-center gap-3 rounded-xl border border-sidebar-border bg-sidebar-accent p-3 transition-colors hover:bg-sidebar-accent/70"
     >

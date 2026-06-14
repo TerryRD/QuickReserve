@@ -88,6 +88,7 @@ export default async function TenantLayout({ children }: { children: React.React
             displayName={session.displayName}
             email={session.email}
             roleLabel={roleLabel}
+            href="/settings/account"
           />
           <Link
             href={`/${tenant.slug}`}
