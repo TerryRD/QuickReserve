@@ -11,6 +11,7 @@ export type AppUserRole =
 export type Session = {
   userId: string
   email: string | null
+  displayName: string | null
   role: AppUserRole
   tenantId: string | null
   memberId: string | null
@@ -53,6 +54,10 @@ export async function getSession(): Promise<Session | null> {
   return {
     userId: user.id,
     email: user.email ?? null,
+    displayName:
+      (typeof user.user_metadata?.full_name === 'string'
+        ? user.user_metadata.full_name.trim()
+        : '') || null,
     role,
     tenantId,
     memberId,
