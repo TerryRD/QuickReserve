@@ -32,7 +32,7 @@ export const updateDisplayNameAction = actionClient
       if (cErr) throw new AppError('PROFILE_UPDATE_FAILED', cErr.message)
     }
 
-    revalidatePath('/account')
+    revalidatePath('/', 'layout')
     return { ok: true, fullName: parsedInput.fullName }
   })
 
@@ -99,6 +99,6 @@ export const updateEmailAction = actionClient
       throw new AppError('EMAIL_UPDATE_FAILED', error.message)
     }
 
-    revalidatePath('/account')
+    revalidatePath('/', 'layout')
     return { ok: true, newEmail: parsedInput.newEmail }
   })
