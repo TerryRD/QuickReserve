@@ -5,6 +5,7 @@ import { getSession, requireTenantMember } from '@/lib/auth/get-session'
 import { getTenantContext } from '@/lib/auth/get-tenant-context'
 import { QRMark } from '@/components/brand/qr-mark'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { AccountChip } from '@/components/shell/account-chip'
 import SidebarNav from './sidebar-nav'
 import MobileSidebar from './mobile-sidebar'
 
@@ -42,6 +43,8 @@ export default async function TenantLayout({ children }: { children: React.React
         tenantSlug={tenant.slug}
         roleLabel={roleLabel}
         isOwner={isOwner}
+        displayName={session.displayName}
+        email={session.email}
       />
       <aside className="hidden flex-col bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:flex md:h-screen">
         {/* Logo block */}
@@ -81,6 +84,11 @@ export default async function TenantLayout({ children }: { children: React.React
 
         {/* Bottom: public link + theme toggle + logout */}
         <div className="space-y-2 border-t border-sidebar-border p-3">
+          <AccountChip
+            displayName={session.displayName}
+            email={session.email}
+            roleLabel={roleLabel}
+          />
           <Link
             href={`/${tenant.slug}`}
             target="_blank"

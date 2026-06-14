@@ -4,13 +4,14 @@ import { LogOut } from 'lucide-react'
 import { getSession, requirePlatformAdmin } from '@/lib/auth/get-session'
 import { QRMark } from '@/components/brand/qr-mark'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { AccountChip } from '@/components/shell/account-chip'
 import PlatformSidebarNav from './platform-sidebar-nav'
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
   const pre = await getSession()
   if (pre && pre.role === 'customer') redirect('/my-bookings')
   if (pre && (pre.role === 'tenant_owner' || pre.role === 'tenant_staff')) redirect('/dashboard')
-  await requirePlatformAdmin()
+  const session = await requirePlatformAdmin()
   return (
     <div className="md:grid md:min-h-screen md:grid-cols-[240px_1fr]">
       <aside className="hidden flex-col bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:flex md:h-screen">
@@ -40,6 +41,11 @@ export default async function PlatformLayout({ children }: { children: React.Rea
 
         {/* Bottom: theme toggle + logout */}
         <div className="space-y-2 border-t border-sidebar-border p-3">
+          <AccountChip
+            displayName={session.displayName}
+            email={session.email}
+            roleLabel="Platform Admin"
+          />
           <div className="px-1">
             <ThemeToggle className="w-full justify-center" />
           </div>

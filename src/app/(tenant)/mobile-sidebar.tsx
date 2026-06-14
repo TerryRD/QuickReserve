@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Calendar, LogOut, Menu } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
+import { AccountChip } from '@/components/shell/account-chip'
 import SidebarNav from './sidebar-nav'
 
 export default function MobileSidebar({
@@ -12,11 +13,15 @@ export default function MobileSidebar({
   tenantSlug,
   roleLabel,
   isOwner,
+  displayName,
+  email,
 }: {
   tenantName: string
   tenantSlug: string
   roleLabel: string
   isOwner: boolean
+  displayName: string | null
+  email: string | null
 }) {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
@@ -51,6 +56,9 @@ export default function MobileSidebar({
             <SidebarNav isOwner={isOwner} onNavigate={close} />
           </div>
           <div className="border-t border-sidebar-border p-3">
+            <div className="pb-2">
+              <AccountChip displayName={displayName} email={email} roleLabel={roleLabel} />
+            </div>
             <Link
               href={`/${tenantSlug}`}
               target="_blank"

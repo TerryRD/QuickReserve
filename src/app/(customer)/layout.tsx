@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Calendar, LogOut } from 'lucide-react'
 import { requireSession } from '@/lib/auth/get-session'
+import { AccountChip } from '@/components/shell/account-chip'
 
 export default async function CustomerLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession()
@@ -16,7 +17,7 @@ export default async function CustomerLayout({ children }: { children: React.Rea
             <span className="font-semibold tracking-tight">QuickReserve</span>
           </Link>
           <div className="flex items-center gap-3">
-            <span className="hidden text-xs text-slate-500 sm:inline">{session.email}</span>
+            <AccountChip displayName={session.displayName} email={session.email} tone="light" />
             <form action="/api/logout" method="post">
               <button
                 type="submit"
