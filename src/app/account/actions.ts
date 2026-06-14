@@ -86,8 +86,14 @@ export const updateEmailAction = actionClient
       email_confirm: true,
     })
     if (error) {
+      const code = (error as { code?: string }).code ?? ''
       const msg = error.message.toLowerCase()
-      if (msg.includes('already') || msg.includes('exists') || msg.includes('registered')) {
+      if (
+        code === 'email_exists' ||
+        msg.includes('already') ||
+        msg.includes('exists') ||
+        msg.includes('registered')
+      ) {
         throw new AppError('EMAIL_TAKEN', '此 email 已被使用')
       }
       throw new AppError('EMAIL_UPDATE_FAILED', error.message)
