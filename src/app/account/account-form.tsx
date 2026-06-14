@@ -68,7 +68,11 @@ export default function AccountForm({
   const [newEmail, setNewEmail] = useState('')
   const emailAction = useAction(updateEmailAction, {
     onSuccess: ({ data }) => {
-      toast.success(`Email 已改為 ${data?.newEmail ?? ''}，下次請用新 email 登入`)
+      toast.success(
+        data?.newEmail
+          ? `Email 已改為 ${data.newEmail}，下次請用新 email 登入`
+          : 'Email 已更新，下次請用新 email 登入',
+      )
       setEmailPw('')
       setNewEmail('')
     },
@@ -101,6 +105,7 @@ export default function AccountForm({
           <Input
             id="fullName"
             required
+            autoComplete="name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             className={inputClass}
@@ -180,6 +185,7 @@ export default function AccountForm({
           <Input
             id="newEmail"
             type="email"
+            autoComplete="email"
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
             className={inputClass}
