@@ -17,7 +17,9 @@ export default async function CustomerLayout({ children }: { children: React.Rea
             <span className="font-semibold tracking-tight">QuickReserve</span>
           </Link>
           <div className="flex items-center gap-3">
-            <AccountChip displayName={session.displayName} email={session.email} tone="light" />
+            <div className="hidden sm:block">
+              <AccountChip displayName={session.displayName} email={session.email} tone="light" />
+            </div>
             <form action="/api/logout" method="post">
               <button
                 type="submit"
