@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { actionClient } from '@/lib/safe-action'
 import { requireSession } from '@/lib/auth/get-session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServerClient, createSupabaseAdminClient } from '@/lib/supabase/server'
 import { verifyCurrentPassword } from '@/lib/auth/verify-password'
 import { AppError } from '@/lib/errors'
 
@@ -60,4 +60,39 @@ export const updatePasswordAction = actionClient
     if (error) throw new AppError('PASSWORD_UPDATE_FAILED', error.message)
 
     return { ok: true }
+  })
+
+const EmailSchema = z.object({
+  currentPassword: z.string().min(1, '請輸入目前密碼'),
+  newEmail: z.string().trim().email('email 格式不正確'),
+})
+
+export const updateEmailAction = actionClient
+  .inputSchema(EmailSchema)
+  .action(async ({ parsedInput }) => {
+    const session = await requireSession()
+    if (!session.email) throw new AppError('EMAIL_UPDATE_FAILED', '帳號缺少 email')
+    if (parsedInput.newEmail.toLowerCase() === session.email.toLowerCase()) {
+      throw new AppError('EMAIL_UPDATE_FAILED', '新 email 與目前相同')
+    }
+
+    const ok = await verifyCurrentPassword(session.email, parsedInput.currentPassword)
+    if (!ok) throw new AppError('INVALID_CURRENT_PASSWORD', '目前密碼不正確')
+
+    // 無可靠寄信管道 → 用 service-role admin API 即時變更、不寄確認信
+    const admin = createSupabaseAdminClient()
+    const { error } = await admin.auth.admin.updateUserById(session.userId, {
+      email: parsedInput.newEmail,
+      email_confirm: true,
+    })
+    if (error) {
+      const msg = error.message.toLowerCase()
+      if (msg.includes('already') || msg.includes('exists') || msg.includes('registered')) {
+        throw new AppError('EMAIL_TAKEN', '此 email 已被使用')
+      }
+      throw new AppError('EMAIL_UPDATE_FAILED', error.message)
+    }
+
+    revalidatePath('/account')
+    return { ok: true, newEmail: parsedInput.newEmail }
   })
