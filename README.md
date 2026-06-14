@@ -47,6 +47,7 @@
   /platform/tenants            租戶管理（邀請 / 暫停 / 啟用）
   /platform/tenants/[id]       單一租戶 drill-in
   /platform/bookings           全平台預約唯讀檢視
+  /platform/account            個人帳號設定（姓名 / 密碼 / Email）
 
 (tenant) — 教練後台
   /dashboard                   儀表板（黑底 hero + 4 KPI + today timeline + pending column）
@@ -61,6 +62,7 @@
   /notifications               通知收件匣 ?tab=all|bookings|packages|system（notification_log inbox）
   /settings/profile            租戶資料 6 sections + sticky save bar（Owner 限定）
   /settings/notifications      通知偏好 — 事件×通道矩陣（web_push + in_app）+ 勿擾時段
+  /settings/account            個人帳號設定（姓名 / 密碼 / Email）— Owner & Staff
   /packages                    套裝管理 ?tab=all|1on1|group|draft（按服務分組）（S4）
   /packages/pending            待審核購買申請佇列 + 4 KpiCard（S4）
 
@@ -362,9 +364,17 @@ pg_cron 所需的 Vault secrets：`app_base_url`（應用 base URL）、`cron_se
 
 ---
 
-## 個人帳號設定（/account）
+## 個人帳號設定
 
-所有登入者（教練 Owner / Staff、學員、平台管理員）皆可使用 `/account` 自助修改個人資料：
+所有登入者皆可自助修改個人資料，頁面渲染在各自的後台框架內（保留側欄／頂列），網址依角色：
+
+| 角色 | 網址 |
+|------|------|
+| 教練 Owner / Staff | `/settings/account` |
+| 平台管理員 | `/platform/account` |
+| 學員 | `/account` |
+
+各介面側欄／頂列的 `AccountChip` 會連到對應網址。可修改的欄位：
 
 | 欄位 | 說明 |
 |------|------|
