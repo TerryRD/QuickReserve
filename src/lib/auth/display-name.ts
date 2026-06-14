@@ -9,7 +9,7 @@ export function resolveDisplayName(input: {
   const name = input.displayName?.trim()
   if (name) return name
   const email = input.email?.trim()
-  if (email && email.includes('@')) return email.split('@')[0]
+  if (email && email.includes('@')) return email.split('@')[0] || email
   if (email) return email
   return '使用者'
 }

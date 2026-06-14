@@ -17,4 +17,7 @@ describe('resolveDisplayName', () => {
   it('returns 使用者 when nothing is available', () => {
     expect(resolveDisplayName({ displayName: null, email: null })).toBe('使用者')
   })
+  it('falls back to raw email when local part is empty', () => {
+    expect(resolveDisplayName({ displayName: null, email: '@domain.com' })).toBe('@domain.com')
+  })
 })
