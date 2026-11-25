@@ -12,10 +12,6 @@
     {
       "path": "/api/cron/weekly-summary",
       "schedule": "0 12 * * 0"
-    },
-    {
-      "path": "/api/cron/auto-cancel-group-class",
-      "schedule": "0 0 * * *"
     }
   ]
 }

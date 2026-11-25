@@ -83,7 +83,7 @@ API
   /api/cron/weekly-summary           每週日 20:00 UTC+8
   /api/cron/daily-reminder           每小時 06-12 UTC+8（hourly cron）
   /api/cron/pre-event-reminder       每分鐘（需 Vercel Pro）
-  /api/cron/auto-cancel-group-class  每小時 xx:00（團班人數不足 auto cancel + 退課數）
+  /api/cron/auto-cancel-group-class  每 5 分鐘（由 Supabase pg_cron 驅動；團班人數不足 auto cancel + 退課數）
   /api/cron/checkin-reminder         每分鐘（由 Supabase pg_cron 驅動，post-deploy 設定）
   /api/push/subscribe                Web Push 訂閱
 ```
