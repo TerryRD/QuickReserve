@@ -50,9 +50,7 @@ export default async function PackagesPage({
     // Pull both active and draft packages — we filter by tab below.
     supabase
       .from('service_packages')
-      .select(
-        'id, service_id, name, class_count, price, expires_in_days, is_active, is_popular',
-      )
+      .select('id, service_id, name, class_count, price, expires_in_days, is_active, is_popular')
       .eq('tenant_id', session.tenantId)
       .order('created_at', { ascending: false }),
   ])
@@ -181,9 +179,7 @@ export default async function PackagesPage({
               <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                 NO MATCHING PACKAGES
               </div>
-              <p className="font-cjk mt-2 text-sm text-muted-foreground">
-                此分類目前沒有套裝
-              </p>
+              <p className="font-cjk mt-2 text-sm text-muted-foreground">此分類目前沒有套裝</p>
             </div>
           ) : (
             groups.map((g, gi) => (

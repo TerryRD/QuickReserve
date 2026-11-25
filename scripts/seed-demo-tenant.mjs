@@ -19,7 +19,9 @@ import { createClient } from '@supabase/supabase-js'
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!url || !key) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Run with: node --env-file=.env.local scripts/seed-demo-tenant.mjs')
+  console.error(
+    'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Run with: node --env-file=.env.local scripts/seed-demo-tenant.mjs',
+  )
   process.exit(1)
 }
 
@@ -83,22 +85,46 @@ const huaId = await mkUser(`hua@${DOMAIN}`, '小華')
 const meiId = await mkUser(`mei@${DOMAIN}`, '小美')
 
 // students -> customers rows
-for (const [id, name] of [[mingId, '小明'], [huaId, '小華'], [meiId, '小美']]) {
-  ck(`customer ${name}`, await admin.from('customers').insert({ id, display_name: name }).select().single())
+for (const [id, name] of [
+  [mingId, '小明'],
+  [huaId, '小華'],
+  [meiId, '小美'],
+]) {
+  ck(
+    `customer ${name}`,
+    await admin.from('customers').insert({ id, display_name: name }).select().single(),
+  )
 }
 
 // ----------------------------------------------------------------- tenant ----
 console.log('Creating tenant + members...')
-const tenant = ck('tenant', await admin.from('tenants').insert({
-  slug: SLUG,
-  name: 'Matt 桌球教室 (測試)',
-  description: '桌球教學測試租戶（個別課 1v1/1v2 + 團體課）',
-}).select().single())
+const tenant = ck(
+  'tenant',
+  await admin
+    .from('tenants')
+    .insert({
+      slug: SLUG,
+      name: 'Matt 桌球教室 (測試)',
+      description: '桌球教學測試租戶（個別課 1v1/1v2 + 團體課）',
+    })
+    .select()
+    .single(),
+)
 const tid = tenant.id
 
-const mattMember = ck('member Matt', await admin.from('tenant_members').insert({
-  tenant_id: tid, user_id: mattId, role: 'owner', status: 'active',
-}).select().single())
+const mattMember = ck(
+  'member Matt',
+  await admin
+    .from('tenant_members')
+    .insert({
+      tenant_id: tid,
+      user_id: mattId,
+      role: 'owner',
+      status: 'active',
+    })
+    .select()
+    .single(),
+)
 
 const staffMembers = {}
 for (const [uid, name, keyName] of [
@@ -106,36 +132,110 @@ for (const [uid, name, keyName] of [
   [jingtingId, '靖庭', 'jingting'],
   [yixuanId, '依璇', 'yixuan'],
 ]) {
-  staffMembers[keyName] = ck(`member ${name}`, await admin.from('tenant_members').insert({
-    tenant_id: tid, user_id: uid, role: 'staff', status: 'active', parent_member_id: mattMember.id,
-  }).select().single())
+  staffMembers[keyName] = ck(
+    `member ${name}`,
+    await admin
+      .from('tenant_members')
+      .insert({
+        tenant_id: tid,
+        user_id: uid,
+        role: 'staff',
+        status: 'active',
+        parent_member_id: mattMember.id,
+      })
+      .select()
+      .single(),
+  )
 }
 
 // --------------------------------------------------------------- services ----
 console.log('Creating services...')
 const svcDefs = [
-  { keyName: 'i1v1pro', name: '個別課 1v1（專業）', price: 1000, duration_minutes: 60, max_capacity: 1, min_attendance: 1 },
-  { keyName: 'i1v1sr', name: '個別課 1v1（資深）', price: 800, duration_minutes: 60, max_capacity: 1, min_attendance: 1 },
-  { keyName: 'i1v2pro', name: '個別課 1v2（專業）', price: 1000, duration_minutes: 60, max_capacity: 2, min_attendance: 1 },
-  { keyName: 'i1v2sr', name: '個別課 1v2（資深）', price: 800, duration_minutes: 60, max_capacity: 2, min_attendance: 1 },
-  { keyName: 'group', name: '團體課', price: 450, duration_minutes: 90, max_capacity: 10, min_attendance: 3 },
-  { keyName: 'trialPro', name: '試上・個別課（專業）', price: 800, duration_minutes: 60, max_capacity: 1, min_attendance: 1 },
-  { keyName: 'trialSr', name: '試上・個別課（資深）', price: 600, duration_minutes: 60, max_capacity: 1, min_attendance: 1 },
-  { keyName: 'trialGroup', name: '試上・團體課（免費）', price: 0, duration_minutes: 90, max_capacity: 10, min_attendance: 3 },
+  {
+    keyName: 'i1v1pro',
+    name: '個別課 1v1（專業）',
+    price: 1000,
+    duration_minutes: 60,
+    max_capacity: 1,
+    min_attendance: 1,
+  },
+  {
+    keyName: 'i1v1sr',
+    name: '個別課 1v1（資深）',
+    price: 800,
+    duration_minutes: 60,
+    max_capacity: 1,
+    min_attendance: 1,
+  },
+  {
+    keyName: 'i1v2pro',
+    name: '個別課 1v2（專業）',
+    price: 1000,
+    duration_minutes: 60,
+    max_capacity: 2,
+    min_attendance: 1,
+  },
+  {
+    keyName: 'i1v2sr',
+    name: '個別課 1v2（資深）',
+    price: 800,
+    duration_minutes: 60,
+    max_capacity: 2,
+    min_attendance: 1,
+  },
+  {
+    keyName: 'group',
+    name: '團體課',
+    price: 450,
+    duration_minutes: 90,
+    max_capacity: 10,
+    min_attendance: 3,
+  },
+  {
+    keyName: 'trialPro',
+    name: '試上・個別課（專業）',
+    price: 800,
+    duration_minutes: 60,
+    max_capacity: 1,
+    min_attendance: 1,
+  },
+  {
+    keyName: 'trialSr',
+    name: '試上・個別課（資深）',
+    price: 600,
+    duration_minutes: 60,
+    max_capacity: 1,
+    min_attendance: 1,
+  },
+  {
+    keyName: 'trialGroup',
+    name: '試上・團體課（免費）',
+    price: 0,
+    duration_minutes: 90,
+    max_capacity: 10,
+    min_attendance: 3,
+  },
 ]
 const svc = {}
 let order = 0
 for (const d of svcDefs) {
-  const row = ck(`service ${d.name}`, await admin.from('services').insert({
-    tenant_id: tid,
-    name: d.name,
-    price: d.price,
-    duration_minutes: d.duration_minutes,
-    max_capacity: d.max_capacity,
-    min_attendance: d.min_attendance,
-    display_order: order++,
-    is_active: true,
-  }).select().single())
+  const row = ck(
+    `service ${d.name}`,
+    await admin
+      .from('services')
+      .insert({
+        tenant_id: tid,
+        name: d.name,
+        price: d.price,
+        duration_minutes: d.duration_minutes,
+        max_capacity: d.max_capacity,
+        min_attendance: d.min_attendance,
+        display_order: order++,
+        is_active: true,
+      })
+      .select()
+      .single(),
+  )
   svc[d.keyName] = row
 }
 
@@ -152,14 +252,38 @@ const pkg = {}
 for (const p of pkgBase) {
   const s = svc[p.keyName]
   pkg[p.keyName] = {
-    ten: ck(`pkg10 ${s.name}`, await admin.from('service_packages').insert({
-      tenant_id: tid, service_id: s.id, name: '一期 10 堂（95 折）',
-      class_count: 10, price: Math.round(p.unit * 10 * 0.95), expires_in_days: 180, is_active: true,
-    }).select().single()),
-    twenty: ck(`pkg20 ${s.name}`, await admin.from('service_packages').insert({
-      tenant_id: tid, service_id: s.id, name: '兩期 20 堂（9 折）',
-      class_count: 20, price: Math.round(p.unit * 20 * 0.9), expires_in_days: 180, is_active: true,
-    }).select().single()),
+    ten: ck(
+      `pkg10 ${s.name}`,
+      await admin
+        .from('service_packages')
+        .insert({
+          tenant_id: tid,
+          service_id: s.id,
+          name: '一期 10 堂（95 折）',
+          class_count: 10,
+          price: Math.round(p.unit * 10 * 0.95),
+          expires_in_days: 180,
+          is_active: true,
+        })
+        .select()
+        .single(),
+    ),
+    twenty: ck(
+      `pkg20 ${s.name}`,
+      await admin
+        .from('service_packages')
+        .insert({
+          tenant_id: tid,
+          service_id: s.id,
+          name: '兩期 20 堂（9 折）',
+          class_count: 20,
+          price: Math.round(p.unit * 20 * 0.9),
+          expires_in_days: 180,
+          is_active: true,
+        })
+        .select()
+        .single(),
+    ),
   }
 }
 
@@ -167,12 +291,26 @@ for (const p of pkgBase) {
 console.log('Creating purchases...')
 const expires = iso(now.getTime() + 180 * DAY)
 async function mkPurchase(label, customerId, serviceId, packageId, classesTotal, classesUsed) {
-  return ck(`purchase ${label}`, await admin.from('customer_purchases').insert({
-    tenant_id: tid, customer_id: customerId, service_id: serviceId, package_id: packageId,
-    classes_total: classesTotal, classes_used: classesUsed,
-    payment_self_reported: 'claimed_paid', approval_status: 'confirmed',
-    approved_at: now.toISOString(), approved_by: mattId, expires_at: expires,
-  }).select().single())
+  return ck(
+    `purchase ${label}`,
+    await admin
+      .from('customer_purchases')
+      .insert({
+        tenant_id: tid,
+        customer_id: customerId,
+        service_id: serviceId,
+        package_id: packageId,
+        classes_total: classesTotal,
+        classes_used: classesUsed,
+        payment_self_reported: 'claimed_paid',
+        approval_status: 'confirmed',
+        approved_at: now.toISOString(),
+        approved_by: mattId,
+        expires_at: expires,
+      })
+      .select()
+      .single(),
+  )
 }
 const pMing = await mkPurchase('小明 1v1專業×10', mingId, svc.i1v1pro.id, pkg.i1v1pro.ten.id, 10, 1)
 const pHua = await mkPurchase('小華 1v1資深×20', huaId, svc.i1v1sr.id, pkg.i1v1sr.twenty.id, 20, 1)
@@ -180,35 +318,110 @@ const pMei = await mkPurchase('小美 團體×5', meiId, svc.group.id, null, 5, 
 
 // tenant_customers bridge (so students appear under the tenant)
 for (const cid of [mingId, huaId, meiId]) {
-  await admin.from('tenant_customers').insert({ tenant_id: tid, customer_id: cid }).select().maybeSingle()
+  await admin
+    .from('tenant_customers')
+    .insert({ tenant_id: tid, customer_id: cid })
+    .select()
+    .maybeSingle()
 }
 
 // ------------------------------------------------------------------ slots ----
 console.log('Creating slots + bookings...')
 async function mkSlot(label, memberId, serviceId, startMs, durMin, status) {
-  return ck(`slot ${label}`, await admin.from('availability_slots').insert({
-    tenant_id: tid, member_id: memberId, service_id: serviceId,
-    start_at: iso(startMs), end_at: iso(startMs + durMin * MIN), status,
-  }).select().single())
+  return ck(
+    `slot ${label}`,
+    await admin
+      .from('availability_slots')
+      .insert({
+        tenant_id: tid,
+        member_id: memberId,
+        service_id: serviceId,
+        start_at: iso(startMs),
+        end_at: iso(startMs + durMin * MIN),
+        status,
+      })
+      .select()
+      .single(),
+  )
 }
 // NOTE: availability_slots.member_id references tenant_members.id (NOT auth user id).
 // Matt: ONGOING 1v1 (for immediate check-in test) + a future open 1v1 + a future group
-const slotMattNow = await mkSlot('Matt 進行中 1v1', mattMember.id, svc.i1v1pro.id, now.getTime() - 5 * MIN, 60, 'booked')
-const slotMattFuture = await mkSlot('Matt 明日 1v1', mattMember.id, svc.i1v1pro.id, now.getTime() + DAY + 2 * HR, 60, 'available')
-const slotGroup = await mkSlot('Matt 後天 團體課', mattMember.id, svc.group.id, now.getTime() + 2 * DAY, 90, 'pending')
+const slotMattNow = await mkSlot(
+  'Matt 進行中 1v1',
+  mattMember.id,
+  svc.i1v1pro.id,
+  now.getTime() - 5 * MIN,
+  60,
+  'booked',
+)
+const slotMattFuture = await mkSlot(
+  'Matt 明日 1v1',
+  mattMember.id,
+  svc.i1v1pro.id,
+  now.getTime() + DAY + 2 * HR,
+  60,
+  'available',
+)
+const slotGroup = await mkSlot(
+  'Matt 後天 團體課',
+  mattMember.id,
+  svc.group.id,
+  now.getTime() + 2 * DAY,
+  90,
+  'pending',
+)
 // 雅涵: one booked + one open
-const slotYahanBooked = await mkSlot('雅涵 明日 1v1(資深)', staffMembers.yahan.id, svc.i1v1sr.id, now.getTime() + DAY + 3 * HR, 60, 'booked')
-await mkSlot('雅涵 明日 1v1 開放', staffMembers.yahan.id, svc.i1v1sr.id, now.getTime() + DAY + 5 * HR, 60, 'available')
+const slotYahanBooked = await mkSlot(
+  '雅涵 明日 1v1(資深)',
+  staffMembers.yahan.id,
+  svc.i1v1sr.id,
+  now.getTime() + DAY + 3 * HR,
+  60,
+  'booked',
+)
+await mkSlot(
+  '雅涵 明日 1v1 開放',
+  staffMembers.yahan.id,
+  svc.i1v1sr.id,
+  now.getTime() + DAY + 5 * HR,
+  60,
+  'available',
+)
 // 靖庭 / 依璇: open future 1v1(資深)
-await mkSlot('靖庭 明日 1v1(資深)', staffMembers.jingting.id, svc.i1v1sr.id, now.getTime() + DAY + 2 * HR, 60, 'available')
-await mkSlot('依璇 明日 1v1(資深)', staffMembers.yixuan.id, svc.i1v1sr.id, now.getTime() + DAY + 4 * HR, 60, 'available')
+await mkSlot(
+  '靖庭 明日 1v1(資深)',
+  staffMembers.jingting.id,
+  svc.i1v1sr.id,
+  now.getTime() + DAY + 2 * HR,
+  60,
+  'available',
+)
+await mkSlot(
+  '依璇 明日 1v1(資深)',
+  staffMembers.yixuan.id,
+  svc.i1v1sr.id,
+  now.getTime() + DAY + 4 * HR,
+  60,
+  'available',
+)
 
 // --------------------------------------------------------------- bookings ----
 async function mkBooking(label, slotId, customerId, serviceId, purchaseId, status) {
-  return ck(`booking ${label}`, await admin.from('bookings').insert({
-    tenant_id: tid, slot_id: slotId, customer_id: customerId, service_id: serviceId,
-    purchase_id: purchaseId, status,
-  }).select().single())
+  return ck(
+    `booking ${label}`,
+    await admin
+      .from('bookings')
+      .insert({
+        tenant_id: tid,
+        slot_id: slotId,
+        customer_id: customerId,
+        service_id: serviceId,
+        purchase_id: purchaseId,
+        status,
+      })
+      .select()
+      .single(),
+  )
 }
 // 小明 -> Matt ongoing (confirmed) => check-in testable right now
 await mkBooking('小明→Matt 進行中', slotMattNow.id, mingId, svc.i1v1pro.id, pMing.id, 'confirmed')
@@ -226,7 +439,9 @@ console.log('  owner  Matt 教練  matt@' + DOMAIN)
 console.log('  staff  雅涵        yahan@' + DOMAIN)
 console.log('  staff  靖庭        jingting@' + DOMAIN)
 console.log('  staff  依璇        yixuan@' + DOMAIN)
-console.log('  學員   小明        ming@' + DOMAIN + '   (1v1專業 10堂, 已預約 Matt 進行中課 → 可測簽到)')
+console.log(
+  '  學員   小明        ming@' + DOMAIN + '   (1v1專業 10堂, 已預約 Matt 進行中課 → 可測簽到)',
+)
 console.log('  學員   小華        hua@' + DOMAIN + '    (1v1資深 20堂, 已預約 雅涵 明日課)')
 console.log('  學員   小美        mei@' + DOMAIN + '    (團體 5堂, 已預約 後天團體課/待開班)')
 console.log('\nServices: 8 (4 個別課 + 1 團體 + 3 試上)   Packages: 8 (個別課 10/20 堂)')

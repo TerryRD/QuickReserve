@@ -16,10 +16,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import ConfirmDialog from '@/components/confirm-dialog'
-import {
-  createUnavailableEventAction,
-  deleteUnavailableEventAction,
-} from './unavailable-actions'
+import { createUnavailableEventAction, deleteUnavailableEventAction } from './unavailable-actions'
 
 type Preset = 'full' | 'half-am' | 'half-pm' | 'custom'
 
@@ -188,7 +185,8 @@ export default function UnavailableEventDialog() {
           </div>
 
           <div className="font-cjk rounded-lg border border-border bg-muted p-3 text-xs text-muted-foreground">
-            ℹ️ 若此時段內已有學員預約，建立後不會自動取消；行事曆會顯示 ⚠ 警示徽章，請自行決定是否取消。
+            ℹ️ 若此時段內已有學員預約，建立後不會自動取消；行事曆會顯示 ⚠
+            警示徽章，請自行決定是否取消。
           </div>
         </div>
 

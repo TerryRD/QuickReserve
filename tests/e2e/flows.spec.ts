@@ -55,7 +55,9 @@ test.describe('public booking flow (王教練, no submit)', () => {
     const chips = page.locator('button:has-text(":")')
     const count = await chips.count()
     if (count === 0) {
-      test.info().annotations.push({ type: 'skip-reason', description: 'no open slots in prod right now' })
+      test
+        .info()
+        .annotations.push({ type: 'skip-reason', description: 'no open slots in prod right now' })
       return
     }
     // Don't actually click — slot picker click navigates to /book. Just verify chips render.

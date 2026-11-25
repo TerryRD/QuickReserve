@@ -29,7 +29,8 @@ export function TimeChip({
         isSelected && 'border-primary bg-primary text-primary-foreground',
         state === 'open' && 'border-border bg-card hover:border-foreground/40',
         state === 'group' && 'border-border bg-card hover:border-foreground/40',
-        state === 'full' && 'border-border bg-muted text-muted-foreground line-through cursor-not-allowed',
+        state === 'full' &&
+          'border-border bg-muted text-muted-foreground line-through cursor-not-allowed',
         className,
       )}
     >
@@ -38,9 +39,7 @@ export function TimeChip({
         <span
           className={cn(
             'rounded-full px-1.5 py-0.5 text-[10px] font-bold tracking-wider',
-            isSelected
-              ? 'bg-primary-foreground text-primary'
-              : 'bg-accent text-accent-foreground',
+            isSelected ? 'bg-primary-foreground text-primary' : 'bg-accent text-accent-foreground',
           )}
         >
           {group.filled}/{group.capacity}

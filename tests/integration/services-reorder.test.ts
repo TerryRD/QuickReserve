@@ -94,9 +94,7 @@ describe('Services drag-reorder (display_order + ownership)', () => {
   it('reverses order: admin can bulk-update display_order', async () => {
     const reversed = [...ctx.servicesA!].reverse()
     await Promise.all(
-      reversed.map((id, idx) =>
-        admin.from('services').update({ display_order: idx }).eq('id', id),
-      ),
+      reversed.map((id, idx) => admin.from('services').update({ display_order: idx }).eq('id', id)),
     )
 
     const { data: rows } = await admin
@@ -114,9 +112,7 @@ describe('Services drag-reorder (display_order + ownership)', () => {
     // get back the exact array ordering we wrote.
     const target = [ctx.servicesA![1]!, ctx.servicesA![0]!, ctx.servicesA![2]!]
     await Promise.all(
-      target.map((id, idx) =>
-        admin.from('services').update({ display_order: idx }).eq('id', id),
-      ),
+      target.map((id, idx) => admin.from('services').update({ display_order: idx }).eq('id', id)),
     )
 
     const { data: rows } = await admin

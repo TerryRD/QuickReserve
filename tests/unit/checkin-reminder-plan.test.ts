@@ -4,8 +4,13 @@ import { planCheckinReminders, type ReminderBooking } from '@/lib/checkin-remind
 const now = new Date('2026-06-13T10:00:00.000Z')
 function bk(over: Partial<ReminderBooking>): ReminderBooking {
   return {
-    bookingId: 'b1', slotId: 's1', startAt: '2026-06-13T10:10:00.000Z',
-    checkedInAt: null, status: 'confirmed', reminderLeadMin: 15, ...over,
+    bookingId: 'b1',
+    slotId: 's1',
+    startAt: '2026-06-13T10:10:00.000Z',
+    checkedInAt: null,
+    status: 'confirmed',
+    reminderLeadMin: 15,
+    ...over,
   }
 }
 
@@ -26,10 +31,16 @@ describe('planCheckinReminders', () => {
     ])
   })
   it('skips checked-in bookings', () => {
-    expect(planCheckinReminders(now, [bk({ startAt: '2026-06-13T09:59:00.000Z', checkedInAt: '2026-06-13T09:58:00.000Z' })])).toEqual([])
+    expect(
+      planCheckinReminders(now, [
+        bk({ startAt: '2026-06-13T09:59:00.000Z', checkedInAt: '2026-06-13T09:58:00.000Z' }),
+      ]),
+    ).toEqual([])
   })
   it('skips non-confirmed bookings', () => {
-    expect(planCheckinReminders(now, [bk({ status: 'pending', startAt: '2026-06-13T09:59:00.000Z' })])).toEqual([])
+    expect(
+      planCheckinReminders(now, [bk({ status: 'pending', startAt: '2026-06-13T09:59:00.000Z' })]),
+    ).toEqual([])
   })
   it('skips stale missing (> 120 min past start)', () => {
     expect(planCheckinReminders(now, [bk({ startAt: '2026-06-13T07:30:00.000Z' })])).toEqual([])

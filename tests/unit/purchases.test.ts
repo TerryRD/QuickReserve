@@ -33,20 +33,14 @@ describe('isActivePurchase', () => {
   })
 
   it('returns false when expired', () => {
-    expect(
-      isActivePurchase({ ...base, expires_at: '2026-05-30T00:00:00Z' }, now),
-    ).toBe(false)
+    expect(isActivePurchase({ ...base, expires_at: '2026-05-30T00:00:00Z' }, now)).toBe(false)
   })
 
   it('returns true when expires_at in future', () => {
-    expect(
-      isActivePurchase({ ...base, expires_at: '2026-06-10T00:00:00Z' }, now),
-    ).toBe(true)
+    expect(isActivePurchase({ ...base, expires_at: '2026-06-10T00:00:00Z' }, now)).toBe(true)
   })
 
   it('returns false at exact expiration moment', () => {
-    expect(
-      isActivePurchase({ ...base, expires_at: '2026-06-01T00:00:00Z' }, now),
-    ).toBe(false)
+    expect(isActivePurchase({ ...base, expires_at: '2026-06-01T00:00:00Z' }, now)).toBe(false)
   })
 })

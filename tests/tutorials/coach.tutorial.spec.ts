@@ -44,7 +44,10 @@ test('教練完整操作教學', async ({ page }) => {
   await go(page, '/calendar?view=list')
   await pace(page)
   await go(page, '/calendar?view=week')
-  const slot = page.locator('.grid button').filter({ hasText: /\d{2}:\d{2}/ }).first()
+  const slot = page
+    .locator('.grid button')
+    .filter({ hasText: /\d{2}:\d{2}/ })
+    .first()
   if (await slot.count()) {
     await narrate(page, '步驟 3-1：時段詳情', '點擊時段查看負責成員與狀態')
     await slot.click()

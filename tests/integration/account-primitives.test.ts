@@ -54,7 +54,10 @@ describe('account settings DB primitives', () => {
       password,
     })
     expect(signErr).toBeNull()
-    const { error } = await client.from('customers').update({ display_name: '新名字' }).eq('id', custId!)
+    const { error } = await client
+      .from('customers')
+      .update({ display_name: '新名字' })
+      .eq('id', custId!)
     expect(error).toBeNull()
     const { data } = await admin.from('customers').select('display_name').eq('id', custId!).single()
     expect(data?.display_name).toBe('新名字')

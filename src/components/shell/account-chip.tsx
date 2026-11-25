@@ -28,7 +28,10 @@ export function AccountChip({
         aria-label={`帳號設定 – ${name}`}
         className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-slate-100"
       >
-        <div aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+        <div
+          aria-hidden="true"
+          className="grid size-7 shrink-0 place-items-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700"
+        >
           {initial}
         </div>
         <div className="min-w-0 leading-tight">
@@ -45,7 +48,10 @@ export function AccountChip({
       aria-label={`帳號設定 – ${name}`}
       className="flex items-center gap-3 rounded-xl border border-sidebar-border bg-sidebar-accent p-3 transition-colors hover:bg-sidebar-accent/70"
     >
-      <div aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground">
+      <div
+        aria-hidden="true"
+        className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground"
+      >
         <span className="font-display text-base">{initial}</span>
       </div>
       <div className="min-w-0 flex-1 leading-tight">

@@ -21,7 +21,9 @@ export default function VideoInput({ value, onChange }: Props) {
         onChange={(e) => onChange(e.target.value)}
         placeholder="https://www.youtube.com/watch?v=..."
       />
-      {value && !parsed && <p className="text-xs text-destructive">無法辨識的連結（僅支援 YouTube / Vimeo）</p>}
+      {value && !parsed && (
+        <p className="text-xs text-destructive">無法辨識的連結（僅支援 YouTube / Vimeo）</p>
+      )}
       {parsed && (
         <div className="overflow-hidden rounded-xl border">
           <VideoEmbed url={value} />

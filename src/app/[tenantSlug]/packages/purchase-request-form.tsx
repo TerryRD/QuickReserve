@@ -40,8 +40,7 @@ export default function PurchaseRequestForm({
       toast.success(`「${packageName}」申請已送出,等教練核可`)
       setOpen(false)
     },
-    onError: ({ error }) =>
-      toast.error(error.serverError?.message ?? '送出失敗'),
+    onError: ({ error }) => toast.error(error.serverError?.message ?? '送出失敗'),
   })
 
   if (!signedIn) {
@@ -149,7 +148,7 @@ export default function PurchaseRequestForm({
             execute({
               packageId,
               paymentSelfReported: paid,
-              receiptNote: paid === 'awaiting_payment' ? null : (receiptNote || null),
+              receiptNote: paid === 'awaiting_payment' ? null : receiptNote || null,
             })
           }
           disabled={isPending}

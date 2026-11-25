@@ -27,52 +27,107 @@ async function makeSlot(startOffsetMin: number) {
   // Each slot uses its own member to avoid the EXCLUDE overlap constraint
   const memberId = ctx.memberIds[slotIndex++]
   const start = new Date(Date.now() + startOffsetMin * 60_000)
-  const { data, error } = await admin.from('availability_slots').insert({
-    tenant_id: ctx.tenantId, member_id: memberId, service_id: ctx.serviceId,
-    start_at: start.toISOString(), end_at: new Date(start.getTime() + 60 * 60_000).toISOString(), status: 'booked',
-  }).select().single()
+  const { data, error } = await admin
+    .from('availability_slots')
+    .insert({
+      tenant_id: ctx.tenantId,
+      member_id: memberId,
+      service_id: ctx.serviceId,
+      start_at: start.toISOString(),
+      end_at: new Date(start.getTime() + 60 * 60_000).toISOString(),
+      status: 'booked',
+    })
+    .select()
+    .single()
   if (error) throw new Error(`makeSlot failed: ${error.message}`)
   return data!.id as string
 }
 async function makeBookingWithPurchase(slotId: string) {
-  const { data: p, error: pe } = await admin.from('customer_purchases').insert({
-    tenant_id: ctx.tenantId, customer_id: ctx.custId, service_id: ctx.serviceId,
-    classes_total: 5, classes_used: 1, approval_status: 'confirmed',
-    approved_at: new Date().toISOString(), payment_self_reported: 'claimed_paid',
-  }).select().single()
+  const { data: p, error: pe } = await admin
+    .from('customer_purchases')
+    .insert({
+      tenant_id: ctx.tenantId,
+      customer_id: ctx.custId,
+      service_id: ctx.serviceId,
+      classes_total: 5,
+      classes_used: 1,
+      approval_status: 'confirmed',
+      approved_at: new Date().toISOString(),
+      payment_self_reported: 'claimed_paid',
+    })
+    .select()
+    .single()
   if (pe) throw new Error(`makeBookingWithPurchase purchase failed: ${pe.message}`)
-  const { data: b, error: be } = await admin.from('bookings').insert({
-    tenant_id: ctx.tenantId, slot_id: slotId, customer_id: ctx.custId,
-    service_id: ctx.serviceId, purchase_id: p!.id, status: 'confirmed',
-  }).select().single()
+  const { data: b, error: be } = await admin
+    .from('bookings')
+    .insert({
+      tenant_id: ctx.tenantId,
+      slot_id: slotId,
+      customer_id: ctx.custId,
+      service_id: ctx.serviceId,
+      purchase_id: p!.id,
+      status: 'confirmed',
+    })
+    .select()
+    .single()
   if (be) throw new Error(`makeBookingWithPurchase booking failed: ${be.message}`)
   return { bookingId: b!.id as string, purchaseId: p!.id as string }
 }
 async function usedCount(purchaseId: string) {
-  const { data } = await admin.from('customer_purchases').select('classes_used').eq('id', purchaseId).single()
+  const { data } = await admin
+    .from('customer_purchases')
+    .select('classes_used')
+    .eq('id', purchaseId)
+    .single()
   return data!.classes_used as number
 }
 
 describe('cancel_booking deadline-aware refund', () => {
   beforeAll(async () => {
-    const { data: t } = await admin.from('tenants').insert({ slug: `cd-${ts}`, name: 'CD Tenant' }).select().single()
+    const { data: t } = await admin
+      .from('tenants')
+      .insert({ slug: `cd-${ts}`, name: 'CD Tenant' })
+      .select()
+      .single()
     ctx.tenantId = t!.id
 
     // Create 3 coach users + members (one per test slot) to avoid EXCLUDE collisions
     for (let i = 0; i < 3; i++) {
       const { data: u } = await admin.auth.admin.createUser({
-        email: `coach-cd-${ts}-${i}@example.com`, password: PW, email_confirm: true,
+        email: `coach-cd-${ts}-${i}@example.com`,
+        password: PW,
+        email_confirm: true,
       })
-      const { data: m } = await admin.from('tenant_members').insert({
-        tenant_id: ctx.tenantId, user_id: u!.user!.id, role: 'owner', status: 'active',
-      }).select().single()
+      const { data: m } = await admin
+        .from('tenant_members')
+        .insert({
+          tenant_id: ctx.tenantId,
+          user_id: u!.user!.id,
+          role: 'owner',
+          status: 'active',
+        })
+        .select()
+        .single()
       ctx.memberIds.push(m!.id)
     }
 
-    const { data: s } = await admin.from('services').insert({ tenant_id: ctx.tenantId, name: 'CD Svc', duration_minutes: 60, cancel_deadline_hours: 24 }).select().single()
+    const { data: s } = await admin
+      .from('services')
+      .insert({
+        tenant_id: ctx.tenantId,
+        name: 'CD Svc',
+        duration_minutes: 60,
+        cancel_deadline_hours: 24,
+      })
+      .select()
+      .single()
     ctx.serviceId = s!.id
 
-    const { data: cu } = await admin.auth.admin.createUser({ email: `cust-cd-${ts}@example.com`, password: PW, email_confirm: true })
+    const { data: cu } = await admin.auth.admin.createUser({
+      email: `cust-cd-${ts}@example.com`,
+      password: PW,
+      email_confirm: true,
+    })
     ctx.custId = cu!.user!.id
     await admin.from('customers').insert({ id: ctx.custId, display_name: 'CD Cust' })
 
@@ -80,7 +135,9 @@ describe('cancel_booking deadline-aware refund', () => {
     // The coach client uses the first coach (index 0) who is also a tenant member
     ctx.coachClient = await signedInClient(`coach-cd-${ts}-0@example.com`)
   })
-  afterAll(async () => { if (ctx.tenantId) await admin.from('tenants').delete().eq('id', ctx.tenantId) })
+  afterAll(async () => {
+    if (ctx.tenantId) await admin.from('tenants').delete().eq('id', ctx.tenantId)
+  })
 
   it('customer cancel WITHIN deadline refunds', async () => {
     const slot = await makeSlot(48 * 60)

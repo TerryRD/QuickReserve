@@ -21,12 +21,7 @@ export function NotificationMatrix({
   className?: string
 }) {
   return (
-    <div
-      className={cn(
-        'overflow-hidden rounded-2xl border border-border bg-card',
-        className,
-      )}
-    >
+    <div className={cn('overflow-hidden rounded-2xl border border-border bg-card', className)}>
       <div className="grid grid-cols-[1fr_minmax(80px,auto)_minmax(80px,auto)] gap-x-4 px-5 py-3 border-b border-border">
         <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           EVENT

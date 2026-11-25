@@ -69,7 +69,8 @@ export default function MonthView({
   const monthLabel = format(mStart, 'yyyy / MM')
   const daysInMonth = differenceInDays(mEnd, mStart) + 1
   const monthSlotCount = Array.from(countByDate.entries()).reduce(
-    (sum, [k, n]) => (k >= format(mStart, 'yyyy-MM-dd') && k <= format(mEnd, 'yyyy-MM-dd') ? sum + n : sum),
+    (sum, [k, n]) =>
+      k >= format(mStart, 'yyyy-MM-dd') && k <= format(mEnd, 'yyyy-MM-dd') ? sum + n : sum,
     0,
   )
 

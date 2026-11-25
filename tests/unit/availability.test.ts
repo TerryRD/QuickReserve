@@ -133,9 +133,7 @@ describe('effectiveAvailability', () => {
       activeTemplate: {
         windows: [{ weekday: 1, start_time: '09:00', end_time: '17:00' }],
       },
-      unavailableEvents: [
-        { start: tpe('2026-05-25', '14:00'), end: tpe('2026-05-25', '15:00') },
-      ],
+      unavailableEvents: [{ start: tpe('2026-05-25', '14:00'), end: tpe('2026-05-25', '15:00') }],
       tzOffsetHours: TZ_OFFSET_HOURS,
     })
     expect(result).toEqual([

@@ -106,7 +106,9 @@ function SignupForm() {
           <Label htmlFor="email" className="font-cjk text-[13px] font-semibold">
             Email
           </Label>
-          <p className="font-cjk text-[11.5px] text-muted-foreground">教練會以此 Email 寄送預約通知</p>
+          <p className="font-cjk text-[11.5px] text-muted-foreground">
+            教練會以此 Email 寄送預約通知
+          </p>
           <Input
             id="email"
             type="email"
@@ -122,7 +124,9 @@ function SignupForm() {
           <Label htmlFor="password" className="font-cjk text-[13px] font-semibold">
             密碼
           </Label>
-          <p className="font-cjk text-[11.5px] text-muted-foreground">至少 8 個字元、包含英文與數字</p>
+          <p className="font-cjk text-[11.5px] text-muted-foreground">
+            至少 8 個字元、包含英文與數字
+          </p>
           <Input
             id="password"
             type="password"

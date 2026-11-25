@@ -40,8 +40,7 @@ export default async function MyPurchasesPage({
           href={`/${tenantSlug}`}
           className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          回 {tenant.name}
+          <ArrowLeft className="h-3.5 w-3.5" />回 {tenant.name}
         </Link>
         <h1 className="font-display text-3xl tracking-tight">
           <span className="italic">我的方案</span>

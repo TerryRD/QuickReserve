@@ -51,17 +51,13 @@ export default function NotificationPrefsForm({
   const [draft, setDraft] = useState<string>(String(checkinReminderMinutes ?? 15))
   const lastSavedCheckin = useRef<number | null>(checkinReminderMinutes)
 
-  const { execute: executeSave, isPending: savePending } = useAction(
-    saveNotificationPrefsAction,
-    {
-      onSuccess: () => {
-        setSavedAt(new Date())
-        toast.success('已儲存通知偏好')
-      },
-      onError: ({ error }) =>
-        toast.error(error.serverError?.message ?? '儲存失敗'),
+  const { execute: executeSave, isPending: savePending } = useAction(saveNotificationPrefsAction, {
+    onSuccess: () => {
+      setSavedAt(new Date())
+      toast.success('已儲存通知偏好')
     },
-  )
+    onError: ({ error }) => toast.error(error.serverError?.message ?? '儲存失敗'),
+  })
 
   const { execute: saveCheckin } = useAction(updateCheckinReminderAction, {
     onSuccess: () => toast.success('已更新簽到提醒設定'),
@@ -82,30 +78,19 @@ export default function NotificationPrefsForm({
     saveCheckin({ minutes: next })
   }
 
-  const { execute: executeRemove, isPending: removePending } = useAction(
-    removePushDeviceAction,
-    {
-      onSuccess: () => toast.success('已移除裝置'),
-      onError: ({ error }) =>
-        toast.error(error.serverError?.message ?? '移除失敗'),
-    },
-  )
+  const { execute: executeRemove, isPending: removePending } = useAction(removePushDeviceAction, {
+    onSuccess: () => toast.success('已移除裝置'),
+    onError: ({ error }) => toast.error(error.serverError?.message ?? '移除失敗'),
+  })
 
-  const onToggle = (
-    channel: NotificationChannel,
-    eventKey: string,
-    next: boolean,
-  ) => {
+  const onToggle = (channel: NotificationChannel, eventKey: string, next: boolean) => {
     setChannels((prev) => ({
       ...prev,
       [channel]: { ...prev[channel], [eventKey]: next },
     }))
   }
 
-  const onQuietHoursChange = (next: {
-    start: string | null
-    end: string | null
-  }) => {
+  const onQuietHoursChange = (next: { start: string | null; end: string | null }) => {
     setQuietStart(next.start)
     setQuietEnd(next.end)
   }
@@ -143,14 +128,10 @@ export default function NotificationPrefsForm({
                 className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 shadow-[0_8px_24px_-18px_rgba(0,0,0,0.18)]"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="font-cjk truncate text-sm font-semibold">
-                    {d.label}
-                  </div>
+                  <div className="font-cjk truncate text-sm font-semibold">{d.label}</div>
                   <div className="font-mono mt-0.5 text-xs text-muted-foreground">
                     最後使用{' '}
-                    {d.last_used_at
-                      ? new Date(d.last_used_at).toLocaleString('zh-TW')
-                      : '—'}
+                    {d.last_used_at ? new Date(d.last_used_at).toLocaleString('zh-TW') : '—'}
                   </div>
                 </div>
                 <Button
@@ -178,11 +159,7 @@ export default function NotificationPrefsForm({
           eng="MATRIX"
           hint="每個事件可獨立勾選要透過哪個通道通知 (Email 不在 Phase 1 範圍)"
         />
-        <NotificationMatrix
-          events={events}
-          prefs={channels}
-          onToggle={onToggle}
-        />
+        <NotificationMatrix events={events} prefs={channels} onToggle={onToggle} />
       </section>
 
       {/* Quiet hours */}
@@ -193,11 +170,7 @@ export default function NotificationPrefsForm({
           eng="QUIET HOURS"
           hint="勿擾時段內推播會延後到結束時段後發送"
         />
-        <QuietHoursInput
-          start={quietStart}
-          end={quietEnd}
-          onChange={onQuietHoursChange}
-        />
+        <QuietHoursInput start={quietStart} end={quietEnd} onChange={onQuietHoursChange} />
       </section>
 
       {/* Checkin reminder (owner-only) */}

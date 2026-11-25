@@ -34,9 +34,7 @@ export function SubNav({
             )}
           >
             <span className="font-cjk">{it.label}</span>
-            <span className="font-mono text-[10px] tracking-[0.15em] opacity-70">
-              {it.eng}
-            </span>
+            <span className="font-mono text-[10px] tracking-[0.15em] opacity-70">{it.eng}</span>
           </Link>
         )
       })}

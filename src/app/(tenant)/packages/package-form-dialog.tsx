@@ -157,11 +157,7 @@ export default function PackageFormDialog(props: Props) {
             <Label>有效期</Label>
             <div className="flex items-center gap-3 text-sm">
               <label className="inline-flex items-center gap-1.5">
-                <input
-                  type="radio"
-                  checked={!permanent}
-                  onChange={() => setPermanent(false)}
-                />
+                <input type="radio" checked={!permanent} onChange={() => setPermanent(false)} />
                 <span>限期</span>
               </label>
               {!permanent && (
@@ -175,11 +171,7 @@ export default function PackageFormDialog(props: Props) {
               )}
               {!permanent && <span className="text-xs text-muted-foreground">天</span>}
               <label className="ml-2 inline-flex items-center gap-1.5">
-                <input
-                  type="radio"
-                  checked={permanent}
-                  onChange={() => setPermanent(true)}
-                />
+                <input type="radio" checked={permanent} onChange={() => setPermanent(true)} />
                 <span>永久</span>
               </label>
             </div>

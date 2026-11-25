@@ -108,9 +108,7 @@ export default async function BookConfirmPage({
             icon={<Package className="size-5" />}
             title="尚無可用套裝"
             hint="先去申請一個套裝才能預約"
-            cta={
-              <PrimaryCtaLink href={`/${tenantSlug}/packages`}>瀏覽套裝</PrimaryCtaLink>
-            }
+            cta={<PrimaryCtaLink href={`/${tenantSlug}/packages`}>瀏覽套裝</PrimaryCtaLink>}
           />
         </main>
       </div>
@@ -120,9 +118,7 @@ export default async function BookConfirmPage({
   // Fetch all active purchases (with package name) for visual radio list
   const { data: rawPurchases } = await supabase
     .from('customer_purchases')
-    .select(
-      'id, approval_status, classes_total, classes_used, expires_at, service_packages(name)',
-    )
+    .select('id, approval_status, classes_total, classes_used, expires_at, service_packages(name)')
     .eq('customer_id', session.userId)
     .eq('service_id', slot.service_id)
     .eq('approval_status', 'confirmed')
@@ -173,9 +169,7 @@ export default async function BookConfirmPage({
           </div>
           <div className="font-display mt-1 text-5xl leading-none tracking-tight">
             {format(start, 'HH:mm')}
-            <span className="text-muted-foreground/60 ml-3 text-2xl">
-              –{format(end, 'HH:mm')}
-            </span>
+            <span className="text-muted-foreground/60 ml-3 text-2xl">–{format(end, 'HH:mm')}</span>
           </div>
           <div className="font-cjk mt-3 text-base">
             {service?.name} · {service?.duration_minutes} 分鐘
@@ -199,9 +193,7 @@ export default async function BookConfirmPage({
           </div>
           <p className="font-cjk mt-2 text-xs leading-relaxed text-muted-foreground">
             開始前{' '}
-            <strong className="text-foreground">
-              {service?.cancel_deadline_hours ?? 24} 小時
-            </strong>{' '}
+            <strong className="text-foreground">{service?.cancel_deadline_hours ?? 24} 小時</strong>{' '}
             以上取消，堂數退回套裝；逾時取消或未到場視同已上完一堂。
           </p>
         </div>

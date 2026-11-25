@@ -14,7 +14,8 @@ export default function CancelMyBookingButton({
   willRefund: boolean
 }) {
   const { execute, isPending } = useAction(cancelMyBookingAction, {
-    onSuccess: () => toast.success(willRefund ? '已取消預約，已退還堂數' : '已取消預約（未退還堂數）'),
+    onSuccess: () =>
+      toast.success(willRefund ? '已取消預約，已退還堂數' : '已取消預約（未退還堂數）'),
     onError: ({ error }) => toast.error(error.serverError?.message ?? '取消失敗'),
   })
 

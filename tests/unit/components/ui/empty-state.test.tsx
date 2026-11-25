@@ -6,11 +6,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 describe('EmptyState', () => {
   it('renders title and optional hint', () => {
     render(
-      <EmptyState
-        icon={<Calendar data-testid="es-icon" />}
-        title="NO BOOKINGS"
-        hint="尚無預約"
-      />,
+      <EmptyState icon={<Calendar data-testid="es-icon" />} title="NO BOOKINGS" hint="尚無預約" />,
     )
     expect(screen.getByText('NO BOOKINGS')).toBeInTheDocument()
     expect(screen.getByText('尚無預約')).toBeInTheDocument()
@@ -18,13 +14,7 @@ describe('EmptyState', () => {
   })
 
   it('renders cta when provided', () => {
-    render(
-      <EmptyState
-        icon={<Calendar />}
-        title="EMPTY"
-        cta={<button>action</button>}
-      />,
-    )
+    render(<EmptyState icon={<Calendar />} title="EMPTY" cta={<button>action</button>} />)
     expect(screen.getByRole('button', { name: 'action' })).toBeInTheDocument()
   })
 

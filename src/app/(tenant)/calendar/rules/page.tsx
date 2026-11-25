@@ -1,13 +1,6 @@
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import {
-  Repeat,
-  ArrowLeft,
-  Calendar as CalendarIcon,
-  Sparkles,
-  Hash,
-  Star,
-} from 'lucide-react'
+import { Repeat, ArrowLeft, Calendar as CalendarIcon, Sparkles, Hash, Star } from 'lucide-react'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { buttonVariants } from '@/components/ui/button'
@@ -240,9 +233,7 @@ export default async function RecurringRulesPage() {
                           <span className="font-display text-lg font-black tabular-nums">
                             {slotCount}
                           </span>
-                          <span className="font-cjk text-xs text-muted-foreground">
-                            個
-                          </span>
+                          <span className="font-cjk text-xs text-muted-foreground">個</span>
                         </dd>
                       </div>
                     </dl>

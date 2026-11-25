@@ -11,13 +11,18 @@ export async function notifyCheckinDone(bookingId: string): Promise<void> {
     const admin = createSupabaseAdminClient()
     const { data: b } = await admin
       .from('bookings')
-      .select('id, customers(display_name), services(name), availability_slots(start_at, tenant_members(user_id))')
+      .select(
+        'id, customers(display_name), services(name), availability_slots(start_at, tenant_members(user_id))',
+      )
       .eq('id', bookingId)
       .maybeSingle()
     if (!b) return
     const customer = b.customers as { display_name: string | null } | null
     const service = b.services as { name: string } | null
-    const slot = b.availability_slots as { start_at: string; tenant_members: { user_id: string | null } | null } | null
+    const slot = b.availability_slots as {
+      start_at: string
+      tenant_members: { user_id: string | null } | null
+    } | null
     const coachUserId = slot?.tenant_members?.user_id ?? null
     if (!coachUserId) return
     await pushToUser(admin, {

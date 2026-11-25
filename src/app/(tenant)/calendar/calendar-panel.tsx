@@ -95,11 +95,7 @@ export default function CalendarPanel({
         />
       )}
       {view === 'month' && (
-        <MonthView
-          monthAnchor={monthAnchor}
-          slots={slots}
-          tzOffsetHours={tzOffsetHours}
-        />
+        <MonthView monthAnchor={monthAnchor} slots={slots} tzOffsetHours={tzOffsetHours} />
       )}
     </div>
   )

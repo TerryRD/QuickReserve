@@ -88,10 +88,7 @@ export default function BookForm({
                         ) : null}
                       </div>
                       <div className="bg-muted mt-2 h-1 overflow-hidden rounded-full">
-                        <div
-                          className="bg-foreground h-full"
-                          style={{ width: `${percent}%` }}
-                        />
+                        <div className="bg-foreground h-full" style={{ width: `${percent}%` }} />
                       </div>
                     </div>
                     <div className="font-display text-2xl leading-none">{remaining}</div>

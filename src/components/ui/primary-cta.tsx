@@ -37,11 +37,7 @@ function ctaRingClasses(size: 'md' | 'lg') {
 
 export function PrimaryCta({ size = 'lg', className, children, ...rest }: PrimaryCtaProps) {
   return (
-    <ButtonPrimitive
-      data-slot="primary-cta"
-      className={ctaClasses(size, className)}
-      {...rest}
-    >
+    <ButtonPrimitive data-slot="primary-cta" className={ctaClasses(size, className)} {...rest}>
       {children}
       <span className={ctaRingClasses(size)}>
         <ArrowRight className="size-3.5" />

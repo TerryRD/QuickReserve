@@ -110,7 +110,9 @@ export default function AvatarUploader({ tenantId, initialUrl, onUploaded, onCle
           />
         </label>
       )}
-      <p className="text-xs text-muted-foreground">建議 800×800 以上、JPEG/PNG/WebP、單檔 ≤ 5 MB。</p>
+      <p className="text-xs text-muted-foreground">
+        建議 800×800 以上、JPEG/PNG/WebP、單檔 ≤ 5 MB。
+      </p>
     </div>
   )
 }

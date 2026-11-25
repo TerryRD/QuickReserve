@@ -19,12 +19,7 @@ describe('DateRibbon', () => {
 
   it('marks selected date with aria-pressed', () => {
     render(
-      <DateRibbon
-        dates={DATES}
-        selected="2026-05-28"
-        onSelect={() => {}}
-        slotCountByDate={{}}
-      />,
+      <DateRibbon dates={DATES} selected="2026-05-28" onSelect={() => {}} slotCountByDate={{}} />,
     )
     const sel = screen.getAllByRole('button').find((b) => b.getAttribute('aria-pressed') === 'true')
     expect(sel).toBeDefined()
@@ -34,12 +29,7 @@ describe('DateRibbon', () => {
   it('calls onSelect with date on click', () => {
     const onSelect = vi.fn()
     render(
-      <DateRibbon
-        dates={DATES}
-        selected="2026-05-27"
-        onSelect={onSelect}
-        slotCountByDate={{}}
-      />,
+      <DateRibbon dates={DATES} selected="2026-05-27" onSelect={onSelect} slotCountByDate={{}} />,
     )
     fireEvent.click(screen.getAllByRole('button')[1]!)
     expect(onSelect).toHaveBeenCalledWith('2026-05-28')

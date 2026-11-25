@@ -57,7 +57,12 @@ export default function MobileSidebar({
           </div>
           <div className="border-t border-sidebar-border p-3">
             <div className="pb-2">
-              <AccountChip displayName={displayName} email={email} roleLabel={roleLabel} href="/settings/account" />
+              <AccountChip
+                displayName={displayName}
+                email={email}
+                roleLabel={roleLabel}
+                href="/settings/account"
+              />
             </div>
             <Link
               href={`/${tenantSlug}`}

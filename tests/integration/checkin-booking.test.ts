@@ -9,10 +9,7 @@ import type { Database } from '@/lib/supabase/types'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const admin = createClient<Database>(
-  SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
+const admin = createClient<Database>(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 const ts = Date.now()
 // Each test gets its own member_id so the availability_slots EXCLUDE
 // constraint (per member_id, overlapping tstzrange) never fires.
@@ -24,7 +21,11 @@ const ctx: {
   customer2Id?: string
   customer2Email: string
   customer2Password: string
-} = { memberIds: [], customer2Email: `cust2-ci-${Date.now()}@example.com`, customer2Password: 'TestPass123!' }
+} = {
+  memberIds: [],
+  customer2Email: `cust2-ci-${Date.now()}@example.com`,
+  customer2Password: 'TestPass123!',
+}
 
 let slotIndex = 0
 async function makeSlot(startOffsetMin: number, durationMin: number) {
@@ -34,57 +35,102 @@ async function makeSlot(startOffsetMin: number, durationMin: number) {
   const { data, error } = await admin
     .from('availability_slots')
     .insert({
-      tenant_id: ctx.tenantId!, member_id: memberId!, service_id: ctx.serviceId!,
-      start_at: start.toISOString(), end_at: end.toISOString(), status: 'booked',
+      tenant_id: ctx.tenantId!,
+      member_id: memberId!,
+      service_id: ctx.serviceId!,
+      start_at: start.toISOString(),
+      end_at: end.toISOString(),
+      status: 'booked',
     })
-    .select().single()
+    .select()
+    .single()
   if (error) throw new Error(`makeSlot failed: ${error.message}`)
   return data!.id as string
 }
 async function makeBooking(slotId: string, status: string) {
-  const { data: p, error: pe } = await admin.from('customer_purchases').insert({
-    tenant_id: ctx.tenantId!, customer_id: ctx.customerId!, service_id: ctx.serviceId!,
-    classes_total: 5, classes_used: 1, approval_status: 'confirmed',
-    approved_at: new Date().toISOString(), payment_self_reported: 'claimed_paid',
-  }).select().single()
+  const { data: p, error: pe } = await admin
+    .from('customer_purchases')
+    .insert({
+      tenant_id: ctx.tenantId!,
+      customer_id: ctx.customerId!,
+      service_id: ctx.serviceId!,
+      classes_total: 5,
+      classes_used: 1,
+      approval_status: 'confirmed',
+      approved_at: new Date().toISOString(),
+      payment_self_reported: 'claimed_paid',
+    })
+    .select()
+    .single()
   if (pe) throw new Error(`makeBooking purchase failed: ${pe.message}`)
-  const { data, error: be } = await admin.from('bookings').insert({
-    tenant_id: ctx.tenantId!, slot_id: slotId, customer_id: ctx.customerId!,
-    service_id: ctx.serviceId!, status, purchase_id: p!.id,
-  }).select().single()
+  const { data, error: be } = await admin
+    .from('bookings')
+    .insert({
+      tenant_id: ctx.tenantId!,
+      slot_id: slotId,
+      customer_id: ctx.customerId!,
+      service_id: ctx.serviceId!,
+      status,
+      purchase_id: p!.id,
+    })
+    .select()
+    .single()
   if (be) throw new Error(`makeBooking booking failed: ${be.message}`)
   return data!.id as string
 }
 
 describe('checkin_booking RPC', () => {
   beforeAll(async () => {
-    const { data: t } = await admin.from('tenants').insert({ slug: `ci-${ts}`, name: 'CI Tenant' }).select().single()
+    const { data: t } = await admin
+      .from('tenants')
+      .insert({ slug: `ci-${ts}`, name: 'CI Tenant' })
+      .select()
+      .single()
     ctx.tenantId = t!.id
 
     // Create 6 coach users + members (one per test slot) to avoid EXCLUDE collisions.
     for (let i = 0; i < 6; i++) {
       const { data: u } = await admin.auth.admin.createUser({
-        email: `coach-ci-${ts}-${i}@example.com`, password: 'TestPass123!', email_confirm: true,
+        email: `coach-ci-${ts}-${i}@example.com`,
+        password: 'TestPass123!',
+        email_confirm: true,
       })
-      const { data: m } = await admin.from('tenant_members').insert({
-        tenant_id: ctx.tenantId!, user_id: u!.user!.id, role: 'owner', status: 'active',
-      }).select().single()
+      const { data: m } = await admin
+        .from('tenant_members')
+        .insert({
+          tenant_id: ctx.tenantId!,
+          user_id: u!.user!.id,
+          role: 'owner',
+          status: 'active',
+        })
+        .select()
+        .single()
       ctx.memberIds.push(m!.id)
     }
 
-    const { data: s } = await admin.from('services').insert({
-      tenant_id: ctx.tenantId!, name: 'CI Service', duration_minutes: 60,
-    }).select().single()
+    const { data: s } = await admin
+      .from('services')
+      .insert({
+        tenant_id: ctx.tenantId!,
+        name: 'CI Service',
+        duration_minutes: 60,
+      })
+      .select()
+      .single()
     ctx.serviceId = s!.id
 
     const { data: cu } = await admin.auth.admin.createUser({
-      email: `cust-ci-${ts}@example.com`, password: 'TestPass123!', email_confirm: true,
+      email: `cust-ci-${ts}@example.com`,
+      password: 'TestPass123!',
+      email_confirm: true,
     })
     ctx.customerId = cu!.user!.id
     await admin.from('customers').insert({ id: ctx.customerId, display_name: 'CI Cust' })
 
     const { data: cu2 } = await admin.auth.admin.createUser({
-      email: ctx.customer2Email, password: ctx.customer2Password, email_confirm: true,
+      email: ctx.customer2Email,
+      password: ctx.customer2Password,
+      email_confirm: true,
     })
     ctx.customer2Id = cu2!.user!.id
     await admin.from('customers').insert({ id: ctx.customer2Id, display_name: 'CI Cust2' })
@@ -100,7 +146,11 @@ describe('checkin_booking RPC', () => {
     const { data, error } = await admin.rpc('checkin_booking', { p_booking_id: booking })
     expect(error).toBeNull()
     expect((data as Array<{ booking_id: string }>)[0]!.booking_id).toBe(booking)
-    const { data: b } = await admin.from('bookings').select('status, checked_in_at').eq('id', booking).single()
+    const { data: b } = await admin
+      .from('bookings')
+      .select('status, checked_in_at')
+      .eq('id', booking)
+      .single()
     expect(b!.status).toBe('completed')
     expect(b!.checked_in_at).not.toBeNull()
   })
