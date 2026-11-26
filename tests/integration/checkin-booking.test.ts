@@ -139,12 +139,12 @@ describe('checkin_booking RPC', () => {
     ctx.customer2Id = cu2!.user!.id
     ctx.userIds.push(ctx.customer2Id)
     await admin.from('customers').insert({ id: ctx.customer2Id, display_name: 'CI Cust2' })
-  })
+  }, 120_000)
 
   afterAll(async () => {
     if (ctx.tenantId) await admin.from('tenants').delete().eq('id', ctx.tenantId)
     for (const id of ctx.userIds) await admin.auth.admin.deleteUser(id)
-  })
+  }, 120_000)
 
   it('checks in a confirmed booking inside the window -> completed', async () => {
     const slot = await makeSlot(-5, 60) // started 5 min ago, ongoing

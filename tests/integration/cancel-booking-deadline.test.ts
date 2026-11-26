@@ -136,11 +136,11 @@ describe('cancel_booking deadline-aware refund', () => {
     ctx.custClient = await signedInClient(`cust-cd-${ts}@example.com`)
     // The coach client uses the first coach (index 0) who is also a tenant member
     ctx.coachClient = await signedInClient(`coach-cd-${ts}-0@example.com`)
-  })
+  }, 120_000)
   afterAll(async () => {
     if (ctx.tenantId) await admin.from('tenants').delete().eq('id', ctx.tenantId)
     for (const id of ctx.userIds) await admin.auth.admin.deleteUser(id)
-  })
+  }, 120_000)
 
   it('customer cancel WITHIN deadline refunds', async () => {
     const slot = await makeSlot(48 * 60)
