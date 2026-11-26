@@ -10,6 +10,7 @@ import type { Database } from '@/lib/supabase/types'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const admin = createClient<Database>(SUPABASE_URL, SERVICE_KEY)
 
 // A-6 group lifecycle test — service has max_capacity=4, min_attendance=2.
@@ -19,6 +20,10 @@ const admin = createClient<Database>(SUPABASE_URL, SERVICE_KEY)
 //   booked at count = max_capacity
 //   cancel rebuilds status from remaining count (pending if any, available if 0)
 //   reschedule into a partial group is allowed
+//
+// cancel_booking / reschedule_booking are called with the booking's own
+// customer client: since 20261126100300_bfv2_p1_functions.sql, service_role
+// gets FORBIDDEN, cancel requires a reason (customer reschedule does not).
 
 const ts = Date.now()
 const ctx: {
@@ -29,12 +34,13 @@ const ctx: {
   groupSlotId?: string
   spareSlotId?: string
   spareDestSlotId?: string
-  customers: Array<{ id: string; purchaseId: string; bookingId?: string }>
+  customers: Array<{ id: string; email: string; purchaseId: string; bookingId?: string }>
 } = { customers: [] }
 
 async function createCustomerWithPurchase(label: string, tenantId: string, serviceId: string) {
+  const email = `${label}-grp-${ts}@example.com`
   const { data: u } = await admin.auth.admin.createUser({
-    email: `${label}-grp-${ts}@example.com`,
+    email,
     password: 'TestPass123!',
     email_confirm: true,
   })
@@ -54,7 +60,19 @@ async function createCustomerWithPurchase(label: string, tenantId: string, servi
     })
     .select()
     .single()
-  return { id: userId, purchaseId: p!.id }
+  return { id: userId, email, purchaseId: p!.id }
+}
+
+// One sign-in per customer (Supabase Auth rate-limits password sign-ins per IP)
+const customerClients = new Map<string, ReturnType<typeof createClient<Database>>>()
+async function customerClient(email: string) {
+  const cached = customerClients.get(email)
+  if (cached) return cached
+  const c = createClient<Database>(SUPABASE_URL, ANON_KEY)
+  const { error } = await c.auth.signInWithPassword({ email, password: 'TestPass123!' })
+  if (error) throw new Error(`signIn ${email}: ${error.message}`)
+  customerClients.set(email, c)
+  return c
 }
 
 async function slotStatus(id: string) {
@@ -220,7 +238,11 @@ describe('Group slot lifecycle (max_capacity=4, min_attendance=2)', () => {
 
   it('cancel one of 4: slot drops back to pending, remaining bookings unaffected', async () => {
     const c = ctx.customers[3]!
-    const { error } = await admin.rpc('cancel_booking', { p_booking_id: c.bookingId! })
+    const client = await customerClient(c.email)
+    const { error } = await client.rpc('cancel_booking', {
+      p_booking_id: c.bookingId!,
+      p_reason: '測試',
+    })
     expect(error).toBeNull()
 
     expect(await slotStatus(ctx.groupSlotId!)).toBe('pending')
@@ -245,7 +267,11 @@ describe('Group slot lifecycle (max_capacity=4, min_attendance=2)', () => {
 
   it('cancel all remaining: slot back to available', async () => {
     for (const c of ctx.customers.slice(0, 3)) {
-      const { error } = await admin.rpc('cancel_booking', { p_booking_id: c.bookingId! })
+      const client = await customerClient(c.email)
+      const { error } = await client.rpc('cancel_booking', {
+        p_booking_id: c.bookingId!,
+        p_reason: '測試',
+      })
       expect(error).toBeNull()
     }
     expect(await slotStatus(ctx.groupSlotId!)).toBe('available')
@@ -270,7 +296,8 @@ describe('Group slot lifecycle (max_capacity=4, min_attendance=2)', () => {
     expect(await slotStatus(ctx.spareDestSlotId!)).toBe('pending')
 
     // A reschedules from spareSlot → spareDestSlot (which already has B)
-    const { error } = await admin.rpc('reschedule_booking', {
+    const aClient = await customerClient(a.email)
+    const { error } = await aClient.rpc('reschedule_booking', {
       p_old_booking_id: aBookingId,
       p_new_slot_id: ctx.spareDestSlotId!,
     })

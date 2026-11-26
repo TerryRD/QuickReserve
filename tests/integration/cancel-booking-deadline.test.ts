@@ -13,7 +13,7 @@ const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const admin = createClient<Database>(URL, SERVICE)
 const ts = Date.now()
 const PW = 'TestPass123!'
-const ctx: any = { memberIds: [] as string[] }
+const ctx: any = { memberIds: [] as string[], userIds: [] as string[] }
 
 async function signedInClient(email: string) {
   const c = createClient<Database>(URL, ANON)
@@ -98,6 +98,7 @@ describe('cancel_booking deadline-aware refund', () => {
         password: PW,
         email_confirm: true,
       })
+      ctx.userIds.push(u!.user!.id)
       const { data: m } = await admin
         .from('tenant_members')
         .insert({
@@ -129,6 +130,7 @@ describe('cancel_booking deadline-aware refund', () => {
       email_confirm: true,
     })
     ctx.custId = cu!.user!.id
+    ctx.userIds.push(ctx.custId)
     await admin.from('customers').insert({ id: ctx.custId, display_name: 'CD Cust' })
 
     ctx.custClient = await signedInClient(`cust-cd-${ts}@example.com`)
@@ -137,12 +139,16 @@ describe('cancel_booking deadline-aware refund', () => {
   })
   afterAll(async () => {
     if (ctx.tenantId) await admin.from('tenants').delete().eq('id', ctx.tenantId)
+    for (const id of ctx.userIds) await admin.auth.admin.deleteUser(id)
   })
 
   it('customer cancel WITHIN deadline refunds', async () => {
     const slot = await makeSlot(48 * 60)
     const { bookingId, purchaseId } = await makeBookingWithPurchase(slot)
-    const { error } = await ctx.custClient.rpc('cancel_booking', { p_booking_id: bookingId })
+    const { error } = await ctx.custClient.rpc('cancel_booking', {
+      p_booking_id: bookingId,
+      p_reason: '測試',
+    })
     expect(error).toBeNull()
     expect(await usedCount(purchaseId)).toBe(0)
   })
@@ -150,17 +156,28 @@ describe('cancel_booking deadline-aware refund', () => {
   it('customer cancel PAST deadline does NOT refund but still cancels', async () => {
     const slot = await makeSlot(12 * 60)
     const { bookingId, purchaseId } = await makeBookingWithPurchase(slot)
-    const { error } = await ctx.custClient.rpc('cancel_booking', { p_booking_id: bookingId })
+    const { error } = await ctx.custClient.rpc('cancel_booking', {
+      p_booking_id: bookingId,
+      p_reason: '測試',
+    })
     expect(error).toBeNull()
     expect(await usedCount(purchaseId)).toBe(1)
-    const { data: b } = await admin.from('bookings').select('status').eq('id', bookingId).single()
+    const { data: b } = await admin
+      .from('bookings')
+      .select('status, class_disposition')
+      .eq('id', bookingId)
+      .single()
     expect(b!.status).toBe('cancelled')
+    expect(b!.class_disposition).toBe('forfeited')
   })
 
   it('coach cancel PAST deadline still refunds', async () => {
     const slot = await makeSlot(12 * 60)
     const { bookingId, purchaseId } = await makeBookingWithPurchase(slot)
-    const { error } = await ctx.coachClient.rpc('cancel_booking', { p_booking_id: bookingId })
+    const { error } = await ctx.coachClient.rpc('cancel_booking', {
+      p_booking_id: bookingId,
+      p_reason: '測試',
+    })
     expect(error).toBeNull()
     expect(await usedCount(purchaseId)).toBe(0)
   })

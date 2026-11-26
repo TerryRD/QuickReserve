@@ -10,6 +10,7 @@ import type { Database } from '@/lib/supabase/types'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const admin = createClient<Database>(SUPABASE_URL, SERVICE_KEY)
 
 // Booking lifecycle integration: book_with_purchase (S4 replacement for
@@ -20,10 +21,15 @@ const admin = createClient<Database>(SUPABASE_URL, SERVICE_KEY)
 // Caller is `admin` (service_role) so the auth.uid()-vs-p_customer_id guard
 // added in 20260529100000 is bypassed — that guard is exercised separately
 // in rpc-cross-customer-guard.test.ts.
+//
+// cancel_booking is called with Alice's own signed-in client: since
+// 20261126100300_bfv2_p1_functions.sql, service_role gets FORBIDDEN from
+// cancel_booking/reschedule_booking, and a cancel reason is required.
 
 const ctx: {
   coachId?: string
   aliceId?: string
+  aliceEmail?: string
   bobId?: string
   tenantId?: string
   memberId?: string
@@ -43,8 +49,9 @@ describe('Booking lifecycle (book_with_purchase + cancel_booking)', () => {
       email_confirm: true,
     })
     ctx.coachId = coach!.user!.id
+    ctx.aliceEmail = `alice-life-${ts}@example.com`
     const { data: alice } = await admin.auth.admin.createUser({
-      email: `alice-life-${ts}@example.com`,
+      email: ctx.aliceEmail,
       password: 'TestPass123!',
       email_confirm: true,
     })
@@ -185,7 +192,16 @@ describe('Booking lifecycle (book_with_purchase + cancel_booking)', () => {
 
   it('cancel_booking refunds the class and releases the slot', async () => {
     expect(ctx.aliceBookingId).toBeDefined()
-    const { error } = await admin.rpc('cancel_booking', { p_booking_id: ctx.aliceBookingId! })
+    const aliceClient = createClient<Database>(SUPABASE_URL, ANON_KEY)
+    const { error: signInErr } = await aliceClient.auth.signInWithPassword({
+      email: ctx.aliceEmail!,
+      password: 'TestPass123!',
+    })
+    expect(signInErr).toBeNull()
+    const { error } = await aliceClient.rpc('cancel_booking', {
+      p_booking_id: ctx.aliceBookingId!,
+      p_reason: '測試',
+    })
     expect(error).toBeNull()
 
     const { data: slot } = await admin

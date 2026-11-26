@@ -16,6 +16,7 @@ const ts = Date.now()
 const ctx: {
   tenantId?: string
   memberIds: string[]
+  userIds: string[]
   serviceId?: string
   customerId?: string
   customer2Id?: string
@@ -23,6 +24,7 @@ const ctx: {
   customer2Password: string
 } = {
   memberIds: [],
+  userIds: [],
   customer2Email: `cust2-ci-${Date.now()}@example.com`,
   customer2Password: 'TestPass123!',
 }
@@ -95,6 +97,7 @@ describe('checkin_booking RPC', () => {
         password: 'TestPass123!',
         email_confirm: true,
       })
+      ctx.userIds.push(u!.user!.id)
       const { data: m } = await admin
         .from('tenant_members')
         .insert({
@@ -125,6 +128,7 @@ describe('checkin_booking RPC', () => {
       email_confirm: true,
     })
     ctx.customerId = cu!.user!.id
+    ctx.userIds.push(ctx.customerId)
     await admin.from('customers').insert({ id: ctx.customerId, display_name: 'CI Cust' })
 
     const { data: cu2 } = await admin.auth.admin.createUser({
@@ -133,11 +137,13 @@ describe('checkin_booking RPC', () => {
       email_confirm: true,
     })
     ctx.customer2Id = cu2!.user!.id
+    ctx.userIds.push(ctx.customer2Id)
     await admin.from('customers').insert({ id: ctx.customer2Id, display_name: 'CI Cust2' })
   })
 
   afterAll(async () => {
     if (ctx.tenantId) await admin.from('tenants').delete().eq('id', ctx.tenantId)
+    for (const id of ctx.userIds) await admin.auth.admin.deleteUser(id)
   })
 
   it('checks in a confirmed booking inside the window -> completed', async () => {

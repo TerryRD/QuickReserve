@@ -178,6 +178,7 @@ async function main() {
   })
   const { error: cancelErr } = await studentClient.rpc('cancel_booking', {
     p_booking_id: booking.id,
+    p_reason: 'e2e 驗證',
   })
   if (cancelErr) fail(`cancel_booking: ${cancelErr.message}`)
   const { data: bAfter } = await admin

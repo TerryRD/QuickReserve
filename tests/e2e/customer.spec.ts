@@ -8,11 +8,12 @@ test.describe('customer (小明)', () => {
 
   test('my-bookings shows KPI row + DateStrip groups', async ({ page }) => {
     await page.goto('/my-bookings')
-    // KPI card labels
-    await expect(page.getByText('本週')).toBeVisible()
-    await expect(page.getByText('待回覆')).toBeVisible()
-    await expect(page.getByText('已完成')).toBeVisible()
-    await expect(page.getByText('已取消')).toBeVisible()
+    // KPI card labels（限定在 KPI 區塊內：預約卡片的狀態標籤與摘要也會出現「已取消」等字）
+    const kpis = page.locator('section').first()
+    await expect(kpis.getByText('本週', { exact: true })).toBeVisible()
+    await expect(kpis.getByText('待回覆', { exact: true })).toBeVisible()
+    await expect(kpis.getByText('已出席', { exact: true })).toBeVisible()
+    await expect(kpis.getByText('已取消', { exact: true })).toBeVisible()
   })
 
   test('account/notifications is reachable for customer', async ({ page }) => {

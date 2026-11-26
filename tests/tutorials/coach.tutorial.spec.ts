@@ -68,12 +68,12 @@ test('教練完整操作教學', async ({ page }) => {
   await narrate(page, '步驟 5：服務管理', '1對1 與 團體課程分頁')
   await expect(page.getByRole('link', { name: /1-ON-1/ })).toBeVisible()
 
-  // ── 6. 套票 + 待審核套票 ──
+  // ── 6. 課堂管理 + 購買申請 ──
   await go(page, '/packages')
-  await narrate(page, '步驟 6：套票', '建立與管理課程套票')
+  await narrate(page, '步驟 6：課堂管理', '建立與管理可購買的 N 堂課')
   await expect(page.getByRole('link', { name: /ALL/ })).toBeVisible()
   await go(page, '/packages/pending')
-  await narrate(page, '步驟 6-1：待審核套票', '審核學員的套票申請')
+  await narrate(page, '步驟 6-1：購買申請', '審核學員的購買申請')
   await pace(page)
 
   // ── 7. 客戶 ──
@@ -122,7 +122,7 @@ test('教練完整操作教學', async ({ page }) => {
 
   // ── 10. 通知收件匣 ──
   await go(page, '/notifications')
-  await narrate(page, '步驟 10：通知', '收件匣四分頁：全部／預約／套票／系統')
+  await narrate(page, '步驟 10：通知', '收件匣四分頁：全部／預約／購課／系統')
   await expect(page.getByRole('heading', { name: '通知' })).toBeVisible()
 
   // ── 11. 設定（個人 + 通知偏好）──
