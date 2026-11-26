@@ -39,7 +39,7 @@ export const requestPurchaseAction = actionClient
     const receiptNote =
       parsedInput.paymentSelfReported === 'awaiting_payment'
         ? null
-        : (parsedInput.receiptNote?.trim() || null)
+        : parsedInput.receiptNote?.trim() || null
 
     const { error } = await supabase.from('customer_purchases').insert({
       tenant_id: pkg.tenant_id,

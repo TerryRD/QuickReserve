@@ -58,9 +58,7 @@ function NumberedSection({
           <h2 className="font-display font-cjk mt-1 text-2xl font-black uppercase leading-tight">
             {title}
           </h2>
-          {hint && (
-            <p className="font-cjk mt-2 text-sm text-muted-foreground">{hint}</p>
-          )}
+          {hint && <p className="font-cjk mt-2 text-sm text-muted-foreground">{hint}</p>}
         </div>
         {children}
       </div>
@@ -144,9 +142,7 @@ export default function ProfileForm({
     setBioHtml(initial.bio_html ?? '')
     setIntroVideoUrl(initial.intro_video_url ?? '')
     setYearsExp(initial.years_exp != null ? String(initial.years_exp) : '')
-    setEstablishedYear(
-      initial.established_year != null ? String(initial.established_year) : '',
-    )
+    setEstablishedYear(initial.established_year != null ? String(initial.established_year) : '')
     setCity(initial.city ?? '')
   }
 
@@ -156,8 +152,7 @@ export default function ProfileForm({
       onSubmit={(e) => {
         e.preventDefault()
         const yearsExpNum = yearsExp.trim() === '' ? null : Number(yearsExp)
-        const establishedYearNum =
-          establishedYear.trim() === '' ? null : Number(establishedYear)
+        const establishedYearNum = establishedYear.trim() === '' ? null : Number(establishedYear)
         execute({
           name,
           description: description || null,
@@ -197,10 +192,7 @@ export default function ProfileForm({
             />
           </div>
           <div className="space-y-2">
-            <Label
-              htmlFor="description"
-              className="font-mono text-[11px] uppercase tracking-wider"
-            >
+            <Label htmlFor="description" className="font-mono text-[11px] uppercase tracking-wider">
               一句介紹（HERO 副標）
             </Label>
             <Input
@@ -234,10 +226,7 @@ export default function ProfileForm({
       >
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
-            <Label
-              htmlFor="years_exp"
-              className="font-mono text-[11px] uppercase tracking-wider"
-            >
+            <Label htmlFor="years_exp" className="font-mono text-[11px] uppercase tracking-wider">
               執業年資（年）
             </Label>
             <Input
@@ -373,16 +362,13 @@ export default function ProfileForm({
       </NumberedSection>
 
       {/* Sticky save bar */}
-      <div
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur md:left-[240px]"
-      >
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur md:left-[240px]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8 lg:px-10">
           <div className="flex items-center gap-3 min-w-0">
             <span
               aria-hidden
               className={
-                'size-2 shrink-0 rounded-full ' +
-                (isDirty ? 'bg-accent' : 'bg-muted-foreground/40')
+                'size-2 shrink-0 rounded-full ' + (isDirty ? 'bg-accent' : 'bg-muted-foreground/40')
               }
             />
             <div className="min-w-0">
@@ -390,9 +376,7 @@ export default function ProfileForm({
                 {isPending ? '儲存中…' : isDirty ? '有未儲存的變更' : '已同步'}
               </div>
               <div className="font-mono text-[10.5px] uppercase tracking-[0.05em] text-muted-foreground mt-0.5">
-                {isDirty
-                  ? 'UNSAVED · 點右側「儲存」以套用'
-                  : 'SYNCED · 所有變更已儲存'}
+                {isDirty ? 'UNSAVED · 點右側「儲存」以套用' : 'SYNCED · 所有變更已儲存'}
               </div>
             </div>
           </div>

@@ -66,12 +66,7 @@ export default function PurchaseRow({ purchase, emphasized = false }: Props) {
   const paidColor = PAID_COLOR[purchase.paymentSelfReported]
 
   return (
-    <Card
-      className={cn(
-        'transition',
-        emphasized && 'bg-accent/15 ring-2 ring-accent',
-      )}
-    >
+    <Card className={cn('transition', emphasized && 'bg-accent/15 ring-2 ring-accent')}>
       <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -93,10 +88,7 @@ export default function PurchaseRow({ purchase, emphasized = false }: Props) {
           <div className="mt-0.5 text-xs text-muted-foreground">申請於 {purchase.createdAt}</div>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            onClick={() => approve.execute({ id: purchase.id })}
-            disabled={approve.isPending}
-          >
+          <Button onClick={() => approve.execute({ id: purchase.id })} disabled={approve.isPending}>
             {approve.isPending ? '處理中...' : '確認'}
           </Button>
           <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>

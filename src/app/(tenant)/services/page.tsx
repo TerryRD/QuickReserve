@@ -100,9 +100,7 @@ export default async function ServicesPage({
                 )}
               >
                 <span className="font-cjk">{t.label}</span>
-                <span className="font-mono text-[10px] tracking-[0.15em] opacity-70">
-                  {t.eng}
-                </span>
+                <span className="font-mono text-[10px] tracking-[0.15em] opacity-70">{t.eng}</span>
               </Link>
             )
           })}
@@ -192,9 +190,7 @@ function ServiceCard({ service, canEdit }: { service: Service; canEdit: boolean 
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             {isGroup ? `GROUP · ${service.max_capacity}` : '1-ON-1'}
           </div>
-          <h3 className="font-display font-cjk mt-1 truncate text-xl font-black">
-            {service.name}
-          </h3>
+          <h3 className="font-display font-cjk mt-1 truncate text-xl font-black">{service.name}</h3>
         </div>
         {!service.is_active && (
           <Badge variant="outline" className="shrink-0">
@@ -203,9 +199,7 @@ function ServiceCard({ service, canEdit }: { service: Service; canEdit: boolean 
         )}
       </div>
       {service.description && (
-        <p className="font-cjk line-clamp-2 text-xs text-muted-foreground">
-          {service.description}
-        </p>
+        <p className="font-cjk line-clamp-2 text-xs text-muted-foreground">{service.description}</p>
       )}
       <div className="flex items-baseline gap-2">
         <span className="font-display text-3xl">

@@ -22,7 +22,8 @@ export function planCheckinReminders(now: Date, bookings: ReminderBooking[]): Re
     if (b.status !== 'confirmed' || b.checkedInAt) continue
     const start = new Date(b.startAt).getTime()
     if (t >= start) {
-      if (t - start <= MISSING_MAX_AGE_MIN * 60_000) out.push({ kind: 'missing', bookingId: b.bookingId })
+      if (t - start <= MISSING_MAX_AGE_MIN * 60_000)
+        out.push({ kind: 'missing', bookingId: b.bookingId })
       continue
     }
     if (b.reminderLeadMin != null) {

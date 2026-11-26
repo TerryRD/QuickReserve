@@ -26,15 +26,10 @@ export const saveNotificationPrefsAction = actionClient
     const supabase = await createSupabaseServerClient()
 
     // Either both start/end set, or both null
-    const bothSet =
-      parsedInput.quiet_hours_start !== null && parsedInput.quiet_hours_end !== null
-    const bothNull =
-      parsedInput.quiet_hours_start === null && parsedInput.quiet_hours_end === null
+    const bothSet = parsedInput.quiet_hours_start !== null && parsedInput.quiet_hours_end !== null
+    const bothNull = parsedInput.quiet_hours_start === null && parsedInput.quiet_hours_end === null
     if (!bothSet && !bothNull) {
-      throw new AppError(
-        'QUIET_HOURS_INVALID',
-        '勿擾時段的開始與結束必須同時設定或同時清空',
-      )
+      throw new AppError('QUIET_HOURS_INVALID', '勿擾時段的開始與結束必須同時設定或同時清空')
     }
 
     const { error } = await supabase.from('notification_preferences').upsert(

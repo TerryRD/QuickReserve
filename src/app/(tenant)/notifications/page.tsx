@@ -15,13 +15,19 @@ type TabKey = 'all' | 'bookings' | 'packages' | 'system'
 
 const TABS: { key: TabKey; label: string; eng: string; matcher: (type: string) => boolean }[] = [
   { key: 'all', label: '全部', eng: 'ALL', matcher: () => true },
-  { key: 'bookings', label: '預約', eng: 'BOOKINGS', matcher: t => t.startsWith('booking_') },
-  { key: 'packages', label: '套裝', eng: 'PACKAGES', matcher: t => t.startsWith('package_') || t.startsWith('purchase_') },
+  { key: 'bookings', label: '預約', eng: 'BOOKINGS', matcher: (t) => t.startsWith('booking_') },
+  {
+    key: 'packages',
+    label: '套裝',
+    eng: 'PACKAGES',
+    matcher: (t) => t.startsWith('package_') || t.startsWith('purchase_'),
+  },
   {
     key: 'system',
     label: '系統',
     eng: 'SYSTEM',
-    matcher: t => !t.startsWith('booking_') && !t.startsWith('package_') && !t.startsWith('purchase_'),
+    matcher: (t) =>
+      !t.startsWith('booking_') && !t.startsWith('package_') && !t.startsWith('purchase_'),
   },
 ]
 
@@ -57,19 +63,14 @@ export default async function NotificationsPage({
     .order('sent_at', { ascending: false })
     .limit(100)
 
-  const tabDef = TABS.find(t => t.key === tab) ?? TABS[0]!
-  const filtered = (logs ?? []).filter(l => tabDef.matcher(l.type))
-  const unreadCount = (logs ?? []).filter(l => l.read_at === null).length
+  const tabDef = TABS.find((t) => t.key === tab) ?? TABS[0]!
+  const filtered = (logs ?? []).filter((l) => tabDef.matcher(l.type))
+  const unreadCount = (logs ?? []).filter((l) => l.read_at === null).length
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <SectionHead
-          kicker="NOTIFICATIONS · 通知"
-          title="通知"
-          eng="INBOX"
-          className="mb-0"
-        />
+        <SectionHead kicker="NOTIFICATIONS · 通知" title="通知" eng="INBOX" className="mb-0" />
         <div className="flex items-center gap-2">
           <MarkAllReadButton unreadCount={unreadCount} />
           <Link href="/settings/notifications">
@@ -81,7 +82,7 @@ export default async function NotificationsPage({
       </div>
 
       <div className="inline-flex rounded-full border border-border bg-card p-1">
-        {TABS.map(t => (
+        {TABS.map((t) => (
           <Link
             key={t.key}
             href={{ pathname: '/notifications', query: t.key === 'all' ? {} : { tab: t.key } }}
@@ -107,7 +108,7 @@ export default async function NotificationsPage({
         />
       ) : (
         <div className="space-y-2">
-          {filtered.map(l => {
+          {filtered.map((l) => {
             const ts = new Date(l.sent_at)
             const isUnread = l.read_at === null
             const label = TYPE_LABEL[l.type] ?? l.type

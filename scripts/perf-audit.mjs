@@ -95,10 +95,22 @@ function buildRoutes({ wangSlug, wangId, slotId }) {
     // ── platform admin ──
     { path: '/platform/dashboard', role: 'platform', label: 'platform-dashboard' },
     { path: '/platform/tenants', role: 'platform', label: 'platform-tenants' },
-    wangId && { path: `/platform/tenants/${wangId}`, role: 'platform', label: 'platform-tenant-detail' },
+    wangId && {
+      path: `/platform/tenants/${wangId}`,
+      role: 'platform',
+      label: 'platform-tenant-detail',
+    },
     { path: '/platform/bookings', role: 'platform', label: 'platform-bookings' },
-    { path: '/platform/bookings?status=pending', role: 'platform', label: 'platform-bookings-pending' },
-    { path: '/platform/bookings?status=confirmed', role: 'platform', label: 'platform-bookings-confirmed' },
+    {
+      path: '/platform/bookings?status=pending',
+      role: 'platform',
+      label: 'platform-bookings-pending',
+    },
+    {
+      path: '/platform/bookings?status=confirmed',
+      role: 'platform',
+      label: 'platform-bookings-confirmed',
+    },
   ].filter(Boolean)
 }
 
@@ -139,7 +151,10 @@ async function measure(context, route) {
       let responseEndMs = null
       const t0 = Date.now()
       page.once('response', (resp) => {
-        if (resp.url() === `${BASE}${route.path}` || resp.url().startsWith(`${BASE}${route.path}?`)) {
+        if (
+          resp.url() === `${BASE}${route.path}` ||
+          resp.url().startsWith(`${BASE}${route.path}?`)
+        ) {
           const st = resp.headers()['server-timing']
           if (st) {
             // Vercel format: "vercel;desc=...;dur=XX,..."
@@ -148,7 +163,10 @@ async function measure(context, route) {
           }
         }
       })
-      const response = await page.goto(`${BASE}${route.path}`, { waitUntil: 'load', timeout: 25_000 })
+      const response = await page.goto(`${BASE}${route.path}`, {
+        waitUntil: 'load',
+        timeout: 25_000,
+      })
       if (response) {
         const st = response.headers()['server-timing']
         if (st && serverTimingMs === null) {
@@ -251,9 +269,14 @@ async function main() {
   if (over.length) {
     log(`\n  Sorted worst first (warmServerTiming / warmResponseEnd):`)
     over
-      .sort((a, b) => (b.warmServerTiming ?? b.warmResponseEnd) - (a.warmServerTiming ?? a.warmResponseEnd))
+      .sort(
+        (a, b) =>
+          (b.warmServerTiming ?? b.warmResponseEnd) - (a.warmServerTiming ?? a.warmResponseEnd),
+      )
       .forEach((r) =>
-        log(`    ${(r.warmServerTiming ?? r.warmResponseEnd) + 'ms'}  ${r.path}  (load ${r.warmLoad}ms)`),
+        log(
+          `    ${(r.warmServerTiming ?? r.warmResponseEnd) + 'ms'}  ${r.path}  (load ${r.warmLoad}ms)`,
+        ),
       )
   }
   log(`\n  Top-10 by warmLoad (perceived):`)

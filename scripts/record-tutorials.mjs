@@ -84,7 +84,7 @@ for (const webm of webms) {
   execFileSync(
     'ffmpeg',
     ['-y', '-i', webm, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', mp4],
-    { stdio: 'inherit' }
+    { stdio: 'inherit' },
   )
 }
 

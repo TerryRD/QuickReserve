@@ -76,12 +76,7 @@ export async function GET(request: Request) {
     let filtered: typeof toTry = toTry
     const template = await fetchActiveTemplate(admin, rule.member_id, windowStart)
     if (template !== null) {
-      const events = await fetchUnavailableEvents(
-        admin,
-        rule.member_id,
-        windowStart,
-        windowEnd,
-      )
+      const events = await fetchUnavailableEvents(admin, rule.member_id, windowStart, windowEnd)
       const passed: typeof toTry = []
       for (const occ of toTry) {
         const start = new Date(occ.startAt)

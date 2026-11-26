@@ -156,7 +156,9 @@ export default function PhotoGalleryManager({ tenantId, photos }: Props) {
           />
         </label>
       )}
-      <p className="text-xs text-muted-foreground">最多 {PHOTO_LIMIT} 張、單檔 ≤ 5 MB（JPEG/PNG/WebP）。</p>
+      <p className="text-xs text-muted-foreground">
+        最多 {PHOTO_LIMIT} 張、單檔 ≤ 5 MB（JPEG/PNG/WebP）。
+      </p>
     </div>
   )
 }

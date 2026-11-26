@@ -11,8 +11,7 @@ import { StatusBadge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) =>
-  new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 type TodayBookingRow = {
   id: string
@@ -94,11 +93,7 @@ export default async function DashboardContent({
       .select('customer_id', { count: 'exact', head: true })
       .eq('tenant_id', tenantId)
       .gte('created_at', monthStart),
-    supabase
-      .from('tenants')
-      .select('description')
-      .eq('id', tenantId)
-      .maybeSingle(),
+    supabase.from('tenants').select('description').eq('id', tenantId).maybeSingle(),
   ])
 
   const pendingCount = pendingRes.count ?? 0
@@ -238,9 +233,7 @@ export default async function DashboardContent({
           {/* Pending list card */}
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
             <div className="flex items-baseline justify-between border-b border-border px-6 py-4">
-              <h2 className="font-display font-cjk text-lg font-black uppercase">
-                待確認預約
-              </h2>
+              <h2 className="font-display font-cjk text-lg font-black uppercase">待確認預約</h2>
               <span className="font-mono text-[11px] tracking-[0.1em] text-muted-foreground">
                 {pendingCount} 筆
               </span>
@@ -304,9 +297,7 @@ export default async function DashboardContent({
           {weekSlotsCount < 5 && (
             <div className="rounded-2xl bg-muted p-6">
               <Kicker>QUICK ACTIONS</Kicker>
-              <h3 className="font-display font-cjk mt-2 text-lg font-black">
-                還沒設定本週時段？
-              </h3>
+              <h3 className="font-display font-cjk mt-2 text-lg font-black">還沒設定本週時段？</h3>
               <p className="font-cjk mt-1.5 text-xs leading-relaxed text-muted-foreground">
                 用作息模板一次設定整週的時段、或用重複規則自動展開未來四週。
               </p>

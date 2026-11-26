@@ -93,7 +93,11 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
   useEffect(() => {
     if (!open) return
     if (!previewPayload.serviceId) return
-    if (previewPayload.freq === 'weekly' && (!previewPayload.byWeekday || previewPayload.byWeekday.length === 0)) return
+    if (
+      previewPayload.freq === 'weekly' &&
+      (!previewPayload.byWeekday || previewPayload.byWeekday.length === 0)
+    )
+      return
     if (previewPayload.endCondition === 'count' && !previewPayload.endCount) return
     if (previewPayload.endCondition === 'until' && !previewPayload.endUntil) return
 
@@ -397,10 +401,7 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
               <span className="text-muted-foreground">計算中…</span>
             ) : preview ? (
               <span className={previewLoading ? 'opacity-60' : ''}>
-                共{' '}
-                <strong className="font-display tabular-nums">
-                  {preview.occurrencesCount}
-                </strong>{' '}
+                共 <strong className="font-display tabular-nums">{preview.occurrencesCount}</strong>{' '}
                 個時段
                 {preview.conflictsCount > 0 && (
                   <>

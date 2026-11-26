@@ -45,9 +45,7 @@ export default async function PublicPackagesPage({
       ? { data: [] as Array<Record<string, unknown>> }
       : await supabase
           .from('service_packages')
-          .select(
-            'id, service_id, name, class_count, price, expires_in_days, is_popular',
-          )
+          .select('id, service_id, name, class_count, price, expires_in_days, is_popular')
           .in('service_id', serviceIds)
           .eq('is_active', true)
           .order('class_count', { ascending: true })
@@ -88,8 +86,7 @@ export default async function PublicPackagesPage({
           href={`/${tenantSlug}`}
           className="font-mono mb-6 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="size-3" />
-          回 {tenant.name} 主頁
+          <ArrowLeft className="size-3" />回 {tenant.name} 主頁
         </Link>
 
         <header className="mb-10 sm:mb-12">
@@ -128,10 +125,7 @@ export default async function PublicPackagesPage({
                   建立帳號
                 </Button>
               </Link>
-              <PrimaryCtaLink
-                href={`/login?redirect=${encodeURIComponent(returnPath)}`}
-                size="md"
-              >
+              <PrimaryCtaLink href={`/login?redirect=${encodeURIComponent(returnPath)}`} size="md">
                 登入
               </PrimaryCtaLink>
             </div>
@@ -151,10 +145,7 @@ export default async function PublicPackagesPage({
                 <span className="font-cjk text-xs text-muted-foreground">
                   · {g.svc.duration_minutes} 分鐘 · {g.list.length} ITEMS
                 </span>
-                <span
-                  aria-hidden
-                  className="ml-2 hidden h-px flex-1 bg-border sm:block"
-                />
+                <span aria-hidden className="ml-2 hidden h-px flex-1 bg-border sm:block" />
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:gap-5">
                 {g.list.map((p) => {
@@ -185,13 +176,8 @@ export default async function PublicPackagesPage({
                           {p.name}
                         </h3>
                         <div className="font-cjk mt-1.5 text-[13px] text-muted-foreground">
-                          <span className="font-mono mr-2 text-xs">
-                            {p.class_count} 堂
-                          </span>
-                          ·{' '}
-                          {p.expires_in_days
-                            ? `${p.expires_in_days} 天內上完`
-                            : '永久有效'}
+                          <span className="font-mono mr-2 text-xs">{p.class_count} 堂</span>·{' '}
+                          {p.expires_in_days ? `${p.expires_in_days} 天內上完` : '永久有效'}
                         </div>
                       </div>
                       <div className="flex items-baseline justify-between border-t border-dashed border-border pt-3">
@@ -227,9 +213,7 @@ export default async function PublicPackagesPage({
             <div className="font-mono mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               NO PACKAGES
             </div>
-            <p className="font-cjk mt-2 text-sm text-muted-foreground">
-              此教練尚未開放套裝
-            </p>
+            <p className="font-cjk mt-2 text-sm text-muted-foreground">此教練尚未開放套裝</p>
           </div>
         )}
 
@@ -238,9 +222,7 @@ export default async function PublicPackagesPage({
             <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
               <Plus className="size-5" />
             </div>
-            <h3 className="font-display font-cjk text-lg font-black">
-              還沒看到喜歡的方案?
-            </h3>
+            <h3 className="font-display font-cjk text-lg font-black">還沒看到喜歡的方案?</h3>
             <p className="font-cjk max-w-[380px] text-[13px] text-muted-foreground">
               可以直接私訊教練詢問客製套裝。教練建立後會出現在這個頁面。
             </p>

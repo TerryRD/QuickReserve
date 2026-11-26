@@ -38,8 +38,7 @@ export default async function CalendarPage({
 }) {
   const session = await requireTenantMember()
   const params = await searchParams
-  const initialView: View =
-    params.view === 'list' || params.view === 'month' ? params.view : 'week'
+  const initialView: View = params.view === 'list' || params.view === 'month' ? params.view : 'week'
 
   // Week anchor drives both week + list views. Month view uses its own anchor
   // but we still compute weekStart for navigation and slot-create defaults.
@@ -184,8 +183,7 @@ export default async function CalendarPage({
     const member = allMembers.find((m) => m.id === s.member_id)
     const booking = bookingsBySlot[s.id]
     const conflict = unavailableEvents.find(
-      (e) =>
-        e.memberId === s.member_id && e.startAt < s.end_at && e.endAt > s.start_at,
+      (e) => e.memberId === s.member_id && e.startAt < s.end_at && e.endAt > s.start_at,
     )
     return {
       id: s.id,
@@ -216,11 +214,7 @@ export default async function CalendarPage({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {allMembers.length > 1 && (
-            <MemberFilter
-              members={allMembers}
-              selectedIds={selectedIds}
-              week={params.week}
-            />
+            <MemberFilter members={allMembers} selectedIds={selectedIds} week={params.week} />
           )}
           {hasMemberFilter && filterSummary && (
             <Link
@@ -238,23 +232,14 @@ export default async function CalendarPage({
             </Link>
           )}
           <div className="flex items-center gap-2 text-sm">
-            <Link
-              href={navPrevHref}
-              className={buttonVariants({ variant: 'outline', size: 'sm' })}
-            >
+            <Link href={navPrevHref} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               ◄
             </Link>
             <div className="font-mono min-w-44 text-center text-sm tracking-wider">{navLabel}</div>
-            <Link
-              href={navTodayHref}
-              className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-            >
+            <Link href={navTodayHref} className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               {initialView === 'month' ? '本月' : '本週'}
             </Link>
-            <Link
-              href={navNextHref}
-              className={buttonVariants({ variant: 'outline', size: 'sm' })}
-            >
+            <Link href={navNextHref} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               ►
             </Link>
           </div>
@@ -269,10 +254,7 @@ export default async function CalendarPage({
                 管理重複規則
               </Link>
               <RecurringRuleDialog services={services ?? []} />
-              <NewSlotDialog
-                services={services ?? []}
-                weekStart={weekStart.toISOString()}
-              />
+              <NewSlotDialog services={services ?? []} weekStart={weekStart.toISOString()} />
             </>
           )}
           {!viewingSelfOnly && (

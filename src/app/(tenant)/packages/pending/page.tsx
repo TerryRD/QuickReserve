@@ -53,9 +53,7 @@ export default async function PendingPurchasesPage() {
     const d = new Date(p.created_at)
     return !acc || d < acc ? d : acc
   }, null)
-  const oldestDays = oldest
-    ? Math.floor((Date.now() - oldest.getTime()) / 86400000)
-    : 0
+  const oldestDays = oldest ? Math.floor((Date.now() - oldest.getTime()) / 86400000) : 0
 
   return (
     <div className="space-y-6">

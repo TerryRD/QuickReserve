@@ -139,9 +139,7 @@ export async function notifyGroupAutoConfirm(slotId: string): Promise<void> {
     const admin = createSupabaseAdminClient()
     const { data: bookings } = await admin
       .from('bookings')
-      .select(
-        'id, customer_id, services(name), availability_slots(start_at), tenants(name)',
-      )
+      .select('id, customer_id, services(name), availability_slots(start_at), tenants(name)')
       .eq('slot_id', slotId)
       .eq('status', 'confirmed')
     if (!bookings) return
@@ -178,9 +176,9 @@ export async function notifyGroupAutoCancel(
 ): Promise<void> {
   try {
     const admin = createSupabaseAdminClient()
-    const startLabel = new Date(
-      new Date(slotStartAt).getTime() + 8 * 3600 * 1000,
-    ).toLocaleString('zh-TW')
+    const startLabel = new Date(new Date(slotStartAt).getTime() + 8 * 3600 * 1000).toLocaleString(
+      'zh-TW',
+    )
     // Customer notification
     await pushToUser(admin, {
       userId: customerId,

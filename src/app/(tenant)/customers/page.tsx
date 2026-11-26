@@ -15,8 +15,7 @@ import CustomerRow, {
 import type { StatusType } from '@/components/ui/badge'
 
 const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) =>
-  new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 type StatusFilter = 'all' | 'active' | 'blocked'
 
@@ -42,24 +41,19 @@ export default async function CustomersPage({
   const supabase = await createSupabaseServerClient()
   const { q: rawQ, status: rawStatus } = await searchParams
   const q = (rawQ ?? '').trim()
-  const status: StatusFilter =
-    rawStatus === 'active' || rawStatus === 'blocked' ? rawStatus : 'all'
+  const status: StatusFilter = rawStatus === 'active' || rawStatus === 'blocked' ? rawStatus : 'all'
 
   // 1) Tenant customers + nested customer profile
   const { data: customerRows } = await supabase
     .from('tenant_customers')
-    .select(
-      'customer_id, is_blocked, created_at, customers(id, display_name, phone)',
-    )
+    .select('customer_id, is_blocked, created_at, customers(id, display_name, phone)')
     .eq('tenant_id', session.tenantId)
     .order('created_at', { ascending: false })
 
   // 2) Bookings (single tenant-wide fetch, group in JS)
   const { data: bookings } = await supabase
     .from('bookings')
-    .select(
-      'id, customer_id, status, created_at, services(name), availability_slots(start_at)',
-    )
+    .select('id, customer_id, status, created_at, services(name), availability_slots(start_at)')
     .eq('tenant_id', session.tenantId)
     .order('created_at', { ascending: false })
 
@@ -135,9 +129,7 @@ export default async function CustomersPage({
         const ts = b.availability_slots?.start_at ?? b.created_at
         if (ts && (!lastSeenIso || ts > lastSeenIso)) lastSeenIso = ts
       }
-      const lastSeenLabel = lastSeenIso
-        ? format(toLocal(lastSeenIso), 'MM/dd')
-        : null
+      const lastSeenLabel = lastSeenIso ? format(toLocal(lastSeenIso), 'MM/dd') : null
 
       const rowData: CustomerRowData = {
         customerId: c.id,
@@ -156,34 +148,30 @@ export default async function CustomersPage({
         if (aTs === bTs) return 0
         return aTs < bTs ? 1 : -1
       })
-      const drawerBookings: DrawerBooking[] = sortedBookings
-        .slice(0, 10)
-        .map((b) => {
-          const startIso = b.availability_slots?.start_at ?? null
-          const startAtLabel = startIso
-            ? format(toLocal(startIso), 'MM/dd HH:mm')
-            : format(toLocal(b.created_at), 'MM/dd HH:mm')
-          const bookingStatus = (
-            ALLOWED_BOOKING_STATUSES.has(b.status as StatusType)
-              ? (b.status as StatusType)
-              : 'pending'
-          ) as StatusType
-          return {
-            id: b.id,
-            serviceName: b.services?.name ?? '—',
-            startAtLabel,
-            status: bookingStatus,
-          }
-        })
+      const drawerBookings: DrawerBooking[] = sortedBookings.slice(0, 10).map((b) => {
+        const startIso = b.availability_slots?.start_at ?? null
+        const startAtLabel = startIso
+          ? format(toLocal(startIso), 'MM/dd HH:mm')
+          : format(toLocal(b.created_at), 'MM/dd HH:mm')
+        const bookingStatus = (
+          ALLOWED_BOOKING_STATUSES.has(b.status as StatusType)
+            ? (b.status as StatusType)
+            : 'pending'
+        ) as StatusType
+        return {
+          id: b.id,
+          serviceName: b.services?.name ?? '—',
+          startAtLabel,
+          status: bookingStatus,
+        }
+      })
 
       const drawerPackages: DrawerPackage[] = custPurchases
         .map((p) => {
           const total = p.classes_total ?? 0
           const used = p.classes_used ?? 0
           const remaining = Math.max(0, total - used)
-          const expiresLabel = p.expires_at
-            ? format(toLocal(p.expires_at), 'yyyy-MM-dd')
-            : '無期限'
+          const expiresLabel = p.expires_at ? format(toLocal(p.expires_at), 'yyyy-MM-dd') : '無期限'
           const pkgName =
             p.service_packages?.name ??
             (p.services?.name ? `${p.services.name} · ${total} 堂` : '套裝')
@@ -204,22 +192,14 @@ export default async function CustomersPage({
 
       return { row: rowData, drawer: drawerData }
     })
-    .filter((x): x is { row: CustomerRowData; drawer: CustomerDrawerData } =>
-      Boolean(x),
-    )
+    .filter((x): x is { row: CustomerRowData; drawer: CustomerDrawerData } => Boolean(x))
 
   // Apply search + status filter
   const filtered = enriched.filter(({ row }) => {
     const matchQ =
-      !q ||
-      row.displayName.toLowerCase().includes(q.toLowerCase()) ||
-      (row.phone ?? '').includes(q)
+      !q || row.displayName.toLowerCase().includes(q.toLowerCase()) || (row.phone ?? '').includes(q)
     const matchStatus =
-      status === 'all'
-        ? true
-        : status === 'blocked'
-          ? row.isBlocked
-          : !row.isBlocked
+      status === 'all' ? true : status === 'blocked' ? row.isBlocked : !row.isBlocked
     return matchQ && matchStatus
   })
 
@@ -253,9 +233,7 @@ export default async function CustomersPage({
             className="font-cjk h-11 w-full rounded-full border-[1.5px] border-border bg-card pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none focus:ring-3 focus:ring-ring/40"
           />
         </div>
-        {status !== 'all' && (
-          <input type="hidden" name="status" value={status} />
-        )}
+        {status !== 'all' && <input type="hidden" name="status" value={status} />}
         <button
           type="submit"
           className="font-mono rounded-full bg-primary px-4 py-2 text-[11px] uppercase tracking-[0.15em] text-primary-foreground transition hover:opacity-90"

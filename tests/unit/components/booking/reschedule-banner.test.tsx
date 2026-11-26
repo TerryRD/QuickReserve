@@ -17,13 +17,7 @@ describe('RescheduleBanner', () => {
   })
 
   it('renders exit link to exitHref', () => {
-    render(
-      <RescheduleBanner
-        originalSlotLabel="x"
-        serviceName="y"
-        exitHref="/coach-foo"
-      />,
-    )
+    render(<RescheduleBanner originalSlotLabel="x" serviceName="y" exitHref="/coach-foo" />)
     const link = screen.getByRole('link', { name: /退出改期/ })
     expect(link).toHaveAttribute('href', '/coach-foo')
   })

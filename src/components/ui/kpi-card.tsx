@@ -34,15 +34,9 @@ export function KpiCard({
       </div>
       <div className="mt-3 flex items-baseline gap-1.5">
         <span className="font-display text-4xl leading-none">{value}</span>
-        {unit && (
-          <span className="font-cjk text-sm text-muted-foreground">{unit}</span>
-        )}
+        {unit && <span className="font-cjk text-sm text-muted-foreground">{unit}</span>}
       </div>
-      {hint && (
-        <div className="font-cjk mt-2 text-xs text-muted-foreground">
-          {hint}
-        </div>
-      )}
+      {hint && <div className="font-cjk mt-2 text-xs text-muted-foreground">{hint}</div>}
     </div>
   )
 }

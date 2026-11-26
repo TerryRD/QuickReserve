@@ -24,12 +24,7 @@ export const createSlotAction = actionClient
     const supabase = await createSupabaseServerClient()
     const startAt = new Date(parsedInput.startAt)
     const endAt = new Date(parsedInput.endAt)
-    const inRange = await validateInEffectiveRange(
-      supabase,
-      session.memberId,
-      startAt,
-      endAt,
-    )
+    const inRange = await validateInEffectiveRange(supabase, session.memberId, startAt, endAt)
     if (!inRange) {
       throw new AppError(
         'OUT_OF_AVAILABILITY',

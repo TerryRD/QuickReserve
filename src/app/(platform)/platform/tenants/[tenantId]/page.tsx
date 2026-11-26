@@ -2,21 +2,13 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
-import {
-  ArrowLeft,
-  Calendar,
-  ClipboardList,
-  ExternalLink,
-  Package,
-  Users,
-} from 'lucide-react'
+import { ArrowLeft, Calendar, ClipboardList, ExternalLink, Package, Users } from 'lucide-react'
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
 
 const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) =>
-  new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 export default async function PlatformTenantDetailPage({
   params,
@@ -121,15 +113,9 @@ async function StatsBlock({ tenantId }: { tenantId: string }) {
     { count: pendingCount },
     { count: slotCount },
   ] = await Promise.all([
-    admin
-      .from('tenant_members')
-      .select('id')
-      .eq('tenant_id', tenantId),
+    admin.from('tenant_members').select('id').eq('tenant_id', tenantId),
     admin.from('services').select('id').eq('tenant_id', tenantId),
-    admin
-      .from('bookings')
-      .select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId),
+    admin.from('bookings').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
     admin
       .from('bookings')
       .select('id', { count: 'exact', head: true })
@@ -169,9 +155,7 @@ async function MembersBlock({ tenantId }: { tenantId: string }) {
         {(members ?? []).map((m) => (
           <div key={m.id} className="flex items-center justify-between p-4 text-sm">
             <div>
-              <div className="font-medium">
-                {m.invited_email ?? (m.user_id ? '已加入' : '?')}
-              </div>
+              <div className="font-medium">{m.invited_email ?? (m.user_id ? '已加入' : '?')}</div>
               <div className="text-xs text-muted-foreground">
                 {m.role === 'owner' ? 'Owner' : 'Staff'} · {m.status}
               </div>
@@ -210,9 +194,7 @@ async function ServicesBlock({ tenantId }: { tenantId: string }) {
             </div>
             <span
               className={`rounded-full px-2 py-0.5 text-[10px] ${
-                s.is_active
-                  ? 'bg-emerald-100 text-emerald-800'
-                  : 'bg-slate-100 text-slate-600'
+                s.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
               }`}
             >
               {s.is_active ? '啟用' : '停用'}
@@ -293,9 +275,7 @@ async function CustomersBlock({ tenantId }: { tenantId: string }) {
               </span>
             )
           })}
-          {!customers?.length && (
-            <span className="text-muted-foreground">無學員</span>
-          )}
+          {!customers?.length && <span className="text-muted-foreground">無學員</span>}
         </div>
       </CardContent>
     </Card>

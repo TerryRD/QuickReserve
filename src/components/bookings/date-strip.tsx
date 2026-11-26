@@ -21,10 +21,7 @@ export function DateStrip({
   const { cn: label, eng } = LABELS[groupKey]
   return (
     <div
-      className={cn(
-        'flex items-baseline justify-between border-b border-border pb-2',
-        className,
-      )}
+      className={cn('flex items-baseline justify-between border-b border-border pb-2', className)}
     >
       <div className="flex items-baseline gap-3">
         <span className="font-display font-cjk text-xl font-black uppercase">{label}</span>
@@ -32,9 +29,7 @@ export function DateStrip({
           {eng}
         </span>
       </div>
-      <span className="font-mono text-[11px] tracking-[0.12em] text-muted-foreground">
-        {count}
-      </span>
+      <span className="font-mono text-[11px] tracking-[0.12em] text-muted-foreground">{count}</span>
     </div>
   )
 }

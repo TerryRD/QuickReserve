@@ -2,12 +2,7 @@
 
 import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Badge, StatusBadge, type StatusType } from '@/components/ui/badge'
 import { Kicker } from '@/components/ui/kicker'
 import BlockButton from './block-button'
@@ -65,9 +60,7 @@ export default function CustomerRow({
       >
         <div
           className={`grid size-10 shrink-0 place-items-center rounded-full font-display text-base font-black sm:size-11 ${
-            row.isBlocked
-              ? 'bg-muted text-muted-foreground'
-              : 'bg-secondary text-foreground'
+            row.isBlocked ? 'bg-muted text-muted-foreground' : 'bg-secondary text-foreground'
           }`}
         >
           {initial}
@@ -90,9 +83,7 @@ export default function CustomerRow({
         </div>
 
         <div className="hidden text-right sm:block min-w-[60px]">
-          <div className="font-display text-lg leading-none tabular-nums">
-            {row.totalBookings}
-          </div>
+          <div className="font-display text-lg leading-none tabular-nums">{row.totalBookings}</div>
           <div className="font-mono mt-1 text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
             BOOKINGS
           </div>
@@ -102,16 +93,12 @@ export default function CustomerRow({
           <div className="flex items-baseline justify-end gap-0.5">
             <span
               className={`font-display text-lg leading-none tabular-nums ${
-                row.remainingClasses > 0
-                  ? 'text-foreground'
-                  : 'text-muted-foreground'
+                row.remainingClasses > 0 ? 'text-foreground' : 'text-muted-foreground'
               }`}
             >
               {row.remainingClasses}
             </span>
-            <span className="font-cjk text-[11px] text-muted-foreground">
-              堂
-            </span>
+            <span className="font-cjk text-[11px] text-muted-foreground">堂</span>
           </div>
           <div className="font-mono mt-1 text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
             BALANCE
@@ -119,18 +106,14 @@ export default function CustomerRow({
         </div>
 
         <div className="hidden text-right lg:block min-w-[88px]">
-          <div className="font-mono text-xs tabular-nums">
-            {row.lastSeenLabel ?? '—'}
-          </div>
+          <div className="font-mono text-xs tabular-nums">{row.lastSeenLabel ?? '—'}</div>
           <div className="font-mono mt-1 text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
             LAST SEEN
           </div>
         </div>
 
         <div className="flex flex-col items-end gap-1 text-right sm:hidden">
-          <span className="font-display text-base leading-none">
-            {row.totalBookings}
-          </span>
+          <span className="font-display text-base leading-none">{row.totalBookings}</span>
           <span className="font-mono text-[10px] text-muted-foreground">
             {row.remainingClasses} 堂
           </span>
@@ -139,18 +122,13 @@ export default function CustomerRow({
         <ChevronRight className="size-3.5 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground" />
       </button>
 
-      <SheetContent
-        side="right"
-        className="w-full overflow-y-auto sm:max-w-md"
-      >
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader className="border-b border-border">
           <Kicker>CUSTOMER · 學員資訊</Kicker>
           <SheetTitle className="font-display font-cjk mt-1 text-2xl font-black">
             {row.displayName}
           </SheetTitle>
-          <div className="font-mono mt-1 text-xs text-muted-foreground">
-            {row.phone ?? '—'}
-          </div>
+          <div className="font-mono mt-1 text-xs text-muted-foreground">{row.phone ?? '—'}</div>
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge variant="outline">{row.totalBookings} 次預約</Badge>
             <Badge variant="outline">{row.remainingClasses} 堂可用</Badge>
@@ -169,35 +147,22 @@ export default function CustomerRow({
               drawer.packages.map((p) => {
                 const pct =
                   p.total > 0
-                    ? Math.max(
-                        0,
-                        Math.min(100, Math.round((p.remaining / p.total) * 100)),
-                      )
+                    ? Math.max(0, Math.min(100, Math.round((p.remaining / p.total) * 100)))
                     : 0
                 return (
-                  <div
-                    key={p.id}
-                    className="rounded-xl border border-border bg-card p-3"
-                  >
+                  <div key={p.id} className="rounded-xl border border-border bg-card p-3">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-cjk truncate text-sm font-semibold">
-                        {p.name}
-                      </span>
+                      <span className="font-cjk truncate text-sm font-semibold">{p.name}</span>
                       <span className="font-display text-lg tabular-nums">
                         {p.remaining}
-                        <span className="font-mono text-xs text-muted-foreground">
-                          /{p.total}
-                        </span>
+                        <span className="font-mono text-xs text-muted-foreground">/{p.total}</span>
                       </span>
                     </div>
                     <div className="font-mono mt-1 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
                       EXP · {p.expiresLabel}
                     </div>
                     <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full bg-foreground"
-                        style={{ width: `${pct}%` }}
-                      />
+                      <div className="h-full bg-foreground" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 )
@@ -218,9 +183,7 @@ export default function CustomerRow({
                   className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3"
                 >
                   <div className="min-w-0">
-                    <div className="font-mono text-xs tabular-nums">
-                      {b.startAtLabel ?? '—'}
-                    </div>
+                    <div className="font-mono text-xs tabular-nums">{b.startAtLabel ?? '—'}</div>
                     <div className="font-cjk mt-0.5 truncate text-xs text-muted-foreground">
                       {b.serviceName}
                     </div>
@@ -234,10 +197,7 @@ export default function CustomerRow({
           <section className="space-y-2 border-t border-border pt-4">
             <Kicker>ACTIONS · 操作</Kicker>
             <div className="flex justify-start">
-              <BlockButton
-                customerId={row.customerId}
-                isBlocked={row.isBlocked}
-              />
+              <BlockButton customerId={row.customerId} isBlocked={row.isBlocked} />
             </div>
           </section>
         </div>

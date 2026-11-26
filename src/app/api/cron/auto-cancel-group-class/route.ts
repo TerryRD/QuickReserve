@@ -15,9 +15,7 @@ export async function GET(request: Request) {
 
   const { data: slots, error } = await admin
     .from('availability_slots')
-    .select(
-      'id, service_id, start_at, status, services(min_attendance, cancel_deadline_hours)',
-    )
+    .select('id, service_id, start_at, status, services(min_attendance, cancel_deadline_hours)')
     .gte('start_at', now.toISOString())
     .lt('start_at', horizonEnd.toISOString())
     .neq('status', 'cancelled')
@@ -32,8 +30,7 @@ export async function GET(request: Request) {
     if (svc.min_attendance <= 1) continue // 1-on-1, no auto-cancel logic
     evaluated++
 
-    const hoursToStart =
-      (new Date(slot.start_at).getTime() - now.getTime()) / 3600000
+    const hoursToStart = (new Date(slot.start_at).getTime() - now.getTime()) / 3600000
     if (hoursToStart > svc.cancel_deadline_hours) continue
 
     const { count } = await admin
@@ -61,12 +58,14 @@ export async function GET(request: Request) {
       service_name: string
       slot_start_at: string
     }>) {
-      pending.push(notifyGroupAutoCancel(
-        row.affected_customer_id,
-        row.affected_member_user_id,
-        row.service_name,
-        row.slot_start_at,
-      ))
+      pending.push(
+        notifyGroupAutoCancel(
+          row.affected_customer_id,
+          row.affected_member_user_id,
+          row.service_name,
+          row.slot_start_at,
+        ),
+      )
     }
   }
 

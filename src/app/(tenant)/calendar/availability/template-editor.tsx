@@ -117,7 +117,10 @@ export default function TemplateEditor(props: Props) {
                   .map((w, idx) => ({ ...w, idx }))
                   .filter((w) => w.weekday === wd)
                 return (
-                  <div key={wd} className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-2">
+                  <div
+                    key={wd}
+                    className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-2"
+                  >
                     <div className="w-12 text-sm font-medium">{WEEKDAY_LABELS[wd]}</div>
                     <div className="flex flex-1 flex-wrap items-center gap-2">
                       {dayWindows.length === 0 ? (
@@ -131,9 +134,7 @@ export default function TemplateEditor(props: Props) {
                             <Input
                               type="time"
                               value={w.start_time.slice(0, 5)}
-                              onChange={(e) =>
-                                updateWindow(w.idx, 'start_time', e.target.value)
-                              }
+                              onChange={(e) => updateWindow(w.idx, 'start_time', e.target.value)}
                               className="h-7 w-24"
                             />
                             <span>–</span>
@@ -169,8 +170,6 @@ export default function TemplateEditor(props: Props) {
               })}
             </div>
           </div>
-
-
         </div>
 
         <DialogFooter>
@@ -188,7 +187,14 @@ export default function TemplateEditor(props: Props) {
   if (isNew) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger render={<Button variant="outline"><Plus className="mr-1 h-3.5 w-3.5" />新增模板</Button>} />
+        <DialogTrigger
+          render={
+            <Button variant="outline">
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              新增模板
+            </Button>
+          }
+        />
         <DialogContent className="max-w-2xl">{renderEditor()}</DialogContent>
       </Dialog>
     )
@@ -226,7 +232,14 @@ export default function TemplateEditor(props: Props) {
             </Button>
           )}
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger render={<Button variant="outline" size="sm"><Pencil className="mr-1 h-3.5 w-3.5" />編輯</Button>} />
+            <DialogTrigger
+              render={
+                <Button variant="outline" size="sm">
+                  <Pencil className="mr-1 h-3.5 w-3.5" />
+                  編輯
+                </Button>
+              }
+            />
             <DialogContent className="max-w-2xl">{renderEditor()}</DialogContent>
           </Dialog>
           <ConfirmDialog

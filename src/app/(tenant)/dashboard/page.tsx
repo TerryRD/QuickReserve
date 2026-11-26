@@ -12,8 +12,7 @@ export default async function TenantDashboard() {
   const tenant = await getTenantContext(session.tenantId)
 
   const now = new Date()
-  const greeting =
-    now.getHours() < 12 ? '早安' : now.getHours() < 18 ? '午安' : '晚安'
+  const greeting = now.getHours() < 12 ? '早安' : now.getHours() < 18 ? '午安' : '晚安'
 
   return (
     <div className="space-y-6">
@@ -31,10 +30,7 @@ export default async function TenantDashboard() {
             <span className="font-cjk">
               {greeting}、{tenant.name}
             </span>
-            <span
-              aria-hidden
-              className="inline-block size-3 rounded-full bg-accent sm:size-3.5"
-            />
+            <span aria-hidden className="inline-block size-3 rounded-full bg-accent sm:size-3.5" />
           </h1>
           <p className="font-cjk mt-3.5 max-w-[540px] text-sm opacity-75 sm:text-base">
             今日預約、本週時段與待確認概況都在下方。

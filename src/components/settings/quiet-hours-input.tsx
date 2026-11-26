@@ -21,9 +21,7 @@ export function QuietHoursInput({
           checked={enabled}
           onChange={(e) =>
             onChange(
-              e.target.checked
-                ? { start: '22:00', end: '07:00' }
-                : { start: null, end: null },
+              e.target.checked ? { start: '22:00', end: '07:00' } : { start: null, end: null },
             )
           }
           className="size-4 accent-foreground"

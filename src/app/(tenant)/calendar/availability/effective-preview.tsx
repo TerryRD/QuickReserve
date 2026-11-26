@@ -1,10 +1,7 @@
 import { addDays, format, startOfDay } from 'date-fns'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import {
-  fetchActiveTemplate,
-  fetchUnavailableEvents,
-} from '@/lib/availability-server'
+import { fetchActiveTemplate, fetchUnavailableEvents } from '@/lib/availability-server'
 import { effectiveAvailability } from '@/lib/availability'
 
 const TZ_OFFSET_HOURS = 8

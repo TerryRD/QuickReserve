@@ -34,7 +34,7 @@ async function injectBanner(page: Page, title: string, desc: string) {
         `<div style="font-size:20px;font-weight:700;letter-spacing:.5px">${title}</div>` +
         (desc ? `<div style="font-size:14px;opacity:.85;margin-top:3px">${desc}</div>` : '')
     },
-    { id: BANNER_ID, title, desc }
+    { id: BANNER_ID, title, desc },
   )
 }
 

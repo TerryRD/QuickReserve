@@ -58,25 +58,16 @@ function Button({
   withArrow,
   children,
   ...props
-}: ButtonPrimitive.Props &
-  VariantProps<typeof buttonVariants> &
-  ButtonExtraProps) {
+}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants> & ButtonExtraProps) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(
-        buttonVariants({ variant, size, className }),
-        fullWidth && 'w-full',
-      )}
+      className={cn(buttonVariants({ variant, size, className }), fullWidth && 'w-full')}
       {...props}
     >
       {children}
       {withArrow === 'inline' && (
-        <ArrowRight
-          data-testid="btn-arrow-inline"
-          className="ml-0.5 size-[14px]"
-          aria-hidden
-        />
+        <ArrowRight data-testid="btn-arrow-inline" className="ml-0.5 size-[14px]" aria-hidden />
       )}
       {withArrow === 'circle' && (
         <span

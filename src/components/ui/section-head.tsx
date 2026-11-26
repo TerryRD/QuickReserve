@@ -12,12 +12,7 @@ type Props = {
 
 export function SectionHead({ kicker, title, eng, hint, right, className }: Props) {
   return (
-    <div
-      className={cn(
-        'mb-6 flex flex-wrap items-end justify-between gap-4',
-        className,
-      )}
-    >
+    <div className={cn('mb-6 flex flex-wrap items-end justify-between gap-4', className)}>
       <div>
         {kicker && (
           <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -38,11 +33,7 @@ export function SectionHead({ kicker, title, eng, hint, right, className }: Prop
             )}
           </h2>
         )}
-        {hint && (
-          <div className="font-cjk mt-3 text-[13px] text-muted-foreground">
-            {hint}
-          </div>
-        )}
+        {hint && <div className="font-cjk mt-3 text-[13px] text-muted-foreground">{hint}</div>}
       </div>
       {right}
     </div>

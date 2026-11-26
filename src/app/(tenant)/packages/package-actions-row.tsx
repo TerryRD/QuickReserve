@@ -7,13 +7,7 @@ import { Button } from '@/components/ui/button'
 import ConfirmDialog from '@/components/confirm-dialog'
 import { softDeletePackageAction, restorePackageAction } from './actions'
 
-export default function PackageActionsRow({
-  id,
-  isActive,
-}: {
-  id: string
-  isActive: boolean
-}) {
+export default function PackageActionsRow({ id, isActive }: { id: string; isActive: boolean }) {
   const del = useAction(softDeletePackageAction, {
     onSuccess: () => toast.success('已刪除'),
     onError: ({ error }) => toast.error(error.serverError?.message ?? '刪除失敗'),

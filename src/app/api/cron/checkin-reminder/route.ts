@@ -136,7 +136,10 @@ export async function GET(request: Request) {
   const noShowIds = (endedRows ?? []).map((r) => r.id)
   let noShowMarked = 0
   if (noShowIds.length > 0) {
-    const { error: nsErr } = await admin.from('bookings').update({ status: 'no_show' }).in('id', noShowIds)
+    const { error: nsErr } = await admin
+      .from('bookings')
+      .update({ status: 'no_show' })
+      .in('id', noShowIds)
     if (!nsErr) noShowMarked = noShowIds.length
   }
 

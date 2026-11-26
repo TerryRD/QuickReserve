@@ -43,24 +43,26 @@ async function fetchSlots(tenantId: string, serviceId: string, date: string) {
     .order('start_at')
   if (error) throw new Error(error.message)
 
-  return (data ?? [])
-    .map((s) => {
-      const svc = s.services as ServiceRel
-      const bookings = (s.bookings as BookingRel[] | null) ?? []
-      const current = bookings.filter((b) => b.status !== 'cancelled').length
-      const max = readMaxCapacity(svc)
-      return {
-        id: s.id,
-        start_at: s.start_at,
-        end_at: s.end_at,
-        max_capacity: max,
-        current_bookings: current,
-      }
-    })
-    // Defensive: book_with_purchase now flips status to 'booked' at full so
-    // the .in() above already excludes these, but a race between cancel and
-    // re-fetch can briefly let a full row through. Filter anyway.
-    .filter((s) => s.current_bookings < s.max_capacity)
+  return (
+    (data ?? [])
+      .map((s) => {
+        const svc = s.services as ServiceRel
+        const bookings = (s.bookings as BookingRel[] | null) ?? []
+        const current = bookings.filter((b) => b.status !== 'cancelled').length
+        const max = readMaxCapacity(svc)
+        return {
+          id: s.id,
+          start_at: s.start_at,
+          end_at: s.end_at,
+          max_capacity: max,
+          current_bookings: current,
+        }
+      })
+      // Defensive: book_with_purchase now flips status to 'booked' at full so
+      // the .in() above already excludes these, but a race between cancel and
+      // re-fetch can briefly let a full row through. Filter anyway.
+      .filter((s) => s.current_bookings < s.max_capacity)
+  )
 }
 
 export async function GET(request: Request) {
@@ -92,9 +94,6 @@ export async function GET(request: Request) {
       },
     )
   } catch (err) {
-    return Response.json(
-      { error: err instanceof Error ? err.message : 'unknown' },
-      { status: 500 },
-    )
+    return Response.json({ error: err instanceof Error ? err.message : 'unknown' }, { status: 500 })
   }
 }

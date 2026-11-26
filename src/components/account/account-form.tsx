@@ -6,11 +6,7 @@ import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import {
-  updateDisplayNameAction,
-  updatePasswordAction,
-  updateEmailAction,
-} from './actions'
+import { updateDisplayNameAction, updatePasswordAction, updateEmailAction } from './actions'
 
 const inputClass = 'font-cjk h-11 rounded-xl border-2 border-border bg-background px-4 text-sm'
 

@@ -4,8 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import UnavailableEventDialog, { DeleteEventButton } from './unavailable-event-dialog'
 
 const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) =>
-  new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 export default async function EventsSection() {
   const session = await requireTenantMember()

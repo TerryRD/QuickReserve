@@ -12,10 +12,15 @@ import { canCheckIn } from '@/lib/checkin-window'
 import { isWithinCancelDeadline } from '@/lib/cancel-deadline'
 
 const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) =>
-  new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
-const STATUS_TYPES: ReadonlyArray<StatusType> = ['pending', 'confirmed', 'cancelled', 'completed', 'no_show']
+const STATUS_TYPES: ReadonlyArray<StatusType> = [
+  'pending',
+  'confirmed',
+  'cancelled',
+  'completed',
+  'no_show',
+]
 function asStatus(s: string): StatusType {
   return (STATUS_TYPES as readonly string[]).includes(s) ? (s as StatusType) : 'pending'
 }
@@ -49,11 +54,11 @@ function groupKey(slotStart: string | undefined, status: string, now: Date): str
 const GROUP_ORDER = ['今日', '本週', '之後', '已過', '其他']
 
 const groupKeyMap: Record<string, DateStripGroup> = {
-  '今日': 'today',
-  '本週': 'thisWeek',
-  '之後': 'later',
-  '已過': 'past',
-  '其他': 'past',
+  今日: 'today',
+  本週: 'thisWeek',
+  之後: 'later',
+  已過: 'past',
+  其他: 'past',
 }
 
 function BookingCard({ b }: { b: BookingRow }) {
@@ -112,9 +117,7 @@ function BookingCard({ b }: { b: BookingRow }) {
           <div className="min-w-0 flex-1">
             <div className="font-mono mb-1 text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground">
               {tenant?.name ?? '—'}
-              {service?.duration_minutes != null && (
-                <> · {service.duration_minutes} MIN</>
-              )}
+              {service?.duration_minutes != null && <> · {service.duration_minutes} MIN</>}
             </div>
             <h3 className="font-display font-cjk text-lg font-black leading-tight sm:text-[22px]">
               {service?.name ?? '—'}
@@ -140,9 +143,7 @@ function BookingCard({ b }: { b: BookingRow }) {
                 variant="secondary"
                 size="sm"
                 render={
-                  <Link
-                    href={`/${tenant.slug}?service=${b.service_id}&reschedule=${b.id}`}
-                  />
+                  <Link href={`/${tenant.slug}?service=${b.service_id}&reschedule=${b.id}`} />
                 }
               >
                 <Calendar className="size-3" /> 改期
@@ -196,12 +197,7 @@ function BookingCard({ b }: { b: BookingRow }) {
 export default async function MyBookingsContent({ userId }: { userId: string }) {
   const supabase = await createSupabaseServerClient()
 
-  const [
-    bookingsRes,
-    pendingCountRes,
-    completedCountRes,
-    cancelledCountRes,
-  ] = await Promise.all([
+  const [bookingsRes, pendingCountRes, completedCountRes, cancelledCountRes] = await Promise.all([
     supabase
       .from('bookings')
       .select(

@@ -12,7 +12,10 @@ export default function AuthCta({ returnPath }: { returnPath: string }) {
         <Link href={`/login?redirect=${enc}`} className={cn(buttonVariants({ size: 'sm' }))}>
           登入
         </Link>
-        <Link href={`/signup?redirect=${enc}`} className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+        <Link
+          href={`/signup?redirect=${enc}`}
+          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+        >
           註冊
         </Link>
       </div>

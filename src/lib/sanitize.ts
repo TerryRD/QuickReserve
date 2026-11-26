@@ -4,12 +4,21 @@ export function sanitizeBioHtml(input: string): string {
   if (!input) return ''
   return sanitizeHtml(input, {
     allowedTags: [
-      'p', 'br',
-      'h1', 'h2', 'h3',
-      'strong', 'em', 'u', 's',
-      'ul', 'ol', 'li',
+      'p',
+      'br',
+      'h1',
+      'h2',
+      'h3',
+      'strong',
+      'em',
+      'u',
+      's',
+      'ul',
+      'ol',
+      'li',
       'a',
-      'blockquote', 'code',
+      'blockquote',
+      'code',
     ],
     allowedAttributes: {
       a: ['href', 'rel', 'target'],
