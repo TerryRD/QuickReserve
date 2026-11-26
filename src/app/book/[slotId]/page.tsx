@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/get-session'
 import { findActivePurchaseForBooking } from '@/lib/purchases-server'
 import { isActivePurchase, type CustomerPurchase } from '@/lib/purchases'
+import { isSlotBookable } from '@/lib/public-slots'
 import { SectionHead } from '@/components/ui/section-head'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -17,6 +18,47 @@ const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HO
 
 type ActivePurchaseRow = CustomerPurchase & {
   service_packages: { name: string } | null
+}
+
+const UNAVAILABLE_NOTICE = {
+  title: '時段已不可預約',
+  hint: '該時段可能已被其他學員預約或取消。',
+}
+
+const LOAD_FAILED_NOTICE = {
+  title: '目前無法取得時段資料',
+  hint: '請稍後再試。',
+}
+
+/** 不能進入預約表單時的提示卡片（時段已不可預約、讀不到時段資料共用同一個版型） */
+function SlotNotice({
+  title,
+  hint,
+  tenantSlug,
+}: {
+  title: string
+  hint: string
+  tenantSlug: string | null
+}) {
+  return (
+    <main className="grid min-h-screen place-items-center bg-background p-6">
+      <div className="max-w-md rounded-2xl border border-border bg-card p-10 text-center">
+        <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          UNAVAILABLE
+        </div>
+        <h2 className="font-display mt-4 text-2xl uppercase">{title}</h2>
+        <p className="font-cjk mt-2 text-sm text-muted-foreground">{hint}</p>
+        {tenantSlug && (
+          <Link
+            href={`/${tenantSlug}`}
+            className="font-mono mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs uppercase tracking-wider hover:bg-muted"
+          >
+            <ArrowLeft className="size-3" /> 回教練頁
+          </Link>
+        )}
+      </div>
+    </main>
+  )
 }
 
 export default async function BookConfirmPage({
@@ -33,35 +75,31 @@ export default async function BookConfirmPage({
   const { data: slot } = await supabase
     .from('availability_slots')
     .select(
-      'id, start_at, end_at, status, service_id, tenants(name, slug), services(name, duration_minutes, price, cancel_deadline_hours)',
+      'id, start_at, end_at, status, service_id, tenants(name, slug), services(name, duration_minutes, price, cancel_deadline_hours, max_capacity)',
     )
     .eq('id', slotId)
     .maybeSingle()
   if (!slot) notFound()
 
-  if (slot.status !== 'available') {
-    const tenant = slot.tenants as { slug: string } | null
-    return (
-      <main className="grid min-h-screen place-items-center bg-background p-6">
-        <div className="max-w-md rounded-2xl border border-border bg-card p-10 text-center">
-          <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            UNAVAILABLE
-          </div>
-          <h2 className="font-display mt-4 text-2xl uppercase">時段已不可預約</h2>
-          <p className="font-cjk mt-2 text-sm text-muted-foreground">
-            該時段可能已被其他學員預約或取消。
-          </p>
-          {tenant && (
-            <Link
-              href={`/${tenant.slug}`}
-              className="font-mono mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs uppercase tracking-wider hover:bg-muted"
-            >
-              <ArrowLeft className="size-3" /> 回教練頁
-            </Link>
-          )}
-        </div>
-      </main>
-    )
+  const slotTenant = slot.tenants as { slug: string } | null
+  const slotTenantSlug = slotTenant?.slug ?? null
+
+  // 沒人預約（available）或有人預約但未額滿（pending）才可能還能約；其他狀態直接擋下
+  if (slot.status !== 'available' && slot.status !== 'pending') {
+    return <SlotNotice {...UNAVAILABLE_NOTICE} tenantSlug={slotTenantSlug} />
+  }
+
+  // 已佔名額由資料庫函式算（學員讀不到別人的預約）；讀不到就擋下，不當成可預約、也不當成 0 人
+  const slotService = slot.services as { max_capacity: number } | null
+  const { data: taken, error: takenError } = await supabase.rpc('slot_taken_count', {
+    p_slot_id: slotId,
+  })
+  const maxCapacity = slotService?.max_capacity
+  if (takenError || typeof taken !== 'number' || typeof maxCapacity !== 'number') {
+    return <SlotNotice {...LOAD_FAILED_NOTICE} tenantSlug={slotTenantSlug} />
+  }
+  if (!isSlotBookable({ status: slot.status, taken, maxCapacity })) {
+    return <SlotNotice {...UNAVAILABLE_NOTICE} tenantSlug={slotTenantSlug} />
   }
 
   const session = await getSession()
