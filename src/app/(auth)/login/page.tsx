@@ -7,7 +7,8 @@ import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { Kicker } from '@/components/ui/kicker'
 import { SidePanel } from '../side-panel'
 import { loginAction } from './actions'
@@ -108,18 +109,12 @@ function LoginForm() {
           >
             {isPending ? '登入中...' : '登入'}
           </Button>
-          <Button
-            type="button"
-            variant="pill-outline"
-            size="pill"
-            render={
-              <Link
-                href={`/signup${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
-              />
-            }
+          <Link
+            href={`/signup${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
+            className={cn(buttonVariants({ variant: 'pill-outline', size: 'pill' }))}
           >
             建立帳號
-          </Button>
+          </Link>
         </div>
         <div className="font-mono mt-1 text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">
           登入即表示同意服務條款 · 隱私權政策
