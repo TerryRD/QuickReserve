@@ -1,7 +1,117 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { pushToUser } from '@/lib/push'
+import { previewReason } from '@/lib/booking-terms'
 
 export type BookingEvent = 'created' | 'confirmed' | 'cancelled'
+
+export type NoticeCopy = { title: string; body: string }
+
+export type CancelNoticeInput = {
+  tenantName: string | null
+  customerName: string | null
+  serviceName: string | null
+  /** 已換算成顯示用的上課時間 */
+  startAt: string
+  /** bookings.cancel_category */
+  category: string | null
+  /** bookings.cancel_reason */
+  reason: string | null
+  /** bookings.class_disposition */
+  disposition: string | null
+  /** bookings.cancel_actor_role */
+  actorRole: string | null
+}
+
+export type CancelNotice = {
+  /** 給學員 */
+  toCustomer?: NoticeCopy
+  /** 給時段負責成員 */
+  toCoach?: NoticeCopy
+  /** 給租戶所有 Owner（助教操作時，§12） */
+  toOwners?: NoticeCopy
+}
+
+/** 推播內文的原因句；過長時截斷（與教練端清單摘要同長度），完整原因在明細頁看 */
+function reasonSentence(reason: string | null): string {
+  const r = previewReason(reason)
+  return r ? `原因：${r}。` : ''
+}
+
+/** 教練取消／拒絕時給學員的堂數結果句 */
+function coachDispositionSentence(disposition: string | null): string {
+  switch (disposition) {
+    case 'refunded':
+      return '已退回 1 堂。'
+    case 'forfeited':
+      return '不退回。'
+    case 'transferred':
+      return '已轉到新預約。'
+    default:
+      return ''
+  }
+}
+
+/** 購買申請被拒絕時給學員的內文；沒有原因時不加冒號那段 */
+export function purchaseRejectedBody(tenantName: string | null, reason: string | null): string {
+  const r = reason?.trim()
+  return `${tenantName ?? '教練'} 已拒絕您的購買申請${r ? `：${r}` : ''}`
+}
+
+/**
+ * 組出取消（含改期）通知的標題與內文。純函式，不查資料庫。
+ * 學員收到的一律稱「教練」（或租戶名稱），不出現 Owner／助教。
+ */
+export function buildCancelNotice(input: CancelNoticeInput): CancelNotice {
+  const customer = input.customerName ?? '學員'
+  const coach = input.tenantName ?? '教練'
+
+  if (input.category === 'rescheduled') {
+    return {
+      toCoach: {
+        title: '預約已改期',
+        body: `${customer} 將預約改期（原時間 ${input.startAt}）`,
+      },
+    }
+  }
+
+  if (input.actorRole === 'customer') {
+    return {
+      toCoach: {
+        title: '預約已取消',
+        body:
+          `${customer} 取消了預約（${input.startAt}）。${reasonSentence(input.reason)}` +
+          (input.disposition === 'forfeited'
+            ? '已過取消期限，不退回。'
+            : input.disposition === 'refunded'
+              ? '已退回 1 堂。'
+              : ''),
+      },
+    }
+  }
+
+  if (input.actorRole === 'owner' || input.actorRole === 'staff') {
+    const rejected = input.category === 'coach_rejected'
+    const notice: CancelNotice = {
+      toCustomer: {
+        title: rejected ? '預約未被接受' : '預約已取消',
+        body:
+          `${coach} ${rejected ? '未接受您的預約' : '取消了您的預約'}（${input.startAt}）。` +
+          reasonSentence(input.reason) +
+          coachDispositionSentence(input.disposition),
+      },
+    }
+    if (input.actorRole === 'staff') {
+      notice.toOwners = {
+        title: rejected ? '助教拒絕了預約' : '助教取消了預約',
+        body: `${customer} 的 ${input.serviceName ?? ''}（${input.startAt}）。${reasonSentence(input.reason)}`,
+      }
+    }
+    return notice
+  }
+
+  // 系統取消（人數不足）由 notifyGroupAutoCancel 通知
+  return {}
+}
 
 /**
  * Fire-and-forget push notifications for booking lifecycle events.
@@ -13,17 +123,21 @@ export type BookingEvent = 'created' | 'confirmed' | 'cancelled'
 export async function notifyBookingChange(
   bookingId: string,
   event: BookingEvent,
-  triggeredByUserId: string,
+  _triggeredByUserId: string,
 ): Promise<void> {
   try {
     const admin = createSupabaseAdminClient()
-    const { data: booking } = await admin
+    const { data: booking, error } = await admin
       .from('bookings')
       .select(
-        'id, customer_id, customers(display_name), services(name), availability_slots(start_at, tenant_members(user_id)), tenants(name, slug)',
+        'id, tenant_id, customer_id, cancel_category, cancel_reason, class_disposition, cancel_actor_role, customers(display_name), services(name), availability_slots(start_at, tenant_members(user_id)), tenants(name, slug)',
       )
       .eq('id', bookingId)
       .maybeSingle()
+    if (error) {
+      console.error('[notify-booking] 讀取預約失敗', error)
+      return
+    }
     if (!booking) return
 
     const customer = booking.customers as { display_name: string | null } | null
@@ -65,22 +179,66 @@ export async function notifyBookingChange(
         relatedId: bookingId,
       })
     } else if (event === 'cancelled') {
-      const target = triggeredByUserId === customerUserId ? memberUserId : customerUserId
-      const isCustomerCancelled = triggeredByUserId === customerUserId
-      if (target) {
+      if (!booking.cancel_actor_role) {
+        console.error('[notify-booking] 取消的預約沒有取消紀錄，無法決定通知對象', bookingId)
+        return
+      }
+      const notice = buildCancelNotice({
+        tenantName: tenant?.name ?? null,
+        customerName: customer?.display_name ?? null,
+        serviceName: service?.name ?? null,
+        startAt,
+        category: booking.cancel_category,
+        reason: booking.cancel_reason,
+        disposition: booking.class_disposition,
+        actorRole: booking.cancel_actor_role,
+      })
+
+      if (notice.toCustomer && customerUserId) {
         await pushToUser(admin, {
-          userId: target,
+          userId: customerUserId,
           type: 'booking_status',
           payload: {
-            title: '預約已取消',
-            body: isCustomerCancelled
-              ? `${customer?.display_name ?? '學員'} 取消了預約 (${startAt})`
-              : `${tenant?.name ?? '教練'} 取消了您的預約 (${startAt})`,
-            url: isCustomerCancelled ? '/bookings' : '/my-bookings',
+            ...notice.toCustomer,
+            url: `/my-bookings/${bookingId}`,
             tag: `booking-${bookingId}`,
           },
           relatedId: bookingId,
         })
+      }
+      if (notice.toCoach && memberUserId) {
+        await pushToUser(admin, {
+          userId: memberUserId,
+          type: 'booking_status',
+          payload: {
+            ...notice.toCoach,
+            url: `/bookings/${bookingId}`,
+            tag: `booking-${bookingId}`,
+          },
+          relatedId: bookingId,
+        })
+      }
+      if (notice.toOwners) {
+        const { data: owners, error: ownersErr } = await admin
+          .from('tenant_members')
+          .select('user_id')
+          .eq('tenant_id', booking.tenant_id)
+          .eq('role', 'owner')
+          .eq('status', 'active')
+        if (ownersErr) console.error('[notify-booking] 讀取 Owner 失敗', ownersErr)
+        for (const owner of owners ?? []) {
+          if (!owner.user_id) continue
+          await pushToUser(admin, {
+            userId: owner.user_id,
+            type: 'booking_status',
+            payload: {
+              ...notice.toOwners,
+              url: `/bookings/${bookingId}`,
+              tag: `booking-${bookingId}-owner`,
+            },
+            relatedId: bookingId,
+          })
+        }
       }
     }
   } catch (err) {
@@ -107,11 +265,11 @@ export async function notifyPurchaseDecision(
     const svc = p.services as { name: string } | null
     const pkg = p.service_packages as { name: string } | null
     const tenant = p.tenants as { name: string; slug: string } | null
-    const title = decision === 'approved' ? '套裝已確認' : '套裝申請被拒絕'
+    const title = decision === 'approved' ? '購買已核准' : '購買申請已拒絕'
     const body =
       decision === 'approved'
-        ? `${tenant?.name ?? ''} 確認您的 ${pkg?.name ?? svc?.name ?? '套裝'}（${p.classes_total} 堂），可開始預約`
-        : `${tenant?.name ?? '教練'} 拒絕了您的套裝申請：${p.rejected_reason ?? ''}`
+        ? `${tenant?.name ?? '教練'} 已核准您購買的 ${pkg?.name ?? svc?.name ?? ''} ${p.classes_total} 堂課，可以開始預約了`
+        : purchaseRejectedBody(tenant?.name ?? null, p.rejected_reason)
 
     await pushToUser(admin, {
       userId: p.customer_id,
@@ -185,7 +343,7 @@ export async function notifyGroupAutoCancel(
       type: 'booking_status',
       payload: {
         title: '課程取消',
-        body: `${serviceName} (${startLabel}) 因人數不足取消。已退還 1 堂課數。`,
+        body: `${serviceName} (${startLabel}) 因人數不足取消，已退回 1 堂。`,
         url: '/my-bookings',
         tag: `auto-cancel-${slotStartAt}-${customerId}`,
       },
@@ -198,7 +356,7 @@ export async function notifyGroupAutoCancel(
         type: 'booking_status',
         payload: {
           title: '團班取消',
-          body: `${serviceName} (${startLabel}) 因人數不足，系統已自動取消並退還學員課數。`,
+          body: `${serviceName} (${startLabel}) 因人數不足，系統已自動取消，並把堂數退回給學員。`,
           url: '/calendar',
           tag: `auto-cancel-${slotStartAt}`,
         },
