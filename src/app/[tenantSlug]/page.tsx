@@ -397,7 +397,7 @@ export default async function TenantPublicPage({
               href={`/${tenantSlug}/packages`}
               className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground hover:text-foreground"
             >
-              套裝
+              購買堂數
             </Link>
             <Link
               href="/my-bookings"

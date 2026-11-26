@@ -57,33 +57,35 @@
   /calendar/rules              重複規則管理（4 種類型 + 結束條件）
   /services                    服務項目管理 ?tab=all|1on1|group
   /bookings                    預約管理（確認 / 取消）
+  /bookings/[bookingId]        預約明細（取消紀錄 + 歷程）（P1）
   /customers                   學員管理（搜尋 + 篩選 + 詳情 drawer）
   /staff                       助教管理（Owner 限定）
   /notifications               通知收件匣 ?tab=all|bookings|packages|system（notification_log inbox）
   /settings/profile            租戶資料 6 sections + sticky save bar（Owner 限定）
   /settings/notifications      通知偏好 — 事件×通道矩陣（web_push + in_app）+ 勿擾時段
   /settings/account            個人帳號設定（姓名 / 密碼 / Email）— Owner & Staff
-  /packages                    套裝管理 ?tab=all|1on1|group|draft（按服務分組）（S4）
-  /packages/pending            待審核購買申請佇列 + 4 KpiCard（S4）
+  /packages                    課堂管理 ?tab=all|1on1|group|draft（按服務分組）（S4）
+  /packages/pending            購買申請（審核中）佇列 + 4 KpiCard（S4）
 
 (customer) — 學員後台
   /my-bookings                 我的預約 + 4 KpiCard + DateStrip 群組 + 改期 link
+  /my-bookings/[bookingId]     預約明細（取消紀錄 + 歷程）（P1）
   /account                     個人帳號設定（姓名 / 密碼 / Email）
   /account/notifications       通知偏好（學員端,獨立於 tenant /settings/notifications）
 
 [tenantSlug] — 公開預約頁
   /[slug]                      教練介紹 + hero meta + bio + video + gallery + services + slot picker
   /[slug]?reschedule=<id>      改期模式（黃色 banner + 選新時段後原預約自動取消）
-  /book/[slotId]               預約確認頁 + 套裝餘額 radio cards
-  /[slug]/packages             可購方案瀏覽 + POPULAR pill + in-card 申請（S4）
-  /[slug]/purchases            學員看自己的餘額（S4）
+  /book/[slotId]               預約確認頁 + 剩餘堂數 radio cards
+  /[slug]/packages             購買堂數（N 堂課瀏覽）+ POPULAR pill + in-card 申請（S4）
+  /[slug]/purchases            購課紀錄（學員看自己的剩餘堂數）（S4）
 
 API
   /api/cron/materialize-recurring    每日 00:30 UTC+8（90 天滑動視窗）
   /api/cron/weekly-summary           每週日 20:00 UTC+8
   /api/cron/daily-reminder           每小時 06-12 UTC+8（hourly cron）
   /api/cron/pre-event-reminder       每分鐘（需 Vercel Pro）
-  /api/cron/auto-cancel-group-class  每 5 分鐘（由 Supabase pg_cron 驅動；團班人數不足 auto cancel + 退課數）
+  /api/cron/auto-cancel-group-class  每 5 分鐘（由 Supabase pg_cron 驅動；團班人數不足 auto cancel + 退回堂數）
   /api/cron/checkin-reminder         每分鐘（由 Supabase pg_cron 驅動，post-deploy 設定）
   /api/push/subscribe                Web Push 訂閱
 ```
@@ -268,32 +270,33 @@ effectiveAvailability(date, template, events) =
 
 ---
 
-## 套裝 / 課數模型（S4）
+## N 堂課 / 剩餘堂數模型（S4）
 
-QuickReserve 把「單堂課」與「套裝」用同一張表（`customer_purchases`）表達：
+QuickReserve 把「單堂課」與「N 堂課」用同一張表（`customer_purchases`）表達：
 
 - **單堂課** = `classes_total = 1` 的 purchase（class_count=1 package）
-- **套裝** = `classes_total > 1` 的 purchase（class_count>1 package）
+- **N 堂課** = `classes_total > 1` 的 purchase（class_count>1 package）
 
 **購買流程：**
-1. 學員瀏覽 `/[slug]/packages` 看可購方案
+1. 學員瀏覽 `/[slug]/packages` 看可購買的 N 堂課
 2. 提交申請（自報已付/未付）→ `customer_purchases` row, `approval_status='pending_review'`
 3. 教練於 `/packages/pending` 審核：
-   - 確認 → status 變 `confirmed`，`expires_at` = approved_at + `package.expires_in_days * 24h`
+   - 核准（畫面顯示「已核准」）→ status 變 `confirmed`，`expires_at` = approved_at + `package.expires_in_days * 24h`
    - 拒絕 → status 變 `rejected`，留下 `rejected_reason`
 4. 預約消費：`book_with_purchase` RPC 自動找最快過期的 active purchase，increment `classes_used`，attach 到 booking 的 `purchase_id`
 
 **取消與退費（取消期限唯一決定，2026-06-13）：**
-- 退費僅由服務的 `cancel_deadline_hours` 決定——堂數在預約當下就扣，是否退還只看取消時機。
+- 退費僅由服務的 `cancel_deadline_hours` 決定——堂數在預約當下就扣，是否退回只看取消時機。
 - 學員取消：在 `start_at − cancel_deadline_hours` 之前（含當下）取消才退一堂；超過期限取消仍會取消預約並釋出時段，但**不退**（堂數作廢）。
 - 教練 / 管理者取消：**一律退**一堂，不受期限限制。
 - 團班 auto-cancel → 視同教練取消，所有 booking 學員一起退。
-- 取消對話框與成功 toast 會依 `isWithinCancelDeadline`（client 端，與 RPC 同輸入）顯示「會 / 不會退還堂數」；RPC 為伺服器端唯一真實來源。
+- 取消對話框與成功 toast 會依 `isWithinCancelDeadline`（client 端，與 RPC 同輸入）顯示「會 / 不會退回堂數」；RPC 為伺服器端唯一真實來源。
 
-**未到場（no_show，2026-06-13）：**
+**未出席（no_show，2026-06-13）：**
 - `checkin-reminder` cron 每分鐘掃描：`confirmed` + 未簽到 + slot 已結束的預約 → 標記 `no_show`（僅標籤，回應含 `noShowMarked`）。
 - 純標籤、**不動 `classes_used`**：該堂在預約時已扣、因未在期限內取消而作廢。30 天下限避免首次執行掃描遠古資料。
-- `/my-bookings` 顯示「未到場」徽章與「未到場 · 未退還此堂」說明。
+- `/my-bookings` 顯示「未出席」徽章與「未出席 · 不退回」說明。
+- P1 起改由 `mark_no_show_bookings()` 標記並寫入歷程（見下方「關鍵 RPC 函式」）。
 
 **過期：**
 - `expires_at` 為 null = 永久；非 null = 該時間後不可用於新預約
@@ -313,7 +316,7 @@ QuickReserve 把「單堂課」與「套裝」用同一張表（`customer_purcha
 
 **團班：** capacity=4 min=3 deadline=24h
 - 第 3 個學員 book 後 → 所有 pending bookings auto-confirmed
-- 開課前 24h 仍 < 3 人 → cron 取消 slot、退課數、通知所有人
+- 開課前 24h 仍 < 3 人 → cron 取消 slot、退回堂數、通知所有人
 
 **Slot lifecycle（2026-05-29 重寫,A-6）:**
 
@@ -330,6 +333,28 @@ Booking row state(`bookings.status` pending / confirmed / cancelled / completed)
 - `SlotPicker` 用 `TimeChip state='group'` 顯示 N/M(`max_capacity > 1` 才出現),滿了的 slot 由 status filter + count guard 雙重排除
 
 Cron 排程：**Vercel Hobby plan 只支援 daily**（`0 0 * * *`），所以 auto-cancel 最多 24h 延遲。若需更短粒度（例如 hourly 對 `cancel_deadline_hours = 1` 才即時）必須升級 Pro 後改 `0 * * * *`。
+
+## 取消原因、預約明細與歷程（預約流程 v2 P1）
+
+規格：[`docs/superpowers/specs/2026-11-25-booking-flow-v2-design.md`](docs/superpowers/specs/2026-11-25-booking-flow-v2-design.md)；計畫：[`docs/superpowers/plans/2026-11-25-booking-flow-v2-p1-foundation.md`](docs/superpowers/plans/2026-11-25-booking-flow-v2-p1-foundation.md)。
+
+**取消一律要填原因：**
+- 學員取消：從常用原因選一個（清單取自 `platform_settings.customer_cancel_reasons`），補充說明欄位常駐；選「其他」時補充說明必填。送出的原因為「選項：補充說明」（沒填補充說明時只送選項；選「其他」時只送補充說明）。
+- 教練取消：必填文字原因。對**待確認**的預約，按鈕與對話框是「**拒絕**」（取消類別「教練拒絕」）；對已確認的預約是「**取消**」（取消類別「教練取消」）。兩者一律退回 1 堂，學員收到的通知含原因。
+- 對話框左側按鈕一律叫「返回」，避免與「取消預約」混淆。
+- 學員取消：待確認一律退回；已確認在取消期限內退回、逾期仍可取消但**不退回**（P1 過渡行為，P2 改為請假申請）。開課後學員不可取消或改期。
+- 每筆取消記錄 5 項：取消人、取消類別、原因、時間、堂數（已退回 1 堂／不退回／已轉到新預約）。改版前已取消的資料歸為「舊資料（未分類）」。
+
+**預約明細頁（教練端 `/bookings/[bookingId]`、學員端 `/my-bookings/[bookingId]`）：**
+- 預約資料（上課時間、使用堂數、取消期限、改期關聯可互相點過去）＋取消紀錄＋歷程（`activity_log`，最新在上）。
+- 學員端只出現「你／教練／系統」，不區分 Owner／助教，也不顯示教練名稱；教練端顯示「名稱（身分）」，查不到名稱時只顯示身分。
+- 學員端從「我的預約」卡片的「查看明細」進入；教練端從預約管理每筆的「明細」進入。
+- 時間一律以台灣時間顯示（`src/lib/taipei-time.ts`），不受伺服器或瀏覽器時區影響。
+
+**助教只能操作自己時段的預約：**
+- 預約管理清單與明細頁中，只有時段負責成員本人（或 Owner）看得到確認／拒絕／取消按鈕與歷程；別人時段的預約只顯示說明。
+- 真正的權限由資料庫函式把關（`cancel_booking`、`confirm_booking` 等），平台管理員不可代為操作。
+- 助教拒絕或取消預約時通知 Owner。
 
 ## 學員簽到機制（Student Check-in）
 
@@ -470,7 +495,7 @@ Storage RLS（policies on `storage.objects`）：
 
 **新增 schema:**
 - `tenants.years_exp / established_year / city` — 公開頁 hero meta
-- `service_packages.is_popular` — 公開頁套裝 POPULAR 黃色 Pill
+- `service_packages.is_popular` — 公開頁 N 堂課 POPULAR 黃色 Pill
 - `notification_preferences.channels` (jsonb event × `{web_push, in_app}` 矩陣) + `quiet_hours_start/end`。**Email 通道不做**（成本/流量考量,列 Phase 2 backlog）
 
 **新增 primitives（11 個,含 Button 擴充）:**
@@ -492,15 +517,15 @@ Storage RLS（policies on `storage.objects`）：
 **Plan 2 已完成（Student 6 頁,2026-05-27）:**
 - `/<slug>` 公開頁:Hero EST/YRS/city meta + Reschedule banner + DateRibbon + TimeChip slot picker + 黑底 selected slot recap bar + QRMark footer
 - `/<slug>/packages`:按服務分組 + POPULAR yellow Pill + in-card 申請表單 + 付款狀態 segmented (claimed_paid / awaiting_payment)
-- `/book/<slotId>`:大 display time slot card + 套裝餘額 radio cards 含進度條 + EmptyState 無套裝 + 取消政策框
+- `/book/<slotId>`:大 display time slot card + 剩餘堂數 radio cards 含進度條 + EmptyState 無剩餘堂數 + 取消政策框
 - `/login`、`/signup`:Kicker primitive + pill submit + signedup/invited banner
-- `/my-bookings`:4 KpiCard 列(本週/待回覆/已完成/已取消) + DateStrip 群組 header + 改期 link
+- `/my-bookings`:4 KpiCard 列(本週/待回覆/已出席/已取消) + DateStrip 群組 header + 改期 link
 
 **Plan 3 已完成（Coach 後台 7 頁,2026-05-27）:**
 - `/dashboard`:黑底 hero card + 右上半透明黃圓 + 4 KpiCard + Today timeline (NEXT UP 高亮) + Pending column + 條件式 Quick action card + Empty state preview
 - `/calendar`:三視圖 tab (Week / List / Month) + 新 MonthView grid + Owner member filter chip(slot popover + conflict badge 既存,保留)
 - `/services`:Tab 分類 (ALL / 1-ON-1 / GROUP) + ServiceCard 含 CAP/MIN/CXL 群班參數 + dashed 新增服務 placeholder
-- `/customers`:GET 表單搜尋 + status 篩選 chips + Sheet drawer (booking 紀錄 + 套裝餘額進度條)
+- `/customers`:GET 表單搜尋 + status 篩選 chips + Sheet drawer (booking 紀錄 + 剩餘堂數進度條)
 - `/packages`:Tab 含草稿 + 按服務分組 + PackageCard (POPULAR pill / 草稿 badge) + dashed placeholder per group
 - `/packages/pending`:4 KpiCard 列(總待審/等待最久/本週新進/本月通過,column 名是 approval_status='pending_review') + 第一筆 accent ring 強調
 - `/notifications`:重寫為 notification_log inbox (取代 preferences wrapper) + 4 tabs + 24h 內 cosmetic 黃色側條(不持久化)
@@ -516,7 +541,7 @@ Storage RLS（policies on `storage.objects`）：
 
 | 條目 | Commit | 摘要 |
 |---|---|---|
-| 互動式套裝選擇 on /book | A-1 | `book_with_purchase` 加 4th arg `p_purchase_id`,radio 變 interactive,新 error `PURCHASE_INVALID` |
+| 互動式剩餘堂數選擇 on /book | A-1 | `book_with_purchase` 加 4th arg `p_purchase_id`,radio 變 interactive,新 error `PURCHASE_INVALID` |
 | zxcvbn password strength on signup | `382791e` | mitigation for HIBP 鎖在 Supabase Pro Plan;score≥2 threshold |
 | signup invite banner 顯示 tenant_name | `42ef8e5` | 新公開 endpoint `/api/invite/resolve`,debounced fetch |
 | `/notifications` persistent read state | `922e281` | `notification_log.read_at` + RLS UPDATE policy + per-row click + bulk mark-read |
@@ -573,7 +598,12 @@ UUID 可以在 Supabase Dashboard → Authentication → Users 找到。
   availability_slots — 物化的時段（GIST EXCLUDE 防重疊）
 
 預約（1 表）
-  bookings — 預約紀錄（pending/confirmed/completed/cancelled）
+  bookings — 預約紀錄（pending/confirmed/completed/no_show/cancelled）
+
+預約歷程與設定（3 表，預約流程 v2 P1）
+  activity_log — 歷程：誰、何時、做了什麼、為什麼；只增不改，只由 security definer 函式寫入
+  class_ledger — 堂數異動明細：每次扣堂 −1、退回 +1；customer_purchases.classes_used = −sum(delta)
+  platform_settings — 平台層級可調整數值（例：學員常用取消原因）；由平台管理者以 SQL 維護
 
 通知（3 表）
   push_subscriptions — Web Push 訂閱
@@ -582,11 +612,12 @@ UUID 可以在 Supabase Dashboard → Authentication → Users 找到。
 ```
 
 關鍵 RPC 函式：
-- `book_with_purchase(slot_id, customer_id, notes, purchase_id?)` — 原子性預約建立 + 消耗一堂套裝餘額。`purchase_id` 為 null 時 fallback 至 oldest-expiring;有值時驗證 ownership + service 一致 + 仍有效,失敗 raise `PURCHASE_INVALID`(P0001)。SECURITY DEFINER 內部第一道 guard 驗 `auth.uid() = customer_id`,擋 cross-customer 攻擊。
+- `book_with_purchase(slot_id, customer_id, notes, purchase_id?)` — 原子性預約建立 + 扣一堂剩餘堂數。`purchase_id` 為 null 時 fallback 至 oldest-expiring;有值時驗證 ownership + service 一致 + 仍有效,失敗 raise `PURCHASE_INVALID`(P0001)。SECURITY DEFINER 內部第一道 guard 驗 `auth.uid() = customer_id`,擋 cross-customer 攻擊。
 - `confirm_booking(booking_id)` — 教練確認
-- `cancel_booking(booking_id)` — 客戶或教練取消;退費依取消期限決定（教練/管理者一律退、客戶僅在 `cancel_deadline_hours` 內退),**重算 slot.status**(尚有未取消 booking → `pending`, else → `available`);拒絕重複取消終結狀態(`cancelled`/`completed`/`no_show`)
-- `reschedule_booking(old_booking_id, new_slot_id)` — 同一 tenant 內 atomically cancel old + create new;接受 `available` 或 `pending` 目的 slot(後者支援改期進團班),帶過原 purchase_id 不重複扣堂
+- `cancel_booking(booking_id, reason)` — **P1 起原因必填**（去除空白後不得為空、上限 500 字），並在同一交易寫入取消紀錄、`activity_log`、`class_ledger`;權限為學員本人、Owner、該時段的助教(平台管理員不可代操作)。學員取消:待確認一律退回、已確認在取消期限(預約上的 `cancel_deadline_at`)內退回、逾期不退回(P1 過渡行為);教練取消或拒絕一律退回;**重算 slot.status**(尚有未取消 booking → `pending`, else → `available`);拒絕重複取消終結狀態(`cancelled`/`completed`/`no_show`)
+- `reschedule_booking(old_booking_id, new_slot_id, reason?)` — **P1 起教練代改期必填原因**,學員自己改期可不填;同一 tenant 內 atomically cancel old + create new;接受 `available` 或 `pending` 目的 slot(後者支援改期進團班),帶過原 purchase_id 不重複扣堂
 - `auto_cancel_group_slot(slot_id)` — service_role only,團班 min_attendance 不足時 cron 用,refund 所有 bookings + 通知扇出
+- `mark_no_show_bookings()` — service_role only(P1 新增),把課程已結束仍未簽到的已確認預約標為 `no_show` 並寫入 `activity_log`;只標記、不動堂數。取代排程直接改 `bookings` 的做法
 - `book_slot_atomic(slot_id, customer_id, notes)` — **legacy**,已從 `authenticated` revoke(`20260529100100`);data layer 受 `bookings.purchase_id NOT NULL` 卡死,實際 dead code,留定義但無 callers
 
 ---

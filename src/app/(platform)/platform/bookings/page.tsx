@@ -5,12 +5,19 @@ import { Kicker } from '@/components/ui/kicker'
 import { EmptyState } from '@/components/ui/empty-state'
 import { StatusBadge, type StatusType } from '@/components/ui/badge'
 import { ClipboardList } from 'lucide-react'
+import { BOOKING_STATUS_LABEL } from '@/lib/booking-terms'
 import TenantFilter from './tenant-filter'
 
 const TZ_OFFSET_HOURS = 8
 const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
-const STATUS_TYPES: ReadonlyArray<StatusType> = ['pending', 'confirmed', 'cancelled', 'completed']
+const STATUS_TYPES: ReadonlyArray<StatusType> = [
+  'pending',
+  'confirmed',
+  'cancelled',
+  'completed',
+  'no_show',
+]
 const asStatus = (s: string): StatusType =>
   (STATUS_TYPES as readonly string[]).includes(s) ? (s as StatusType) : 'pending'
 
@@ -39,10 +46,11 @@ export default async function PlatformBookingsPage({
 
   const filters = [
     { key: 'all', label: '全部' },
-    { key: 'pending', label: '待確認' },
-    { key: 'confirmed', label: '已確認' },
-    { key: 'completed', label: '已完成' },
-    { key: 'cancelled', label: '已取消' },
+    { key: 'pending', label: BOOKING_STATUS_LABEL.pending },
+    { key: 'confirmed', label: BOOKING_STATUS_LABEL.confirmed },
+    { key: 'completed', label: BOOKING_STATUS_LABEL.completed },
+    { key: 'no_show', label: BOOKING_STATUS_LABEL.no_show },
+    { key: 'cancelled', label: BOOKING_STATUS_LABEL.cancelled },
   ]
   const activeFilter = status ?? 'all'
 

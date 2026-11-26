@@ -102,13 +102,13 @@ export default async function BookConfirmPage({
             kicker={`/book · ${tenantSlug}`}
             title="預約確認"
             eng="CONFIRM"
-            hint={`您尚未持有 ${service?.name ?? '此服務'} 的有效課數，請先申請套裝。`}
+            hint={`您目前沒有 ${service?.name ?? '此服務'} 的剩餘堂數，請先購買。`}
           />
           <EmptyState
             icon={<Package className="size-5" />}
-            title="尚無可用套裝"
-            hint="先去申請一個套裝才能預約"
-            cta={<PrimaryCtaLink href={`/${tenantSlug}/packages`}>瀏覽套裝</PrimaryCtaLink>}
+            title="沒有可用的剩餘堂數"
+            hint="先購買堂數才能預約"
+            cta={<PrimaryCtaLink href={`/${tenantSlug}/packages`}>去購買堂數</PrimaryCtaLink>}
           />
         </main>
       </div>
@@ -152,7 +152,7 @@ export default async function BookConfirmPage({
           hint={
             rescheduleFrom
               ? '送出後將自動取消原預約並改為此時段。'
-              : '確認資訊後送出預約申請，待教練核可。'
+              : '確認資訊後送出預約申請，等教練確認。'
           }
         />
 
@@ -194,7 +194,7 @@ export default async function BookConfirmPage({
           <p className="font-cjk mt-2 text-xs leading-relaxed text-muted-foreground">
             開始前{' '}
             <strong className="text-foreground">{service?.cancel_deadline_hours ?? 24} 小時</strong>{' '}
-            以上取消，堂數退回套裝；逾時取消或未到場視同已上完一堂。
+            以上取消，堂數退回；逾期取消或未出席不退回。
           </p>
         </div>
 

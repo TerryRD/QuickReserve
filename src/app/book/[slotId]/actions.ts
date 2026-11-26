@@ -7,7 +7,8 @@ import { revalidateTag } from 'next/cache'
 import { actionClient } from '@/lib/safe-action'
 import { requireSession } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { AppError, SlotUnavailableError } from '@/lib/errors'
+import { AppError } from '@/lib/errors'
+import { toBookingAppError } from '@/lib/booking-rpc-errors'
 import { notifyBookingChange, notifyGroupAutoConfirm } from '@/lib/notify-booking'
 import { notifyCheckinDone } from '@/lib/notify-checkin'
 import { publicSlotsTag } from '@/lib/cache-tags'
@@ -39,18 +40,11 @@ export const createBookingAction = actionClient
         p_old_booking_id: parsedInput.rescheduleFrom,
         p_new_slot_id: parsedInput.slotId,
       })
-      if (error) {
-        if (error.message?.includes('SLOT_UNAVAILABLE')) throw new SlotUnavailableError()
-        if (error.message?.includes('INVALID_STATE'))
-          throw new AppError('INVALID_STATE', '原預約已無法改期')
-        if (error.message?.includes('CROSS_TENANT'))
-          throw new AppError('CROSS_TENANT', '不可跨教練改期')
-        throw new AppError('RESCHEDULE_FAILED', error.message)
-      }
+      if (error) throw toBookingAppError(error)
       const newBooking = data as { id: string }
       void notifyBookingChange(parsedInput.rescheduleFrom, 'cancelled', session.userId)
       void notifyBookingChange(newBooking.id, 'created', session.userId)
-      revalidatePath('/my-bookings')
+      revalidatePath('/my-bookings', 'layout')
       if (tenantId) revalidateTag(publicSlotsTag(tenantId))
       redirect(`/my-bookings?rescheduled=${newBooking.id}`)
     }
@@ -61,33 +55,26 @@ export const createBookingAction = actionClient
       p_customer_notes: parsedInput.customerNotes ?? undefined,
       p_purchase_id: parsedInput.purchaseId ?? undefined,
     })
-    if (error) {
-      if (error.message?.includes('SLOT_UNAVAILABLE')) throw new SlotUnavailableError()
-      if (error.message?.includes('SLOT_NOT_FOUND'))
-        throw new AppError('SLOT_NOT_FOUND', '時段不存在')
-      if (error.message?.includes('SLOT_FULL')) throw new AppError('SLOT_FULL', '此時段名額已滿')
-      if (error.message?.includes('SLOT_PAST')) throw new AppError('SLOT_PAST', '此時段已過')
-      if (error.message?.includes('NO_BALANCE'))
-        throw new AppError('NO_BALANCE', '需先購買套裝才能預約')
-      if (error.message?.includes('PURCHASE_INVALID'))
-        throw new AppError('PURCHASE_INVALID', '選擇的套裝不可用，請重新選擇')
-      if (error.message?.includes('CUSTOMER_BLOCKED'))
-        throw new AppError('CUSTOMER_BLOCKED', '此教練已封鎖您的預約')
-      throw new AppError('BOOKING_FAILED', error.message)
-    }
+    if (error) throw toBookingAppError(error)
     const result = (data as Array<{ booking_id: string; auto_confirmed: boolean }>)[0]
-    if (!result) throw new AppError('BOOKING_FAILED', 'unexpected empty result')
+    if (!result) {
+      console.error('[book_with_purchase] empty result', { slotId: parsedInput.slotId })
+      throw new AppError('BOOKING_FAILED', '操作失敗，請稍後再試')
+    }
     const booking = { id: result.booking_id }
     if (result.auto_confirmed) {
       void notifyGroupAutoConfirm(parsedInput.slotId)
     }
     void notifyBookingChange(booking.id, 'created', session.userId)
-    revalidatePath('/my-bookings')
+    revalidatePath('/my-bookings', 'layout')
     if (tenantId) revalidateTag(publicSlotsTag(tenantId))
     redirect(`/my-bookings?booked=${booking.id}`)
   })
 
-const CancelMyBookingSchema = z.object({ bookingId: z.string().uuid() })
+const CancelMyBookingSchema = z.object({
+  bookingId: z.string().uuid(),
+  reason: z.string().trim().min(1, '請填寫原因').max(500, '原因請不要超過 500 字'),
+})
 
 export const cancelMyBookingAction = actionClient
   .inputSchema(CancelMyBookingSchema)
@@ -103,17 +90,16 @@ export const cancelMyBookingAction = actionClient
       .maybeSingle()
     const tenantId = bookingRow?.tenant_id ?? null
 
-    const { error } = await supabase.rpc('cancel_booking', { p_booking_id: parsedInput.bookingId })
-    if (error) {
-      if (error.message?.includes('INVALID_STATE'))
-        throw new AppError('INVALID_STATE', '此預約已無法取消')
-      if (error.message?.includes('FORBIDDEN')) throw new AppError('FORBIDDEN', '無權限')
-      throw new AppError('CANCEL_FAILED', error.message)
-    }
+    const { data, error } = await supabase.rpc('cancel_booking', {
+      p_booking_id: parsedInput.bookingId,
+      p_reason: parsedInput.reason,
+    })
+    if (error) throw toBookingAppError(error)
     void notifyBookingChange(parsedInput.bookingId, 'cancelled', session.userId)
-    revalidatePath('/my-bookings')
+    revalidatePath('/my-bookings', 'layout')
     if (tenantId) revalidateTag(publicSlotsTag(tenantId))
-    return { ok: true }
+    // 以資料庫實際寫入的堂數處理為準，畫面上的提示可能因停留太久而過期
+    return { ok: true, classDisposition: data?.class_disposition ?? null }
   })
 
 const CheckinBookingSchema = z.object({ bookingId: z.string().uuid() })
@@ -124,21 +110,8 @@ export const checkinBookingAction = actionClient
     await requireSession()
     const supabase = await createSupabaseServerClient()
     const { error } = await supabase.rpc('checkin_booking', { p_booking_id: parsedInput.bookingId })
-    if (error) {
-      if (error.message?.includes('BOOKING_NOT_FOUND'))
-        throw new AppError('BOOKING_NOT_FOUND', '預約不存在')
-      if (error.message?.includes('FORBIDDEN')) throw new AppError('FORBIDDEN', '無權限')
-      if (error.message?.includes('ALREADY_CHECKED_IN'))
-        throw new AppError('ALREADY_CHECKED_IN', '已簽到過了')
-      if (error.message?.includes('NOT_CONFIRMED'))
-        throw new AppError('NOT_CONFIRMED', '此預約尚未確認，無法簽到')
-      if (error.message?.includes('CHECKIN_TOO_EARLY'))
-        throw new AppError('CHECKIN_TOO_EARLY', '尚未開放簽到（開課前 30 分鐘起）')
-      if (error.message?.includes('CHECKIN_CLOSED'))
-        throw new AppError('CHECKIN_CLOSED', '課程已結束，無法簽到')
-      throw new AppError('CHECKIN_FAILED', error.message)
-    }
+    if (error) throw toBookingAppError(error)
     void notifyCheckinDone(parsedInput.bookingId)
-    revalidatePath('/my-bookings')
+    revalidatePath('/my-bookings', 'layout')
     return { ok: true }
   })

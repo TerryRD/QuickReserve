@@ -94,7 +94,7 @@ export default async function PublicPackagesPage({
             /{tenantSlug} · PACKAGES
           </div>
           <h1 className="font-display flex flex-wrap items-baseline gap-3.5 text-[56px] font-normal uppercase leading-[0.9] tracking-tight sm:text-[88px]">
-            <span className="font-cjk">套裝</span>
+            <span className="font-cjk">購買堂數</span>
             <span className="relative inline-block">
               PACKAGES
               <span
@@ -104,7 +104,7 @@ export default async function PublicPackagesPage({
             </span>
           </h1>
           <p className="font-cjk mt-4 max-w-[540px] text-[13px] leading-[1.6] text-muted-foreground sm:text-sm">
-            買套裝享更划算的單堂單價。送出申請後等教練核可、確認付款狀態,核可後即可預約時段。
+            一次買多堂，每堂更划算。送出申請後由教練核對付款並核准，核准後就能預約時段。
           </p>
         </header>
 
@@ -113,10 +113,10 @@ export default async function PublicPackagesPage({
             <Info className="size-5 shrink-0 text-muted-foreground" />
             <div className="min-w-0 flex-1">
               <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground">
-                SIGN IN · 申請套裝前需要登入
+                SIGN IN · 購買前需要登入
               </div>
               <p className="font-cjk mt-1 text-sm font-medium">
-                登入或註冊後填寫付款狀態、送出後等教練核可。
+                登入或註冊後填寫付款狀態、送出後等教練核准。
               </p>
             </div>
             <div className="flex gap-2">
@@ -213,7 +213,9 @@ export default async function PublicPackagesPage({
             <div className="font-mono mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               NO PACKAGES
             </div>
-            <p className="font-cjk mt-2 text-sm text-muted-foreground">此教練尚未開放套裝</p>
+            <p className="font-cjk mt-2 text-sm text-muted-foreground">
+              這位教練目前沒有可購買的堂數
+            </p>
           </div>
         )}
 
@@ -222,9 +224,9 @@ export default async function PublicPackagesPage({
             <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
               <Plus className="size-5" />
             </div>
-            <h3 className="font-display font-cjk text-lg font-black">還沒看到喜歡的方案?</h3>
+            <h3 className="font-display font-cjk text-lg font-black">沒有適合的堂數？</h3>
             <p className="font-cjk max-w-[380px] text-[13px] text-muted-foreground">
-              可以直接私訊教練詢問客製套裝。教練建立後會出現在這個頁面。
+              可以直接私訊教練詢問。教練建立後會出現在這個頁面。
             </p>
           </div>
         )}

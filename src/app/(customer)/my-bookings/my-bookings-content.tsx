@@ -1,18 +1,22 @@
 import Link from 'next/link'
-import { format } from 'date-fns'
 import { Calendar } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { StatusBadge, type StatusType } from '@/components/ui/badge'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { DateStrip, type DateStripGroup } from '@/components/bookings/date-strip'
-import CancelMyBookingButton from './cancel-button'
+import BookingChangeActions from './booking-change-actions'
 import CheckinButton from './checkin-button'
 import { canCheckIn } from '@/lib/checkin-window'
-import { isWithinCancelDeadline } from '@/lib/cancel-deadline'
-
-const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+import { getCustomerCancelReasons } from '@/lib/platform-settings'
+import { formatTaipeiTime, taipeiParts } from '@/lib/taipei-time'
+import {
+  canCustomerChangeBooking,
+  cancelOutcomeText,
+  cancelSummaryLine,
+  resolveMyBookingsView,
+  type CancelInfo,
+} from './booking-display'
 
 const STATUS_TYPES: ReadonlyArray<StatusType> = [
   'pending',
@@ -32,12 +36,15 @@ type BookingRow = {
   created_at: string
   service_id: string
   checked_in_at: string | null
+  cancel_deadline_at: string | null
+  cancel_category: string | null
+  cancel_reason: string | null
+  cancel_actor_role: string | null
+  class_disposition: string | null
   tenants: { name: string; slug: string } | null
   services: { name: string; duration_minutes: number; cancel_deadline_hours: number } | null
   availability_slots: { start_at: string; end_at: string } | null
 }
-
-const WEEKDAY = ['日', '一', '二', '三', '四', '五', '六'] as const
 
 function groupKey(slotStart: string | undefined, status: string, now: Date): string {
   if (status === 'cancelled' || status === 'completed') return '已過'
@@ -61,15 +68,19 @@ const groupKeyMap: Record<string, DateStripGroup> = {
   其他: 'past',
 }
 
-function BookingCard({ b }: { b: BookingRow }) {
+function BookingCard({ b, cancelReasons }: { b: BookingRow; cancelReasons: string[] | null }) {
   const tenant = b.tenants
   const service = b.services
   const slot = b.availability_slots
   const isCancelledOrCompleted = b.status === 'cancelled' || b.status === 'completed'
-  const canCancel =
-    (b.status === 'pending' || b.status === 'confirmed') &&
-    slot &&
-    new Date(slot.start_at) > new Date()
+  const canCancel = canCustomerChangeBooking(b.status, slot?.start_at, new Date())
+  const cancelInfo: CancelInfo = {
+    category: b.cancel_category,
+    reason: b.cancel_reason,
+    actorRole: b.cancel_actor_role,
+    disposition: b.class_disposition,
+  }
+  const cancelSummary = b.status === 'cancelled' ? cancelSummaryLine(cancelInfo) : null
 
   // Render-time visibility gate only; checkin_booking RPC is the authoritative check.
   const canDoCheckin =
@@ -78,12 +89,12 @@ function BookingCard({ b }: { b: BookingRow }) {
     !!slot &&
     canCheckIn(new Date(), slot.start_at, slot.end_at)
 
-  const start = slot ? toLocal(slot.start_at) : null
-  const day = start?.getDate()
-  const month = start ? String(start.getMonth() + 1).padStart(2, '0') : ''
-  const year = start?.getFullYear()
-  const weekday = start ? WEEKDAY[start.getDay()] : ''
-  const time = start ? format(start, 'HH:mm') : ''
+  const start = slot ? taipeiParts(slot.start_at) : null
+  const day = start?.day
+  const month = start ? String(start.month).padStart(2, '0') : ''
+  const year = start?.year
+  const weekday = start?.weekday ?? ''
+  const time = slot ? formatTaipeiTime(slot.start_at) : ''
 
   return (
     <div
@@ -116,7 +127,16 @@ function BookingCard({ b }: { b: BookingRow }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="font-mono mb-1 text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground">
-              {tenant?.name ?? '—'}
+              {tenant ? (
+                <Link
+                  href={`/${tenant.slug}`}
+                  className="underline-offset-2 hover:text-foreground hover:underline"
+                >
+                  {tenant.name}
+                </Link>
+              ) : (
+                '—'
+              )}
               {service?.duration_minutes != null && <> · {service.duration_minutes} MIN</>}
             </div>
             <h3 className="font-display font-cjk text-lg font-black leading-tight sm:text-[22px]">
@@ -135,56 +155,52 @@ function BookingCard({ b }: { b: BookingRow }) {
           </div>
         )}
 
-        {canCancel ? (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {canDoCheckin && <CheckinButton bookingId={b.id} />}
-            {tenant && b.service_id && (
-              <Button
-                variant="secondary"
-                size="sm"
-                render={
-                  <Link href={`/${tenant.slug}?service=${b.service_id}&reschedule=${b.id}`} />
-                }
-              >
-                <Calendar className="size-3" /> 改期
-              </Button>
-            )}
-            <CancelMyBookingButton
-              bookingId={b.id}
-              willRefund={
-                !!slot &&
-                !!service &&
-                isWithinCancelDeadline(new Date(), slot.start_at, service.cancel_deadline_hours)
-              }
-            />
-            {tenant && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="ml-auto text-muted-foreground"
-                render={<Link href={`/${tenant.slug}`} />}
-              >
-                查看詳情
-              </Button>
-            )}
-          </div>
-        ) : canDoCheckin ? (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <CheckinButton bookingId={b.id} />
-          </div>
-        ) : (
-          <div className="font-mono mt-2 text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
-            {b.status === 'completed'
-              ? b.checked_in_at
-                ? `已簽到 · ${format(toLocal(b.checked_in_at), 'HH:mm')} 完課`
-                : '已完成 · 期待下次見面'
-              : b.status === 'cancelled'
-                ? '已取消 · 不會佔用套裝堂數'
-                : b.status === 'no_show'
-                  ? '未到場 · 未退還此堂'
-                  : ''}
+        {cancelSummary && (
+          <div
+            className="font-cjk truncate rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground"
+            title={cancelSummary}
+          >
+            {cancelSummary}
           </div>
         )}
+
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {canDoCheckin && <CheckinButton bookingId={b.id} />}
+          {canCancel ? (
+            <BookingChangeActions
+              bookingId={b.id}
+              status={b.status}
+              tenantSlug={tenant?.slug ?? null}
+              serviceId={b.service_id}
+              startAt={slot?.start_at ?? null}
+              cancelDeadlineAt={b.cancel_deadline_at}
+              cancelDeadlineHours={service?.cancel_deadline_hours ?? null}
+              cancelReasons={cancelReasons}
+            />
+          ) : (
+            !canDoCheckin && (
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
+                {b.status === 'completed'
+                  ? b.checked_in_at
+                    ? `已簽到 · ${formatTaipeiTime(b.checked_in_at)}`
+                    : '已出席 · 期待下次見面'
+                  : b.status === 'cancelled'
+                    ? cancelOutcomeText(cancelInfo)
+                    : b.status === 'no_show'
+                      ? '未出席 · 不退回此堂'
+                      : ''}
+              </span>
+            )
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto text-muted-foreground"
+            render={<Link href={`/my-bookings/${b.id}`} />}
+          >
+            查看明細
+          </Button>
+        </div>
       </div>
     </div>
   )
@@ -197,35 +213,50 @@ function BookingCard({ b }: { b: BookingRow }) {
 export default async function MyBookingsContent({ userId }: { userId: string }) {
   const supabase = await createSupabaseServerClient()
 
-  const [bookingsRes, pendingCountRes, completedCountRes, cancelledCountRes] = await Promise.all([
-    supabase
-      .from('bookings')
-      .select(
-        'id, status, customer_notes, created_at, service_id, checked_in_at, tenants(name, slug), services(name, duration_minutes, cancel_deadline_hours), availability_slots(start_at, end_at)',
-      )
-      .eq('customer_id', userId)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('bookings')
-      .select('id', { count: 'exact', head: true })
-      .eq('customer_id', userId)
-      .eq('status', 'pending'),
-    supabase
-      .from('bookings')
-      .select('id', { count: 'exact', head: true })
-      .eq('customer_id', userId)
-      .eq('status', 'completed'),
-    supabase
-      .from('bookings')
-      .select('id', { count: 'exact', head: true })
-      .eq('customer_id', userId)
-      .eq('status', 'cancelled'),
-  ])
+  const [bookingsRes, pendingCountRes, completedCountRes, cancelledCountRes, cancelReasons] =
+    await Promise.all([
+      supabase
+        .from('bookings')
+        .select(
+          'id, status, customer_notes, created_at, service_id, checked_in_at, cancel_deadline_at, cancel_category, cancel_reason, cancel_actor_role, class_disposition, tenants(name, slug), services(name, duration_minutes, cancel_deadline_hours), availability_slots(start_at, end_at)',
+        )
+        .eq('customer_id', userId)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('customer_id', userId)
+        .eq('status', 'pending'),
+      supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('customer_id', userId)
+        .eq('status', 'completed'),
+      supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('customer_id', userId)
+        .eq('status', 'cancelled'),
+      // 讀取失敗時為 null（錯誤已在 getCustomerCancelReasons 內記錄），卡片改顯示無法取消
+      getCustomerCancelReasons(supabase).catch(() => null),
+    ])
 
-  const bookings = (bookingsRes.data ?? []) as BookingRow[]
-  const pendingCount = pendingCountRes.count ?? 0
-  const completedCount = completedCountRes.count ?? 0
-  const cancelledCount = cancelledCountRes.count ?? 0
+  const view = resolveMyBookingsView({
+    bookings: { data: bookingsRes.data as BookingRow[] | null, error: bookingsRes.error },
+    pending: pendingCountRes,
+    completed: completedCountRes,
+    cancelled: cancelledCountRes,
+  })
+  if (!view.ok) {
+    console.error('[my-bookings] 讀取預約失敗', view.failures)
+    return (
+      <div className="mt-8 rounded-2xl border border-dashed border-border bg-muted/40 p-16 text-center">
+        <Calendar className="mx-auto size-10 text-muted-foreground" />
+        <p className="font-cjk mt-4 text-sm text-muted-foreground">目前無法取得預約，請稍後再試</p>
+      </div>
+    )
+  }
+  const { bookings, pendingCount, completedCount, cancelledCount } = view
 
   const now = new Date()
   const weekAhead = new Date(now.getTime() + 7 * 24 * 3600 * 1000)
@@ -252,10 +283,10 @@ export default async function MyBookingsContent({ userId }: { userId: string }) 
           label="待回覆"
           value={pendingCount}
           unit="筆"
-          hint="教練核可中"
+          hint="等教練確認"
           accent={pendingCount > 0}
         />
-        <KpiCard label="已完成" value={completedCount} unit="筆" />
+        <KpiCard label="已出席" value={completedCount} unit="筆" />
         <KpiCard label="已取消" value={cancelledCount} unit="筆" />
       </section>
 
@@ -278,7 +309,7 @@ export default async function MyBookingsContent({ userId }: { userId: string }) 
                 <DateStrip groupKey={groupKeyMap[g] ?? 'past'} count={items.length} />
                 <div className="flex flex-col gap-3">
                   {items.map((b) => (
-                    <BookingCard key={b.id} b={b} />
+                    <BookingCard key={b.id} b={b} cancelReasons={cancelReasons} />
                   ))}
                 </div>
               </section>

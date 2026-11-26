@@ -12,6 +12,7 @@ import {
 } from 'date-fns'
 import { X } from 'lucide-react'
 import { requireTenantMember } from '@/lib/auth/get-session'
+import { memberDisplayName } from '@/lib/auth/display-name'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { buttonVariants } from '@/components/ui/button'
 import { SectionHead } from '@/components/ui/section-head'
@@ -69,14 +70,18 @@ export default async function CalendarPage({
   if (session.role === 'tenant_owner') {
     const { data } = await supabase
       .from('tenant_members')
-      .select('id, role, invited_email, user_id')
+      .select('id, role, display_name, invited_email, user_id')
       .eq('tenant_id', session.tenantId)
       .eq('status', 'active')
       .order('role', { ascending: false })
     allMembers = (data ?? []).map((m) => ({
       id: m.id,
       role: m.role,
-      label: m.role === 'owner' ? '我' : (m.invited_email?.split('@')[0] ?? 'Staff'),
+      label:
+        m.role === 'owner'
+          ? '我'
+          : (memberDisplayName({ displayName: m.display_name, invitedEmail: m.invited_email }) ??
+            'Staff'),
       isSelf: m.id === session.memberId,
     }))
   } else {

@@ -93,14 +93,14 @@ export default function PackageFormDialog(props: Props) {
           ) : (
             <Button>
               <Plus className="mr-1 h-3.5 w-3.5" />
-              新增套裝
+              新增 N 堂課
             </Button>
           ))
         }
       />
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? '編輯套裝' : '新增套裝'}</DialogTitle>
+          <DialogTitle>{isEdit ? '編輯 N 堂課' : '新增 N 堂課'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -126,7 +126,7 @@ export default function PackageFormDialog(props: Props) {
               id="pkg-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="單堂 / 10 堂套裝"
+              placeholder="例如：10 堂課"
             />
           </div>
 

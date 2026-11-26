@@ -87,7 +87,7 @@ test.describe('public booking flow (王教練, no submit)', () => {
 
     // Either the confirm SectionHead OR the empty-state when student has no purchase.
     // Both confirm /book chrome rendered correctly.
-    const confirmOrEmpty = page.getByText(/預約確認|尚無可用套裝/).first()
+    const confirmOrEmpty = page.getByText(/預約確認|沒有可用的剩餘堂數/).first()
     await expect(confirmOrEmpty).toBeVisible({ timeout: 5_000 })
     // Do NOT click submit; that would create a real booking.
   })
