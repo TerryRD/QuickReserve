@@ -308,6 +308,22 @@ async function build(): Promise<Bfv2E2e> {
   }
 }
 
+/** 教練的聯絡方式（tenants 的四個聯絡欄位） */
+export type TenantContact = {
+  contact_line_id: string | null
+  contact_phone: string | null
+  contact_email: string | null
+  contact_note: string | null
+}
+
+/** 直接改測試租戶的聯絡方式（驗證學員端「聯絡教練」段落用；測試結束要自行還原成 null） */
+export async function setTenantContact(tenantId: string, contact: TenantContact): Promise<void> {
+  check(
+    await admin.from('tenants').update(contact).eq('id', tenantId).select('id').single(),
+    'tenants contact',
+  )
+}
+
 /** 直接讀資料庫的預約狀態（驗證畫面操作真的寫進資料庫） */
 export async function readBooking(bookingId: string) {
   return check(

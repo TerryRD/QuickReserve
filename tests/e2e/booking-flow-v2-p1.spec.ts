@@ -5,8 +5,10 @@ import {
   SVC,
   cleanupBfv2E2e,
   readBooking,
+  setTenantContact,
   setupBfv2E2e,
   type Bfv2E2e,
+  type TenantContact,
 } from './bfv2-fixture'
 
 /**
@@ -18,6 +20,14 @@ import {
 
 /** 畫面上不得出現的舊用語（設計文件 §2、計畫 H1） */
 const FORBIDDEN_ON_PAGE = ['套裝', '已完成', '未到場', '退還']
+
+/** 教練沒有設定任何聯絡方式 */
+const NO_CONTACT: TenantContact = {
+  contact_line_id: null,
+  contact_phone: null,
+  contact_email: null,
+  contact_note: null,
+}
 
 let ctx: Bfv2E2e
 
@@ -225,6 +235,85 @@ test.describe('2. 學員端預約明細頁', () => {
     await page.goto('/my-bookings/00000000-0000-4000-8000-000000000000')
     await expect(page.getByText('頁面不存在')).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: '歷程' })).toHaveCount(0)
+  })
+
+  test('教練沒有設定聯絡方式時，明細頁沒有「聯絡教練」段落', async ({ page }) => {
+    // 不依賴其他測試的執行順序：開頭先把四項清成 null
+    await setTenantContact(ctx.tenantId, NO_CONTACT)
+    await login(page, ctx.customer.email)
+    await page.goto(`/my-bookings/${ctx.bookings.custCancelled}`)
+    await expect(page.getByRole('heading', { level: 1, name: SVC.custCancelled })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: '聯絡教練' })).toHaveCount(0)
+  })
+
+  test('教練有設定聯絡方式時，明細頁顯示「聯絡教練」，電話與 Email 是連結', async ({ page }) => {
+    const contact = {
+      contact_line_id: 'e2e_coach',
+      contact_phone: '0912345678',
+      contact_email: 'e2e-coach@example.com',
+      contact_note: '上課時間請先傳 LINE',
+    }
+    await setTenantContact(ctx.tenantId, contact)
+    try {
+      await login(page, ctx.customer.email)
+
+      // 已取消與未取消的預約都要顯示
+      for (const [key, serviceName] of [
+        ['custCancelled', SVC.custCancelled],
+        ['ownerSlotPending', SVC.ownerSlotPending],
+      ] as const) {
+        await page.goto(`/my-bookings/${ctx.bookings[key]}`)
+        await expect(page.getByRole('heading', { level: 1, name: serviceName })).toBeVisible()
+
+        const section = customerSection(page, '聯絡教練')
+        await expect(section).toBeVisible()
+        await expect(section.locator('dt')).toHaveCount(4)
+        await expect(fieldValue(section, 'LINE')).toHaveText(contact.contact_line_id)
+        await expect(fieldValue(section, '電話')).toHaveText(contact.contact_phone)
+        await expect(fieldValue(section, 'Email')).toHaveText(contact.contact_email)
+        await expect(fieldValue(section, '備註')).toHaveText(contact.contact_note)
+
+        await expect(fieldValue(section, '電話').locator('a')).toHaveAttribute(
+          'href',
+          'tel:0912345678',
+        )
+        await expect(fieldValue(section, 'Email').locator('a')).toHaveAttribute(
+          'href',
+          'mailto:e2e-coach@example.com',
+        )
+        await expect(fieldValue(section, 'LINE').locator('a')).toHaveCount(0)
+        await expect(fieldValue(section, '備註').locator('a')).toHaveCount(0)
+
+        if (key === 'custCancelled') {
+          // 位置：在「取消紀錄」之後、「歷程」之前
+          const titles = (await page.locator('h2').allInnerTexts()).map((t) => t.trim())
+          const contactAt = titles.indexOf('聯絡教練')
+          const recordAt = titles.indexOf('取消紀錄')
+          const historyAt = titles.indexOf('歷程')
+          expect(recordAt, '應有「取消紀錄」段落').toBeGreaterThanOrEqual(0)
+          expect(contactAt).toBeGreaterThan(recordAt)
+          expect(contactAt).toBeLessThan(historyAt)
+        }
+
+        await expectNoForbiddenTerms(page)
+      }
+
+      // 只設定電話：只有「電話」一列
+      await setTenantContact(ctx.tenantId, { ...NO_CONTACT, contact_phone: '0912345678' })
+      await page.goto(`/my-bookings/${ctx.bookings.ownerSlotPending}`)
+      await expect(
+        page.getByRole('heading', { level: 1, name: SVC.ownerSlotPending }),
+      ).toBeVisible()
+      const section = customerSection(page, '聯絡教練')
+      await expect(section.locator('dt')).toHaveCount(1)
+      await expect(fieldValue(section, '電話')).toHaveText('0912345678')
+      await expect(fieldValue(section, '電話').locator('a')).toHaveAttribute(
+        'href',
+        'tel:0912345678',
+      )
+    } finally {
+      await setTenantContact(ctx.tenantId, NO_CONTACT)
+    }
   })
 })
 

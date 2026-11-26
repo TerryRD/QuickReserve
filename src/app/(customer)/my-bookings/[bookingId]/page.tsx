@@ -18,6 +18,7 @@ import { CancelRecord } from '@/components/bookings/cancel-record'
 import BookingChangeActions from '../booking-change-actions'
 import { formatTaipeiDateTime, formatTaipeiSlotRange } from '@/lib/taipei-time'
 import { canCustomerChangeBooking, isLegacyCancel } from '../booking-display'
+import { coachContactRows } from './contact-rows'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const STATUS_TYPES: ReadonlyArray<StatusType> = [
@@ -45,7 +46,14 @@ type BookingDetailRow = {
   class_disposition: string | null
   cancelled_at: string | null
   rescheduled_from_booking_id: string | null
-  tenants: { name: string; slug: string } | null
+  tenants: {
+    name: string
+    slug: string
+    contact_line_id: string | null
+    contact_phone: string | null
+    contact_email: string | null
+    contact_note: string | null
+  } | null
   services: { name: string; duration_minutes: number; cancel_deadline_hours: number } | null
   availability_slots: { start_at: string; end_at: string } | null
   customer_purchases: { classes_total: number } | null
@@ -93,7 +101,7 @@ export default async function MyBookingDetailPage({
   const { data, error } = await supabase
     .from('bookings')
     .select(
-      'id, status, customer_notes, service_id, cancel_deadline_at, cancel_category, cancel_reason, cancel_actor_role, class_disposition, cancelled_at, rescheduled_from_booking_id, tenants(name, slug), services(name, duration_minutes, cancel_deadline_hours), availability_slots(start_at, end_at), customer_purchases(classes_total)',
+      'id, status, customer_notes, service_id, cancel_deadline_at, cancel_category, cancel_reason, cancel_actor_role, class_disposition, cancelled_at, rescheduled_from_booking_id, tenants(name, slug, contact_line_id, contact_phone, contact_email, contact_note), services(name, duration_minutes, cancel_deadline_hours), availability_slots(start_at, end_at), customer_purchases(classes_total)',
     )
     .eq('id', bookingId)
     .eq('customer_id', session.userId)
@@ -114,6 +122,7 @@ export default async function MyBookingDetailPage({
   const canChange = canCustomerChangeBooking(b.status, slot?.start_at, now)
   const isCancelled = b.status === 'cancelled'
   const rescheduledOut = isCancelled && b.cancel_category === 'rescheduled'
+  const contactRows = coachContactRows(tenant)
 
   const loadRelated = async (
     query: PromiseLike<{
@@ -261,6 +270,28 @@ export default async function MyBookingDetailPage({
                 cancelledAt={b.cancelled_at}
                 disposition={pick(DISPOSITIONS, b.class_disposition)}
               />
+            </Section>
+          )}
+
+          {contactRows.length > 0 && (
+            <Section title="聯絡教練">
+              <dl className="font-cjk grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+                {contactRows.map((row) => (
+                  <Row key={row.key} label={row.label}>
+                    {/* 長 Email／LINE ID 沒有空白也要能斷行，避免手機版橫向溢出 */}
+                    {row.href ? (
+                      <a
+                        href={row.href}
+                        className="underline underline-offset-[3px] hover:text-muted-foreground"
+                      >
+                        <span className="break-all">{row.value}</span>
+                      </a>
+                    ) : (
+                      <span className="break-all">{row.value}</span>
+                    )}
+                  </Row>
+                ))}
+              </dl>
             </Section>
           )}
 
