@@ -38,7 +38,7 @@ export default function ServiceActionsRow({ id, isActive }: { id: string; isActi
         </Button>
       }
       title="刪除此服務？"
-      description="刪除後學員端不再顯示。既有預約與套裝不受影響。可從『已刪除』分頁重新啟用。"
+      description="刪除後學員端不再顯示。既有預約與已購買的堂數不受影響。可從『已刪除』分頁重新啟用。"
       confirmLabel="刪除"
       variant="destructive"
       onConfirm={() => del.execute({ id })}

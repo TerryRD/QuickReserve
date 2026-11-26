@@ -49,7 +49,7 @@ export const updatePackageAction = actionClient
       .select('tenant_id')
       .eq('id', parsedInput.id)
       .maybeSingle()
-    if (!existing || existing.tenant_id !== session.tenantId) throw new NotFoundError('套裝')
+    if (!existing || existing.tenant_id !== session.tenantId) throw new NotFoundError('N 堂課')
 
     const { error } = await supabase
       .from('service_packages')

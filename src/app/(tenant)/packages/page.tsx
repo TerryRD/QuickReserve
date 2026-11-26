@@ -98,10 +98,10 @@ export default async function PackagesPage({
   return (
     <div className="space-y-6">
       <SectionHead
-        kicker="PACKAGES · 套裝管理"
-        title="套裝管理"
+        kicker="PACKAGES · 課堂管理"
+        title="課堂管理"
         eng="PACKAGES"
-        hint="按服務分組管理可購買的套裝（單堂、N 堂等）"
+        hint="按服務分組管理可購買的 N 堂課，並審核購買申請"
         right={
           <div className="flex flex-wrap items-center gap-2">
             <Link
@@ -118,7 +118,7 @@ export default async function PackagesPage({
       />
 
       <nav
-        aria-label="套裝分類"
+        aria-label="課堂分類"
         className="inline-flex rounded-full border border-border bg-card p-1 shadow-[0_8px_24px_-18px_rgba(0,0,0,0.18)]"
       >
         {tabs.map((t) => {
@@ -162,7 +162,7 @@ export default async function PackagesPage({
             NO SERVICES
           </div>
           <p className="font-cjk mt-2 text-sm text-muted-foreground">
-            請先建立服務，才能為服務新增可購買的套裝。
+            請先建立服務，才能為服務新增可購買的 N 堂課。
           </p>
         </div>
       ) : tab === 'draft' ? (
@@ -179,7 +179,9 @@ export default async function PackagesPage({
               <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                 NO MATCHING PACKAGES
               </div>
-              <p className="font-cjk mt-2 text-sm text-muted-foreground">此分類目前沒有套裝</p>
+              <p className="font-cjk mt-2 text-sm text-muted-foreground">
+                此分類目前沒有可購買的 N 堂課
+              </p>
             </div>
           ) : (
             groups.map((g, gi) => (
@@ -242,7 +244,7 @@ function ServiceGroup({
         </span>
         <h2 className="font-display font-cjk text-2xl font-black">{service.name}</h2>
         <span className="font-cjk text-xs text-muted-foreground">
-          · {service.duration_minutes} 分鐘 · {packages.length} 個套裝
+          · {service.duration_minutes} 分鐘 · {packages.length} 個商品
         </span>
         <span aria-hidden className="ml-2 hidden h-px flex-1 bg-border sm:block" />
       </div>
@@ -270,7 +272,9 @@ function ServiceGroup({
                   <div className="mx-auto grid size-10 place-items-center rounded-full bg-secondary text-muted-foreground">
                     <Plus className="size-4" />
                   </div>
-                  <div className="font-cjk text-sm font-semibold">新增 {service.name} 套裝</div>
+                  <div className="font-cjk text-sm font-semibold">
+                    新增 {service.name} 的 N 堂課
+                  </div>
                   <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                     CREATE NEW
                   </div>
@@ -301,7 +305,7 @@ function DraftSection({
         <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
           NO DRAFTS
         </div>
-        <p className="font-cjk mt-2 text-sm text-muted-foreground">沒有草稿（已刪除）套裝</p>
+        <p className="font-cjk mt-2 text-sm text-muted-foreground">沒有已刪除的 N 堂課</p>
       </div>
     )
   }

@@ -30,6 +30,7 @@ const ALLOWED_BOOKING_STATUSES = new Set<StatusType>([
   'confirmed',
   'cancelled',
   'completed',
+  'no_show',
 ])
 
 export default async function CustomersPage({
@@ -174,7 +175,7 @@ export default async function CustomersPage({
           const expiresLabel = p.expires_at ? format(toLocal(p.expires_at), 'yyyy-MM-dd') : '無期限'
           const pkgName =
             p.service_packages?.name ??
-            (p.services?.name ? `${p.services.name} · ${total} 堂` : '套裝')
+            (p.services?.name ? `${p.services.name} · ${total} 堂` : `${total} 堂課`)
           return {
             id: p.id,
             name: pkgName,
@@ -215,7 +216,7 @@ export default async function CustomersPage({
         kicker="CUSTOMERS · 學員管理"
         title="學員"
         eng="CUSTOMERS"
-        hint="所有預約過你服務的學員。點開查看預約紀錄與持有套裝。"
+        hint="所有預約過你服務的學員。點開查看預約紀錄與剩餘堂數。"
       />
 
       {/* Search row */}

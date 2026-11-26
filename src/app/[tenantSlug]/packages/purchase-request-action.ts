@@ -24,7 +24,7 @@ export const requestPurchaseAction = actionClient
       .select('id, tenant_id, service_id, class_count, is_active')
       .eq('id', parsedInput.packageId)
       .maybeSingle()
-    if (!pkg || !pkg.is_active) throw new NotFoundError('套裝')
+    if (!pkg || !pkg.is_active) throw new NotFoundError('N 堂課')
 
     // Ensure tenant_customers bridge
     await supabase

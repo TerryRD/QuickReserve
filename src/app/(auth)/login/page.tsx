@@ -13,8 +13,8 @@ import { SidePanel } from '../side-panel'
 import { loginAction } from './actions'
 
 const SIDE_LINES = [
-  '登入後可購買套裝、預約時段、改期或取消預約。',
-  '教練核可後會以 Email 與 Web Push 通知你。',
+  '登入後可購買堂數、預約時段、改期或取消預約。',
+  '教練核准後會以推播通知你。',
   '資料安全：密碼以 bcrypt 雜湊儲存、session 採 httpOnly cookie。',
 ]
 

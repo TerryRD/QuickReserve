@@ -60,7 +60,7 @@ export default async function TenantDashboard() {
                 size="pill"
                 className="text-primary-foreground/85 hover:bg-white/10 hover:text-primary-foreground dark:hover:bg-white/10"
               >
-                <Layers className="size-3.5" /> 開放新套裝
+                <Layers className="size-3.5" /> 新增 N 堂課
               </Button>
             </Link>
           </div>
