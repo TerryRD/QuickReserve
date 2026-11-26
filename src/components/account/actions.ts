@@ -32,6 +32,24 @@ export const updateDisplayNameAction = actionClient
       if (cErr) throw new AppError('PROFILE_UPDATE_FAILED', cErr.message)
     }
 
+    // 教練／助教的姓名另存在 tenant_members.display_name（教練端預約清單、明細、歷程的成員名稱），
+    // 這個使用者的所有成員列一併同步；不是成員時更新 0 列。本人更新自己的列由既有 RLS（tenant_members_update）允許。
+    const { data: memberRows, error: mErr } = await supabase
+      .from('tenant_members')
+      .update({ display_name: parsedInput.fullName })
+      .eq('user_id', session.userId)
+      .select('id')
+    // 目前登入中的成員列沒有被更新到（例如被權限擋下而回傳 0 列）也算失敗，不當作已同步
+    const missedCurrentMember =
+      !mErr && !!session.memberId && !(memberRows ?? []).some((m) => m.id === session.memberId)
+    if (mErr || missedCurrentMember) {
+      console.error('[account] 同步成員名稱失敗', mErr ?? { memberId: session.memberId })
+      throw new AppError(
+        'PROFILE_UPDATE_FAILED',
+        '姓名已儲存，但教練後台顯示的名稱沒有更新成功，請再儲存一次',
+      )
+    }
+
     revalidatePath('/', 'layout')
     return { ok: true, fullName: parsedInput.fullName }
   })
