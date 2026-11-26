@@ -1,8 +1,12 @@
 // 預約流程改版 v2 / P1 整合測試共用骨架（任務 9）
 //
-// 每個測試檔呼叫 setupBfv2(label) 建立一個獨立的測試租戶與使用者，
+// 每個測試檔呼叫 setupBfv2(label, 登入清單) 建立一個獨立的測試租戶與使用者，
 // afterAll 呼叫 teardownBfv2(ctx)：先刪平台管理員列，再刪租戶（連帶刪掉時段、預約、購買、歷程、明細），最後刪使用者。
 // 只會讀寫這裡建立的資料，不碰任何既有租戶、使用者或預約。
+//
+// 六個身分的帳號與資料列一律建立，但只有登入清單內的身分會真的登入：
+// Supabase 登入有頻率上限，整合測試全套跑下來的登入次數要省著用，測試檔用不到的身分就不登入。
+// 沒登入的身分若被讀取 .client 會立刻丟錯，提醒把它加進清單。
 import WebSocket from 'ws'
 if (typeof globalThis.WebSocket === 'undefined') {
   globalThis.WebSocket = WebSocket as unknown as typeof globalThis.WebSocket
@@ -22,6 +26,15 @@ export const admin: SupabaseClient<Database> = createClient<Database>(URL, SERVI
 
 type Member = { userId: string; memberId: string; client: SupabaseClient<Database> }
 type User = { userId: string; client: SupabaseClient<Database> }
+
+/** setupBfv2 建立的六個身分 */
+export type Bfv2Role =
+  | 'owner'
+  | 'staffA'
+  | 'staffB'
+  | 'customer'
+  | 'otherCustomer'
+  | 'platformAdmin'
 
 export type Bfv2Ctx = {
   /** 這次執行的時間戳，所有 slug／email 都帶著它 */
@@ -63,6 +76,28 @@ export async function signedInClient(email: string): Promise<SupabaseClient<Data
   return c
 }
 
+/**
+ * 替身分物件補上 client。
+ * notSignedIn 沒給：以 email 登入，放上真的 client。
+ * notSignedIn 有給：不登入，client 改成不可列舉的 getter，一被讀取就丟錯（訊息帶這個身分名稱）。
+ * 型別仍是 SupabaseClient，呼叫端寫法不用改。
+ */
+async function withClient<T extends object>(
+  base: T,
+  email: string,
+  notSignedIn: Bfv2Role | undefined,
+): Promise<T & { client: SupabaseClient<Database> }> {
+  if (notSignedIn === undefined) return { ...base, client: await signedInClient(email) }
+  return Object.defineProperty(base, 'client', {
+    enumerable: false,
+    get(): never {
+      throw new Error(
+        `bfv2-fixture：這支測試檔沒有宣告以「${notSignedIn}」登入，請把它加進 setupBfv2 的登入清單`,
+      )
+    },
+  }) as T & { client: SupabaseClient<Database> }
+}
+
 /** 建立一個測試使用者並登入；email 帶 label 與時間戳 */
 export async function makeUser(ctx: Pick<Bfv2Ctx, 'ts' | 'label' | 'userIds'>, role: string) {
   const email = `${role}-bfv2-${ctx.label}-${ctx.ts}@example.com`
@@ -77,22 +112,28 @@ export async function makeUser(ctx: Pick<Bfv2Ctx, 'ts' | 'label' | 'userIds'>, r
   return { userId, email }
 }
 
-/** 建立一位學員（auth 使用者＋customers 列）並登入 */
+/**
+ * 建立一位學員（auth 使用者＋customers 列）並登入。
+ * 傳入 notSignedIn 時不登入，client 讀取即丟錯（見 withClient）。
+ */
 export async function makeCustomer(
   ctx: Pick<Bfv2Ctx, 'ts' | 'label' | 'userIds'>,
   role: string,
+  notSignedIn?: Bfv2Role,
 ): Promise<User> {
   const { userId, email } = await makeUser(ctx, role)
   const { error } = await admin.from('customers').insert({ id: userId, display_name: role })
   if (error) throw new Error(`customers ${role}: ${error.message}`)
-  return { userId, client: await signedInClient(email) }
+  return withClient({ userId }, email, notSignedIn)
 }
 
+/** 建立一位成員並登入；傳入 notSignedIn 時不登入（同 makeCustomer） */
 async function makeMember(
   ctx: Pick<Bfv2Ctx, 'ts' | 'label' | 'userIds'>,
   tenantId: string,
   role: 'owner' | 'staff',
   name: string,
+  notSignedIn?: Bfv2Role,
 ): Promise<Member> {
   const { userId, email } = await makeUser(ctx, name)
   const { data, error } = await admin
@@ -101,7 +142,7 @@ async function makeMember(
     .select('id')
     .single()
   if (error) throw new Error(`tenant_members ${name}: ${error.message}`)
-  return { userId, memberId: data.id, client: await signedInClient(email) }
+  return withClient({ userId, memberId: data.id }, email, notSignedIn)
 }
 
 export async function makeTenant(ctx: Pick<Bfv2Ctx, 'ts' | 'label'>, suffix = '') {
@@ -143,12 +184,23 @@ export async function makeService(
   return data.id
 }
 
-export async function setupBfv2(label: string): Promise<Bfv2Ctx> {
+/**
+ * 建立這支測試檔的租戶、六個身分、三個服務。
+ *
+ * signIn：這支測試檔會以哪些身分登入操作（也就是會讀哪些身分的 .client）。
+ * 六個身分的帳號與 tenant_members／customers／platform_admins 列仍全部建立（測試會用到沒登入身分的
+ * userId／memberId），只有清單內的身分會登入。原因是 Supabase 登入有頻率上限，整合測試全套的登入次數要省著用。
+ * 沒列入的身分讀 .client 會立刻丟錯，提醒把它加進清單。
+ *
+ * 不改成「第一次查詢時才登入」：登入失敗必須在 beforeAll 就明確失敗。若延後到查詢當下，
+ * 登入失敗會變成某個查詢的錯誤，遇到斷言「這個操作應該被擋」的案例，就會被誤判成通過。
+ */
+export async function setupBfv2(label: string, signIn: readonly Bfv2Role[]): Promise<Bfv2Ctx> {
   const base = { ts: Date.now(), label, userIds: [] as string[], extraTenantIds: [] as string[] }
   const { tenantId, slug } = await makeTenant(base)
   const partial = { ...base, tenantId, tenantSlug: slug }
   try {
-    return await setupInTenant(partial)
+    return await setupInTenant(partial, signIn)
   } catch (e) {
     // 建到一半失敗：把已建立的租戶與使用者清掉再丟出原錯誤
     await admin.from('tenants').delete().eq('id', tenantId)
@@ -159,19 +211,22 @@ export async function setupBfv2(label: string): Promise<Bfv2Ctx> {
 
 async function setupInTenant(
   partial: Pick<Bfv2Ctx, 'ts' | 'label' | 'userIds' | 'extraTenantIds' | 'tenantId' | 'tenantSlug'>,
+  signIn: readonly Bfv2Role[],
 ): Promise<Bfv2Ctx> {
   const { tenantId } = partial
+  /** 清單內的身分回 undefined（要登入）；不在清單內回身分名稱（不登入） */
+  const skip = (r: Bfv2Role) => (signIn.includes(r) ? undefined : r)
 
-  const owner = await makeMember(partial, tenantId, 'owner', 'owner')
-  const staffA = await makeMember(partial, tenantId, 'staff', 'staffa')
-  const staffB = await makeMember(partial, tenantId, 'staff', 'staffb')
-  const customer = await makeCustomer(partial, 'cust')
-  const otherCustomer = await makeCustomer(partial, 'othercust')
+  const owner = await makeMember(partial, tenantId, 'owner', 'owner', skip('owner'))
+  const staffA = await makeMember(partial, tenantId, 'staff', 'staffa', skip('staffA'))
+  const staffB = await makeMember(partial, tenantId, 'staff', 'staffb', skip('staffB'))
+  const customer = await makeCustomer(partial, 'cust', skip('customer'))
+  const otherCustomer = await makeCustomer(partial, 'othercust', skip('otherCustomer'))
 
   const { userId: paId, email: paEmail } = await makeUser(partial, 'padmin')
   const { error: paErr } = await admin.from('platform_admins').insert({ user_id: paId })
   if (paErr) throw new Error(`platform_admins: ${paErr.message}`)
-  const platformAdmin = { userId: paId, client: await signedInClient(paEmail) }
+  const platformAdmin = await withClient({ userId: paId }, paEmail, skip('platformAdmin'))
 
   const soloServiceId = await makeService(partial, {
     name: 'Solo',

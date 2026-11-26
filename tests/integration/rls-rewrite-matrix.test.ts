@@ -344,7 +344,7 @@ afterAll(async () => {
   for (const uid of [f.ownerUserId, f.staffUserId, f.customerUserId, f.otherCustomerUserId]) {
     if (uid) await admin.auth.admin.deleteUser(uid).catch(() => {})
   }
-})
+}, 120_000)
 
 describe('availability_templates', () => {
   it('owner SELECTs own tenant template (1 row)', async () => {

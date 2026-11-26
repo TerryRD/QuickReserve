@@ -71,7 +71,7 @@ async function moveSlotPastDeadline(slotId: string, bookingId: string) {
 
 describe('bfv2 P1：取消紀錄與取消必填原因', () => {
   beforeAll(async () => {
-    ctx = await setupBfv2('cancel')
+    ctx = await setupBfv2('cancel', ['owner', 'customer', 'otherCustomer'])
     soloPurchase = await makePurchase(ctx, {
       customerId: ctx.customer.userId,
       serviceId: ctx.soloServiceId,

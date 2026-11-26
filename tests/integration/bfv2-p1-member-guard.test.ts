@@ -175,7 +175,7 @@ async function ensureNewTenant(): Promise<string> {
 
 describe('bfv2 P1：成員防線', () => {
   beforeAll(async () => {
-    ctx = await setupBfv2('mguard')
+    ctx = await setupBfv2('mguard', ['owner', 'staffA', 'customer', 'platformAdmin'])
     const other = await makeOwnerOfNewTenant(ctx, '-other')
     otherTenantId = other.tenantId
     otherTenantOwner = other.owner.client

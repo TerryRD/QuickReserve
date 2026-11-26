@@ -57,7 +57,7 @@ async function pendingOn(memberId: string, who: 'customer' | 'otherCustomer' = '
 
 describe('bfv2 P1：權限與讀取範圍', () => {
   beforeAll(async () => {
-    ctx = await setupBfv2('perm')
+    ctx = await setupBfv2('perm', ['owner', 'staffA', 'customer', 'otherCustomer', 'platformAdmin'])
     custGroupPurchase = await makePurchase(ctx, {
       customerId: ctx.customer.userId,
       serviceId: ctx.groupServiceId,

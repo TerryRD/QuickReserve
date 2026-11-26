@@ -40,12 +40,12 @@ describe('account settings DB primitives', () => {
     })
     if (oErr || !o?.user) throw new Error(`create other failed: ${oErr?.message}`)
     otherId = o.user.id
-  })
+  }, 120_000)
 
   afterAll(async () => {
     if (custId) await admin.auth.admin.deleteUser(custId)
     if (otherId) await admin.auth.admin.deleteUser(otherId)
-  })
+  }, 120_000)
 
   it('customer can update own customers.display_name under RLS', async () => {
     const client = createClient<Database>(SUPABASE_URL, ANON_KEY)
