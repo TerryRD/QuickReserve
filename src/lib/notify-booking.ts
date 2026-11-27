@@ -1,6 +1,8 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { pushToUser } from '@/lib/push'
 import { previewReason } from '@/lib/booking-terms'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/supabase/types'
 
 export type BookingEvent = 'created' | 'confirmed' | 'cancelled'
 
@@ -289,6 +291,109 @@ export async function notifyPurchaseDecision(
     })
   } catch (err) {
     console.error('[notify-purchase]', err)
+  }
+}
+
+/** 學員送出購買申請時自報的付款狀態（customer_purchases.payment_self_reported）→ 通知內文用語 */
+const PAYMENT_SELF_REPORTED_LABEL: Record<string, string> = {
+  claimed_paid: '我已轉帳',
+  partial_paid: '已部分付款',
+  awaiting_payment: '尚未付款',
+}
+
+export type PurchaseRequestNoticeInput = {
+  customerName: string | null
+  productName: string | null
+  classCount: number
+  /** customer_purchases.payment_self_reported */
+  paymentSelfReported: string
+}
+
+/** 學員送出購買申請時，給教練端的通知標題與內文。純函式，不查資料庫。 */
+export function buildPurchaseRequestNotice(input: PurchaseRequestNoticeInput): NoticeCopy {
+  const customer = input.customerName?.trim() || '學員'
+  const product = input.productName?.trim() || '課程'
+  const payment = PAYMENT_SELF_REPORTED_LABEL[input.paymentSelfReported]
+  return {
+    title: '新的購買申請',
+    body:
+      `${customer} 申請購買 ${product}（${input.classCount} 堂課）。` +
+      (payment ? `付款申報：${payment}` : ''),
+  }
+}
+
+/**
+ * 誰可以審購買申請：這個租戶所有在職成員（Owner 與助教），排除還沒綁帳號的。
+ * 查詢失敗會 throw——不可回空陣列冒充「沒有人要通知」。
+ * 第 3 階段會收緊成只有 Owner，到時只改這一支。
+ */
+export async function purchaseReviewerUserIds(
+  admin: SupabaseClient<Database>,
+  tenantId: string,
+): Promise<string[]> {
+  const { data, error } = await admin
+    .from('tenant_members')
+    .select('user_id')
+    .eq('tenant_id', tenantId)
+    .eq('status', 'active')
+  if (error || !data) {
+    throw new Error(`查詢可審核購買申請的成員失敗：${error?.message ?? '沒有回傳資料'}`)
+  }
+  return data.flatMap((m) => (m.user_id ? [m.user_id] : []))
+}
+
+/**
+ * 學員送出購買申請後，通知可以審核的教練端成員。
+ * 失敗只記 log，絕不往外丟——購買申請本身必須成功。
+ */
+export async function notifyPurchaseRequested(purchaseId: string): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient()
+    const { data: p, error } = await admin
+      .from('customer_purchases')
+      .select(
+        'id, tenant_id, customer_id, classes_total, payment_self_reported, customers(display_name), services(name), service_packages(name)',
+      )
+      .eq('id', purchaseId)
+      .maybeSingle()
+    if (error || !p) {
+      console.error('[notify-purchase-request] 查詢購買申請失敗，未發通知', purchaseId, error)
+      return
+    }
+
+    let reviewers: string[]
+    try {
+      reviewers = await purchaseReviewerUserIds(admin, p.tenant_id)
+    } catch (err) {
+      console.error('[notify-purchase-request] 查詢審核者失敗，未發通知', purchaseId, err)
+      return
+    }
+
+    const customer = p.customers as { display_name: string | null } | null
+    const svc = p.services as { name: string } | null
+    const pkg = p.service_packages as { name: string } | null
+    const notice = buildPurchaseRequestNotice({
+      customerName: customer?.display_name ?? null,
+      productName: pkg?.name ?? svc?.name ?? null,
+      classCount: p.classes_total,
+      paymentSelfReported: p.payment_self_reported,
+    })
+
+    for (const userId of reviewers) {
+      if (userId === p.customer_id) continue
+      await pushToUser(admin, {
+        userId,
+        type: 'package_request',
+        payload: {
+          ...notice,
+          url: '/packages/pending',
+          tag: `purchase-request-${purchaseId}`,
+        },
+        relatedId: purchaseId,
+      })
+    }
+  } catch (err) {
+    console.error('[notify-purchase-request]', err)
   }
 }
 
