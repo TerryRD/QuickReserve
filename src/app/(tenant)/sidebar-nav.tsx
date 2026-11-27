@@ -3,25 +3,29 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  Bell,
   Calendar,
   CalendarClock,
   ClipboardList,
   Contact,
   LayoutDashboard,
   Package,
-  Settings,
   UserCog,
   Users,
   type LucideIcon,
 } from 'lucide-react'
+import { UnreadBadge } from '@/components/notifications/unread-badge'
 
-type Item = { href: string; label: string; icon: LucideIcon }
+type Item = { href: string; label: string; icon: LucideIcon; badge?: number | null }
 
 export default function SidebarNav({
   isOwner,
+  unread,
   onNavigate,
 }: {
   isOwner: boolean
+  /** 未讀通知數；查詢失敗為 null（不顯示數字） */
+  unread: number | null
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
@@ -35,7 +39,7 @@ export default function SidebarNav({
     { href: '/packages', label: '課堂管理', icon: Package },
     ...(isOwner ? [{ href: '/staff', label: '助教管理', icon: Users }] : []),
     ...(isOwner ? [{ href: '/settings/profile', label: '租戶資料', icon: UserCog }] : []),
-    { href: '/notifications', label: '通知設定', icon: Settings },
+    { href: '/notifications', label: '通知', icon: Bell, badge: unread },
   ]
 
   return (
@@ -58,6 +62,7 @@ export default function SidebarNav({
           >
             <it.icon className="size-4 shrink-0" />
             <span className="font-cjk">{it.label}</span>
+            {it.badge !== undefined && <UnreadBadge unread={it.badge} className="ml-auto" />}
           </Link>
         )
       })}
