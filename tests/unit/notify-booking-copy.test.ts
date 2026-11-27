@@ -1,13 +1,18 @@
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseAdminClient: vi.fn() }))
 vi.mock('@/lib/push', () => ({ pushToUser: vi.fn() }))
 
 import {
   buildCancelNotice,
+  buildPurchaseRequestNotice,
+  notifyPurchaseRequested,
   purchaseRejectedBody,
+  purchaseReviewerUserIds,
   type CancelNoticeInput,
 } from '@/lib/notify-booking'
+import { createSupabaseAdminClient } from '@/lib/supabase/server'
+import { pushToUser } from '@/lib/push'
 import { FORBIDDEN_TERMS, REASON_PREVIEW_MAX } from '@/lib/booking-terms'
 
 const base: CancelNoticeInput = {
@@ -194,5 +199,188 @@ describe('purchaseRejectedBody', () => {
   })
   it('沒有租戶名稱時寫「教練」', () => {
     expect(purchaseRejectedBody(null, null)).toBe('教練 已拒絕您的購買申請')
+  })
+})
+
+describe('buildPurchaseRequestNotice', () => {
+  const input = {
+    customerName: '陳小明',
+    productName: '十堂課方案',
+    classCount: 10,
+    paymentSelfReported: 'claimed_paid',
+  }
+
+  it('含學員、商品、堂數與付款申報', () => {
+    expect(buildPurchaseRequestNotice(input)).toEqual({
+      title: '新的購買申請',
+      body: '陳小明 申請購買 十堂課方案（10 堂課）。付款申報：我已轉帳',
+    })
+  })
+
+  it.each([
+    ['claimed_paid', '我已轉帳'],
+    ['partial_paid', '已部分付款'],
+    ['awaiting_payment', '尚未付款'],
+  ])('付款申報 %s → 「%s」', (value, label) => {
+    const n = buildPurchaseRequestNotice({ ...input, paymentSelfReported: value })
+    expect(n.body.endsWith(`付款申報：${label}`)).toBe(true)
+  })
+
+  it('沒有學員名稱時寫「學員」', () => {
+    const n = buildPurchaseRequestNotice({ ...input, customerName: null })
+    expect(n.body.startsWith('學員 申請購買')).toBe(true)
+  })
+
+  it('不含禁用詞、「退還」與付款狀態代碼', () => {
+    for (const value of ['claimed_paid', 'partial_paid', 'awaiting_payment']) {
+      const n = buildPurchaseRequestNotice({ ...input, paymentSelfReported: value })
+      for (const text of [n.title, n.body]) {
+        for (const term of FORBIDDEN_TERMS) expect(text).not.toContain(term)
+        expect(text).not.toContain('退還')
+        expect(text).not.toContain(value)
+      }
+    }
+  })
+})
+
+type Row = Record<string, unknown>
+
+/** 假的 admin client：依 eq 條件過濾指定表的資料；可指定某張表查詢失敗 */
+function fakeAdmin(tables: Record<string, Row[]>, failing: string[] = []) {
+  return {
+    from(table: string) {
+      const filters: [string, unknown][] = []
+      const result = () => {
+        if (failing.includes(table)) return { data: null, error: { message: 'boom' } }
+        const rows = (tables[table] ?? []).filter((r) => filters.every(([c, v]) => r[c] === v))
+        return { data: rows, error: null }
+      }
+      const builder: Record<string, unknown> = {
+        select: () => builder,
+        eq: (col: string, val: unknown) => {
+          filters.push([col, val])
+          return builder
+        },
+        maybeSingle: () => {
+          const r = result()
+          return Promise.resolve({ data: r.data?.[0] ?? null, error: r.error })
+        },
+        then: (resolve: (v: unknown) => unknown) => Promise.resolve(result()).then(resolve),
+      }
+      return builder
+    },
+  }
+}
+
+const PURCHASE = {
+  id: 'p-1',
+  tenant_id: 't-1',
+  customer_id: 'u-student',
+  classes_total: 10,
+  payment_self_reported: 'partial_paid',
+  customers: { display_name: '陳小明' },
+  services: { name: '一對一基礎課' },
+  service_packages: { name: '十堂課方案' },
+}
+
+const MEMBERS = [
+  { tenant_id: 't-1', user_id: 'u-owner', status: 'active' },
+  { tenant_id: 't-1', user_id: 'u-staff', status: 'active' },
+  { tenant_id: 't-1', user_id: 'u-removed', status: 'removed' },
+  { tenant_id: 't-1', user_id: null, status: 'active' },
+  // 學員本人剛好也是成員（自己買自己的課）
+  { tenant_id: 't-1', user_id: 'u-student', status: 'active' },
+  { tenant_id: 't-other', user_id: 'u-other', status: 'active' },
+]
+
+describe('purchaseReviewerUserIds', () => {
+  it('回傳租戶內在職、有帳號的成員（Owner 與助教）', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const admin = fakeAdmin({ tenant_members: MEMBERS }) as any
+    await expect(purchaseReviewerUserIds(admin, 't-1')).resolves.toEqual([
+      'u-owner',
+      'u-staff',
+      'u-student',
+    ])
+  })
+
+  it('查詢失敗 → throw，不回空陣列', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const admin = fakeAdmin({}, ['tenant_members']) as any
+    await expect(purchaseReviewerUserIds(admin, 't-1')).rejects.toThrow('查詢可審核購買申請的成員失敗')
+  })
+})
+
+describe('notifyPurchaseRequested', () => {
+  const push = vi.mocked(pushToUser)
+  const adminFactory = vi.mocked(createSupabaseAdminClient)
+
+  beforeEach(() => {
+    push.mockReset()
+    adminFactory.mockReset()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  it('通知 Owner 與助教，不含已停用成員與學員本人', async () => {
+    adminFactory.mockReturnValue(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fakeAdmin({ customer_purchases: [PURCHASE], tenant_members: MEMBERS }) as any,
+    )
+
+    await notifyPurchaseRequested('p-1')
+
+    expect(push.mock.calls.map(([, d]) => d.userId)).toEqual(['u-owner', 'u-staff'])
+    expect(push.mock.calls[0]![1]).toEqual({
+      userId: 'u-owner',
+      type: 'package_request',
+      payload: {
+        title: '新的購買申請',
+        body: '陳小明 申請購買 十堂課方案（10 堂課）。付款申報：已部分付款',
+        url: '/packages/pending',
+        tag: 'purchase-request-p-1',
+      },
+      relatedId: 'p-1',
+    })
+  })
+
+  it('沒有方案名稱時用服務名稱', async () => {
+    adminFactory.mockReturnValue(
+      fakeAdmin({
+        customer_purchases: [{ ...PURCHASE, service_packages: null }],
+        tenant_members: MEMBERS,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any,
+    )
+    await notifyPurchaseRequested('p-1')
+    expect(push.mock.calls[0]![1].payload.body).toContain('申請購買 一對一基礎課（10 堂課）')
+  })
+
+  it('查詢審核者失敗 → 不發、記錄「查詢失敗」、不往外丟', async () => {
+    adminFactory.mockReturnValue(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fakeAdmin({ customer_purchases: [PURCHASE] }, ['tenant_members']) as any,
+    )
+    await expect(notifyPurchaseRequested('p-1')).resolves.toBeUndefined()
+    expect(push).not.toHaveBeenCalled()
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('查詢審核者失敗'),
+      'p-1',
+      expect.anything(),
+    )
+  })
+
+  it('讀取購買申請失敗 → 不發、不往外丟', async () => {
+    adminFactory.mockReturnValue(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fakeAdmin({ tenant_members: MEMBERS }, ['customer_purchases']) as any,
+    )
+    await expect(notifyPurchaseRequested('p-1')).resolves.toBeUndefined()
+    expect(push).not.toHaveBeenCalled()
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('查詢購買申請失敗'),
+      'p-1',
+      expect.anything(),
+    )
   })
 })
