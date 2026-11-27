@@ -337,6 +337,75 @@ export async function readBooking(bookingId: string) {
 }
 
 // ---------------------------------------------------------------------------
+// 站內通知 e2e（tests/e2e/in-app-notifications.spec.ts）用的資料準備
+// ---------------------------------------------------------------------------
+
+/** 測試租戶的 slug（建立時為 E2E_PREFIX + ts） */
+export function tenantSlugOf(ctx: Pick<Bfv2E2e, 'ts'>): string {
+  return `${E2E_PREFIX}${ctx.ts}`
+}
+
+/** 在測試租戶建立一個服務與一個上架中的 N 堂課方案（學員在公開頁送出購買申請用），回傳方案名稱 */
+export async function createServicePackage(
+  tenantId: string,
+  o: { serviceName: string; packageName: string; classCount: number; price: number },
+): Promise<string> {
+  const service = check(
+    await admin
+      .from('services')
+      .insert({
+        tenant_id: tenantId,
+        name: o.serviceName,
+        duration_minutes: 60,
+        max_capacity: 1,
+        min_attendance: 1,
+        cancel_deadline_hours: 24,
+      })
+      .select('id')
+      .single(),
+    `services ${o.serviceName}`,
+  )
+  check(
+    await admin
+      .from('service_packages')
+      .insert({
+        tenant_id: tenantId,
+        service_id: service.id,
+        name: o.packageName,
+        class_count: o.classCount,
+        price: o.price,
+      })
+      .select('id')
+      .single(),
+    `service_packages ${o.packageName}`,
+  )
+  return o.packageName
+}
+
+/** 以後端身分（service role）直接寫入一則站內通知給指定使用者 */
+export async function insertInAppNotification(
+  userId: string,
+  o: { title: string; body: string; url: string | null },
+): Promise<void> {
+  check(
+    await admin
+      .from('notification_log')
+      .insert({
+        user_id: userId,
+        type: 'booking_confirmed',
+        channel: 'in_app',
+        status: 'skipped',
+        title: o.title,
+        body: o.body,
+        url: o.url,
+      })
+      .select('id')
+      .single(),
+    'notification_log',
+  )
+}
+
+// ---------------------------------------------------------------------------
 // 團班時段可見性（tests/e2e/group-slot-visibility.spec.ts）專用
 // ---------------------------------------------------------------------------
 

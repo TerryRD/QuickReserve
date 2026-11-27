@@ -2,6 +2,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import {
   formatTaipeiDateTime,
   formatTaipeiMonthDayTime,
+  formatTaipeiShortMonthDayTime,
   formatTaipeiSlotRange,
   formatTaipeiTime,
   taipeiParts,
@@ -14,6 +15,7 @@ function allFormats() {
     formatTaipeiDateTime('2026-12-03T11:00:00Z'),
     formatTaipeiDateTime('2026-12-03T11:00:00Z', { withYear: true }),
     formatTaipeiMonthDayTime('2026-12-01T16:05:00Z'),
+    formatTaipeiShortMonthDayTime('2026-12-01T16:05:00Z'),
     formatTaipeiTime('2026-12-01T16:05:00Z'),
     formatTaipeiSlotRange('2026-12-06T06:00:00Z', '2026-12-06T07:30:00Z'),
   ]
@@ -48,6 +50,12 @@ describe('台灣時間格式', () => {
     expect(formatTaipeiMonthDayTime('2026-11-28T02:02:00Z')).toBe('11/28 10:02')
   })
 
+  it('月日不補零的月日時分：例 12/2 19:00', () => {
+    expect(formatTaipeiShortMonthDayTime('2026-12-02T11:00:00Z')).toBe('12/2 19:00')
+    // 台灣已跨日：UTC 16:05 是隔天 00:05
+    expect(formatTaipeiShortMonthDayTime('2026-01-04T16:05:00Z')).toBe('1/5 00:05')
+  })
+
   it('時段區間：例 2026/12/06（日）14:00–15:30', () => {
     expect(formatTaipeiSlotRange('2026-12-06T06:00:00Z', '2026-12-06T07:30:00Z')).toBe(
       '2026/12/06（日）14:00–15:30',
@@ -75,6 +83,7 @@ describe('台灣時間格式', () => {
       '12/03（四）19:00',
       '2026/12/03（四）19:00',
       '12/02 00:05',
+      '12/2 00:05',
       '00:05',
       '2026/12/06（日）14:00–15:30',
     ]
