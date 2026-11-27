@@ -161,9 +161,7 @@ async function MembersBlock({ tenantId }: { tenantId: string }) {
                 {m.role === 'owner' ? 'Owner' : 'Staff'} · {m.status}
               </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              {formatTaipeiDate(m.created_at)}
-            </div>
+            <div className="text-xs text-muted-foreground">{formatTaipeiDate(m.created_at)}</div>
           </div>
         ))}
         {!members?.length && (

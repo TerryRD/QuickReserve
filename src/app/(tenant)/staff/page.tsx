@@ -56,9 +56,7 @@ export default async function StaffPage() {
                     </span>
                   )}
                 </td>
-                <td className="p-3 text-xs text-slate-500">
-                  {formatTaipeiDate(m.created_at)}
-                </td>
+                <td className="p-3 text-xs text-slate-500">{formatTaipeiDate(m.created_at)}</td>
                 <td className="p-3 text-right">
                   {m.role === 'staff' && <RemoveStaffButton memberId={m.id} />}
                 </td>
