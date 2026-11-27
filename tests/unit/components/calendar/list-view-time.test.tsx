@@ -30,9 +30,7 @@ describe.each(ZONES)('行事曆清單檢視（執行環境時區 $tz）', ({ tz,
   })
 
   it('兩筆都歸在台灣 12/2 那一天，時間以台灣時間顯示', () => {
-    const { container } = render(
-      <CalendarListView slots={SLOTS} showMemberLabel={false} />,
-    )
+    const { container } = render(<CalendarListView slots={SLOTS} showMemberLabel={false} />)
     const sections = container.querySelectorAll('section')
     expect(sections).toHaveLength(1)
     expect(sections[0]!.querySelector('header')!.textContent).toMatch(/^12\/2 /)
