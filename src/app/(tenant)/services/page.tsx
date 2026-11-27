@@ -110,7 +110,7 @@ export default async function ServicesPage({
       {filtered.length === 0 && !canEdit ? (
         <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-16 text-center">
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            NO SERVICES
+            沒有服務
           </div>
           <p className="font-cjk mt-2 text-sm text-muted-foreground">
             {showArchived ? '所有服務都在使用中' : '尚無符合的服務'}
