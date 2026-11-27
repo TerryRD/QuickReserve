@@ -12,6 +12,7 @@ import {
   startOfWeek,
 } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { taipeiDateKey } from '@/lib/taipei-time'
 
 type SlotDisplay = {
   id: string
@@ -29,19 +30,13 @@ type SlotDisplay = {
   maxCapacity: number
 }
 
-function toLocal(iso: string, tzOffsetHours: number): Date {
-  return new Date(new Date(iso).getTime() + tzOffsetHours * 3600 * 1000)
-}
-
 export default function MonthView({
   monthAnchor,
   slots,
-  tzOffsetHours,
 }: {
-  /** ISO date string anchoring the month being shown (e.g. first day of that month). */
+  /** 要顯示的月份第一天（台灣日期 yyyy-MM-01）。 */
   monthAnchor: string
   slots: SlotDisplay[]
-  tzOffsetHours: number
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -55,16 +50,16 @@ export default function MonthView({
   const totalCells = 42
   const cells: Date[] = Array.from({ length: totalCells }, (_, i) => addDays(gridStart, i))
 
-  // Count slots per local day + flag conflict days.
+  // 依台灣日期計算每天的時段數，並標出有衝突的日子。
   const countByDate = new Map<string, number>()
   const conflictDates = new Set<string>()
   for (const s of slots) {
-    const k = format(toLocal(s.startAt, tzOffsetHours), 'yyyy-MM-dd')
+    const k = taipeiDateKey(s.startAt)
     countByDate.set(k, (countByDate.get(k) ?? 0) + 1)
     if (s.conflictReason) conflictDates.add(k)
   }
 
-  const todayKey = format(toLocal(new Date().toISOString(), tzOffsetHours), 'yyyy-MM-dd')
+  const todayKey = taipeiDateKey(new Date())
 
   const monthLabel = format(mStart, 'yyyy / MM')
   const daysInMonth = differenceInDays(mEnd, mStart) + 1

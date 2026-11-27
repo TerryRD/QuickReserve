@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import { formatTaipeiTime, taipeiDateKey } from '@/lib/taipei-time'
 import SlotPopover from './slot-popover'
 
 type SlotDisplay = {
@@ -24,17 +25,11 @@ const STATUS_BADGE: Record<SlotDisplay['status'], { label: string; cls: string }
   cancelled: { label: '已取消', cls: 'bg-slate-200 text-slate-600' },
 }
 
-function toLocal(iso: string, tzOffsetHours: number): Date {
-  return new Date(new Date(iso).getTime() + tzOffsetHours * 3600 * 1000)
-}
-
 export default function CalendarListView({
   slots,
-  tzOffsetHours,
   showMemberLabel,
 }: {
   slots: SlotDisplay[]
-  tzOffsetHours: number
   showMemberLabel: boolean
 }) {
   if (slots.length === 0) {
@@ -45,10 +40,10 @@ export default function CalendarListView({
     )
   }
 
-  // group by local date
+  // 依台灣日期分組
   const byDay: Record<string, SlotDisplay[]> = {}
   for (const s of slots) {
-    const key = format(toLocal(s.startAt, tzOffsetHours), 'yyyy-MM-dd')
+    const key = taipeiDateKey(s.startAt)
     byDay[key] = byDay[key] ?? []
     byDay[key].push(s)
   }
@@ -71,9 +66,7 @@ export default function CalendarListView({
             </header>
             <ul className="divide-y">
               {list.map((s) => {
-                const ls = toLocal(s.startAt, tzOffsetHours)
-                const le = toLocal(s.endAt, tzOffsetHours)
-                const timeLabel = `${format(ls, 'HH:mm')}-${format(le, 'HH:mm')}`
+                const timeLabel = `${formatTaipeiTime(s.startAt)}-${formatTaipeiTime(s.endAt)}`
                 const badge = STATUS_BADGE[s.status]
                 return (
                   <SlotPopover key={s.id} slot={s} timeLabel={timeLabel}>
