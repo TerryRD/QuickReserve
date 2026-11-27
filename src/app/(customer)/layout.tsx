@@ -2,9 +2,15 @@ import Link from 'next/link'
 import { Calendar, LogOut } from 'lucide-react'
 import { requireSession } from '@/lib/auth/get-session'
 import { AccountChip } from '@/components/shell/account-chip'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { countUnread } from '@/lib/notifications'
+import { NotificationPopover } from '@/components/notifications/notification-popover'
 
 export default async function CustomerLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession()
+  const supabase = await createSupabaseServerClient()
+  // 讀不到時是 null：鈴鐺照樣顯示，只是不顯示數字
+  const unread = await countUnread(supabase, session.userId)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -20,6 +26,7 @@ export default async function CustomerLayout({ children }: { children: React.Rea
             <div className="hidden sm:block">
               <AccountChip displayName={session.displayName} email={session.email} tone="light" />
             </div>
+            <NotificationPopover href="/my-notifications" unread={unread} />
             <form action="/api/logout" method="post">
               <button
                 type="submit"
