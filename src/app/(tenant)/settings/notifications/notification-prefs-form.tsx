@@ -13,6 +13,7 @@ import { QuietHoursInput } from '@/components/settings/quiet-hours-input'
 import { SectionHead } from '@/components/ui/section-head'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { formatTaipeiDateTime, formatTaipeiTime } from '@/lib/taipei-time'
 import {
   saveNotificationPrefsAction,
   removePushDeviceAction,
@@ -131,7 +132,7 @@ export default function NotificationPrefsForm({
                   <div className="font-cjk truncate text-sm font-semibold">{d.label}</div>
                   <div className="font-mono mt-0.5 text-xs text-muted-foreground">
                     最後使用{' '}
-                    {d.last_used_at ? new Date(d.last_used_at).toLocaleString('zh-TW') : '—'}
+                    {d.last_used_at ? formatTaipeiDateTime(d.last_used_at, { withYear: true }) : '—'}
                   </div>
                 </div>
                 <Button
@@ -230,7 +231,7 @@ export default function NotificationPrefsForm({
       <div className="flex items-center justify-end gap-3 pt-2">
         {savedAt && !savePending && (
           <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            已儲存 {savedAt.toLocaleTimeString('zh-TW')}
+            已儲存 {formatTaipeiTime(savedAt)}
           </span>
         )}
         <Button

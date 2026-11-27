@@ -1,12 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { format } from 'date-fns'
 import { ArrowLeft, Wallet } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireSession } from '@/lib/auth/get-session'
 import { getTenantBySlug } from '@/lib/auth/get-tenant-context'
 import { Card, CardContent } from '@/components/ui/card'
 import { PURCHASE_APPROVAL_LABEL } from '@/lib/booking-terms'
+import { formatTaipeiDate, formatTaipeiTime } from '@/lib/taipei-time'
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   pending_review: {
@@ -97,7 +97,7 @@ export default async function MyPurchasesPage({
                       </div>
                       <div>
                         <span className="text-muted-foreground">到期：</span>
-                        {p.expires_at ? format(new Date(p.expires_at), 'yyyy/MM/dd') : '永久'}
+                        {p.expires_at ? formatTaipeiDate(p.expires_at) : '永久'}
                       </div>
                     </div>
                   )}
@@ -107,7 +107,7 @@ export default async function MyPurchasesPage({
                     </div>
                   )}
                   <div className="mt-3 text-[10px] text-muted-foreground">
-                    申請於 {format(new Date(p.created_at), 'yyyy/MM/dd HH:mm')}
+                    申請於 {formatTaipeiDate(p.created_at)} {formatTaipeiTime(p.created_at)}
                   </div>
                 </CardContent>
               </Card>

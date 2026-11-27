@@ -1,10 +1,11 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { ArrowRight, Layers, Plus } from 'lucide-react'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { getTenantContext } from '@/lib/auth/get-tenant-context'
 import { Button } from '@/components/ui/button'
+import { taipeiDateKey, taipeiParts } from '@/lib/taipei-time'
 import DashboardContent, { DashboardContentSkeleton } from './dashboard-content'
 
 export default async function TenantDashboard() {
@@ -12,7 +13,8 @@ export default async function TenantDashboard() {
   const tenant = await getTenantContext(session.tenantId)
 
   const now = new Date()
-  const greeting = now.getHours() < 12 ? '早安' : now.getHours() < 18 ? '午安' : '晚安'
+  const hour = taipeiParts(now).hour
+  const greeting = hour < 12 ? '早安' : hour < 18 ? '午安' : '晚安'
 
   return (
     <div className="space-y-6">
@@ -24,7 +26,7 @@ export default async function TenantDashboard() {
         />
         <div className="relative">
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary-foreground/70">
-            DASHBOARD · {format(now, 'EEE yyyy.MM.dd').toUpperCase()} · {tenant.name}
+            DASHBOARD · {format(parseISO(taipeiDateKey(now)), 'EEE yyyy.MM.dd').toUpperCase()} · {tenant.name}
           </div>
           <h1 className="font-display mt-3 flex flex-wrap items-baseline gap-3.5 text-4xl uppercase leading-[0.95] tracking-tight sm:text-6xl">
             <span className="font-cjk">

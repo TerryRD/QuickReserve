@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { formatTaipeiDate } from '@/lib/taipei-time'
 import InviteStaffForm from './invite-staff-form'
 import RemoveStaffButton from './remove-staff-button'
 
@@ -56,7 +57,7 @@ export default async function StaffPage() {
                   )}
                 </td>
                 <td className="p-3 text-xs text-slate-500">
-                  {new Date(m.created_at).toLocaleDateString('zh-TW')}
+                  {formatTaipeiDate(m.created_at)}
                 </td>
                 <td className="p-3 text-right">
                   {m.role === 'staff' && <RemoveStaffButton memberId={m.id} />}

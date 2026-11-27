@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { formatTaipeiDate } from '@/lib/taipei-time'
 import SuspendButton from './suspend-button'
 import { TenantRowActions } from './tenant-row-actions'
 
@@ -114,7 +115,7 @@ export default function TenantsTable({ tenants }: { tenants: Tenant[] }) {
                     )}
                   </td>
                   <td className="p-3 text-xs text-muted-foreground">
-                    {new Date(t.created_at).toLocaleDateString('zh-TW')}
+                    {formatTaipeiDate(t.created_at)}
                   </td>
                   <td className="p-3">
                     <div className="flex justify-end gap-1">
