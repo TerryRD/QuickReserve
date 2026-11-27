@@ -332,6 +332,14 @@ Booking row state(`bookings.status` pending / confirmed / cancelled / completed)
 - `/api/public/slots` 回傳 `max_capacity` + `current_bookings`
 - `SlotPicker` 用 `TimeChip state='group'` 顯示 N/M(`max_capacity > 1` 才出現),滿了的 slot 由 status filter + count guard 雙重排除
 
+**團班有人預約後的可見性（2026-11-27 修正）:**
+- 問題：學員與訪客讀不到別人的預約，時段讀取規則又只開放 `available`，所以團班只要有 1 人預約（slot 變 `pending`），其他人就看不到、進不了這個時段，公開頁人數也永遠是 0。
+- `/api/public/slots` 與 `/api/public/slot-days` 改呼叫資料庫函式 `public_bookable_slots(tenant_id, service_id, from, to)`：只回傳教練未停用、狀態 `available` 或 `pending`、尚未開課、未額滿的時段，已佔名額（`taken`，API 轉成 `current_bookings`）由資料庫算，不回傳任何學員資料。一次最多查 62 天。查詢失敗回 500，不回空清單。
+- 已佔名額統一由 `slot_taken_count(slot_id)` 計算：未取消的預約＋學員臨時取消（`cancel_category = 'late_cancel'`）的已取消預約。
+- 時段讀取規則 `slots_select`：非成員可讀 `available` 與 `pending` 的時段（`booked`、`cancelled` 仍讀不到；自己有預約的時段不論狀態都讀得到）。
+- 預約確認頁 `/book/[slotId]` 的判斷順序：登入學員在這個時段已有未取消的預約 → 顯示「你已預約這個時段」；狀態不是 `available`／`pending`，或已佔名額 ≥ 名額上限 → 「時段已不可預約」；讀不到名額資料 → 「目前無法取得時段資料」並擋下。
+- Migration：`20261126110000_group_slot_visibility_functions.sql`（函式，須先於程式上線）、`20261126110100_group_slot_visibility_policy.sql`（讀取規則）。
+
 Cron 排程：**Vercel Hobby plan 只支援 daily**（`0 0 * * *`），所以 auto-cancel 最多 24h 延遲。若需更短粒度（例如 hourly 對 `cancel_deadline_hours = 1` 才即時）必須升級 Pro 後改 `0 * * * *`。
 
 ## 取消原因、預約明細與歷程（預約流程 v2 P1）
@@ -617,6 +625,8 @@ UUID 可以在 Supabase Dashboard → Authentication → Users 找到。
 - `cancel_booking(booking_id, reason)` — **P1 起原因必填**（去除空白後不得為空、上限 500 字），並在同一交易寫入取消紀錄、`activity_log`、`class_ledger`;權限為學員本人、Owner、該時段的助教(平台管理員不可代操作)。學員取消:待確認一律退回、已確認在取消期限(預約上的 `cancel_deadline_at`)內退回、逾期不退回(P1 過渡行為);教練取消或拒絕一律退回;**重算 slot.status**(尚有未取消 booking → `pending`, else → `available`);拒絕重複取消終結狀態(`cancelled`/`completed`/`no_show`)
 - `reschedule_booking(old_booking_id, new_slot_id, reason?)` — **P1 起教練代改期必填原因**,學員自己改期可不填;同一 tenant 內 atomically cancel old + create new;接受 `available` 或 `pending` 目的 slot(後者支援改期進團班),帶過原 purchase_id 不重複扣堂
 - `auto_cancel_group_slot(slot_id)` — service_role only,團班 min_attendance 不足時 cron 用,refund 所有 bookings + 通知扇出
+- `slot_taken_count(slot_id)` — 回傳時段已佔名額（只有數字）;anon 與登入者皆可呼叫,預約確認頁用它判斷是否額滿
+- `public_bookable_slots(tenant_id, service_id, from, to)` — 公開頁查詢用,回傳還能預約的時段與已佔名額,不含任何學員資料;anon 與登入者皆可呼叫
 - `mark_no_show_bookings()` — service_role only(P1 新增),把課程已結束仍未簽到的已確認預約標為 `no_show` 並寫入 `activity_log`;只標記、不動堂數。取代排程直接改 `bookings` 的做法
 - `book_slot_atomic(slot_id, customer_id, notes)` — **legacy**,已從 `authenticated` revoke(`20260529100100`);data layer 受 `bookings.purchase_id NOT NULL` 卡死,實際 dead code,留定義但無 callers
 

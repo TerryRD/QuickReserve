@@ -1265,6 +1265,21 @@ export type Database = {
       is_own_slot_booking: { Args: { p_booking_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
       mark_no_show_bookings: { Args: { p_lookback?: unknown }; Returns: number }
+      public_bookable_slots: {
+        Args: {
+          p_from: string
+          p_service_id: string
+          p_tenant_id: string
+          p_to: string
+        }
+        Returns: {
+          end_at: string
+          id: string
+          max_capacity: number
+          start_at: string
+          taken: number
+        }[]
+      }
       reschedule_booking: {
         Args: {
           p_new_slot_id: string
@@ -1303,6 +1318,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      slot_taken_count: { Args: { p_slot_id: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never

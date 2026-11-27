@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Calendar } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { willCustomerCancelRefund } from '@/lib/cancel-deadline'
 import CancelMyBookingButton from './cancel-button'
 
@@ -27,13 +28,12 @@ export default function BookingChangeActions({
   return (
     <>
       {tenantSlug && serviceId && (
-        <Button
-          variant="secondary"
-          size="sm"
-          render={<Link href={`/${tenantSlug}?service=${serviceId}&reschedule=${bookingId}`} />}
+        <Link
+          href={`/${tenantSlug}?service=${serviceId}&reschedule=${bookingId}`}
+          className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }))}
         >
           <Calendar className="size-3" /> 改期
-        </Button>
+        </Link>
       )}
       {cancelReasons ? (
         <CancelMyBookingButton
