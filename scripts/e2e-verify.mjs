@@ -1,8 +1,26 @@
+/**
+ * API-level booking flow end-to-end verification against production.
+ *
+ * Run:  PLATFORM_ADMIN_EMAIL=... PLATFORM_ADMIN_PWD=... node scripts/e2e-verify.mjs
+ *
+ * Env vars (shell or .env.local):
+ *   - PLATFORM_ADMIN_EMAIL / PLATFORM_ADMIN_PWD — required, no default; the script exits
+ *     immediately (non-zero) if either is missing.
+ */
 import ws from 'ws'
 globalThis.WebSocket = ws
 import { createClient } from '@supabase/supabase-js'
 import { config } from 'dotenv'
 config({ path: '.env.local' })
+
+const PLATFORM_EMAIL = process.env.PLATFORM_ADMIN_EMAIL
+const PLATFORM_PWD = process.env.PLATFORM_ADMIN_PWD
+if (!PLATFORM_EMAIL || !PLATFORM_PWD) {
+  console.error(
+    '錯誤：缺少平台管理員帳密。請先設定環境變數 PLATFORM_ADMIN_EMAIL 與 PLATFORM_ADMIN_PWD（可寫在 .env.local 或執行前於命令列設定），再執行本腳本。',
+  )
+  process.exit(1)
+}
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -44,8 +62,8 @@ async function main() {
   log('\n─── Step 2: Login as platform admin via Supabase Auth ───')
   const userClient = createClient(SUPABASE_URL, ANON_KEY)
   const { data: signIn, error: signInErr } = await userClient.auth.signInWithPassword({
-    email: 'terry@gmail.com',
-    password: 'Nx7$kPm9!Lq3vRz2',
+    email: PLATFORM_EMAIL,
+    password: PLATFORM_PWD,
   })
   if (signInErr) fail(`Login: ${signInErr.message}`)
   log(`  ✓ Signed in as ${signIn.user.email}`)
