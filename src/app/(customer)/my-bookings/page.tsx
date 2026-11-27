@@ -2,7 +2,8 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { Calendar, Settings, Filter } from 'lucide-react'
 import { requireSession } from '@/lib/auth/get-session'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import PushOptIn from '@/components/push-opt-in'
 import MyBookingsContent, { MyBookingsContentSkeleton } from './my-bookings-content'
@@ -31,13 +32,12 @@ export default async function MyBookingsPage() {
             <Badge variant="outline" icon={<Calendar className="size-3" />}>
               本月 · {now.getMonth() + 1} 月
             </Badge>
-            <Button
-              variant="pill-outline"
-              size="sm"
-              render={<Link href="/account/notifications" />}
+            <Link
+              href="/account/notifications"
+              className={cn(buttonVariants({ variant: 'pill-outline', size: 'sm' }))}
             >
               <Settings className="size-3" /> 通知
-            </Button>
+            </Link>
           </div>
         </div>
 
