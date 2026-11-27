@@ -273,7 +273,11 @@ describe('站內通知：讀寫範圍與限制', () => {
       pushToUser(admin, {
         userId,
         type: 'daily_reminder',
-        payload: { title: '今日行程提醒', body: `您今天有 1 個預約 / 時段（${day}）`, url: '/my-bookings' },
+        payload: {
+          title: '今日行程提醒',
+          body: `您今天有 1 個預約 / 時段（${day}）`,
+          url: '/my-bookings',
+        },
         scheduledFor: `${day}T16:00:00.000Z`,
       })
     await send('2026-12-01')

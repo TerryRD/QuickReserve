@@ -31,13 +31,7 @@ export const bellButtonClassName = cn(
 )
 
 /** 紅底白字的未讀數字徽章；0 或查詢失敗不顯示 */
-export function UnreadBadge({
-  unread,
-  className,
-}: {
-  unread: number | null
-  className?: string
-}) {
+export function UnreadBadge({ unread, className }: { unread: number | null; className?: string }) {
   const text = unreadBadgeText(unread)
   if (!text) return null
   return (

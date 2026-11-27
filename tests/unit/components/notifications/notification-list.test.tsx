@@ -117,9 +117,7 @@ describe('NotificationList', () => {
   })
 
   it('已讀且沒有連結 → 不可點', () => {
-    render(
-      <NotificationList items={[item({ url: null, readAt: '2026-12-02T12:00:00Z' })]} />,
-    )
+    render(<NotificationList items={[item({ url: null, readAt: '2026-12-02T12:00:00Z' })]} />)
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })

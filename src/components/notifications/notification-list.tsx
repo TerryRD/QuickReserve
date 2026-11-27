@@ -109,7 +109,10 @@ export function NotificationRow({
     <>
       <Bell
         aria-hidden
-        className={cn('mt-0.5 size-4 shrink-0', isUnread ? 'text-foreground' : 'text-muted-foreground')}
+        className={cn(
+          'mt-0.5 size-4 shrink-0',
+          isUnread ? 'text-foreground' : 'text-muted-foreground',
+        )}
       />
       {/* 手機寬度（與小視窗）時間在內文下面；電腦寬度在右側 */}
       <div
@@ -129,10 +132,7 @@ export function NotificationRow({
           </div>
           {item.body && (
             <p
-              className={cn(
-                'font-cjk mt-0.5 text-sm text-muted-foreground',
-                compact && 'truncate',
-              )}
+              className={cn('font-cjk mt-0.5 text-sm text-muted-foreground', compact && 'truncate')}
             >
               {item.body}
             </p>

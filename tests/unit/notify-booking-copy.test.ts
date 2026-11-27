@@ -307,7 +307,9 @@ describe('purchaseReviewerUserIds', () => {
   it('查詢失敗 → throw，不回空陣列', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const admin = fakeAdmin({}, ['tenant_members']) as any
-    await expect(purchaseReviewerUserIds(admin, 't-1')).rejects.toThrow('查詢可審核購買申請的成員失敗')
+    await expect(purchaseReviewerUserIds(admin, 't-1')).rejects.toThrow(
+      '查詢可審核購買申請的成員失敗',
+    )
   })
 })
 

@@ -84,10 +84,8 @@ function fakeSupabase(opts: Options = {}) {
       return builder
     },
   }
-  const logInserts = () =>
-    calls.filter((c) => c.table === 'notification_log' && c.op === 'insert')
-  const logUpdates = () =>
-    calls.filter((c) => c.table === 'notification_log' && c.op === 'update')
+  const logInserts = () => calls.filter((c) => c.table === 'notification_log' && c.op === 'insert')
+  const logUpdates = () => calls.filter((c) => c.table === 'notification_log' && c.op === 'update')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { client: client as any, calls, logInserts, logUpdates }
 }
@@ -191,9 +189,7 @@ describe('pushToUser：一律留下站內紀錄', () => {
     expect(res).toEqual({ sent: 1, failed: 0, removed: 0 })
     expect(webpushMock.sendNotification).toHaveBeenCalledTimes(1)
     expect(fake.logInserts()[0]!.values).toMatchObject({ status: 'sent' })
-    expect(
-      fake.calls.some((c) => c.table === 'push_subscriptions' && c.op === 'update'),
-    ).toBe(true)
+    expect(fake.calls.some((c) => c.table === 'push_subscriptions' && c.op === 'update')).toBe(true)
   })
 
   it('推播失敗（非 410）→ failed', async () => {
