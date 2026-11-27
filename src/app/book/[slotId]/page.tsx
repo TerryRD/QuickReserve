@@ -21,16 +21,19 @@ type ActivePurchaseRow = CustomerPurchase & {
 }
 
 const UNAVAILABLE_NOTICE = {
+  kicker: '無法預約',
   title: '時段已不可預約',
   hint: '該時段可能已被其他學員預約或取消。',
 }
 
 const LOAD_FAILED_NOTICE = {
+  kicker: '暫時無法顯示',
   title: '目前無法取得時段資料',
   hint: '請稍後再試。',
 }
 
 const ALREADY_BOOKED_NOTICE = {
+  kicker: '已預約',
   title: '你已預約這個時段',
   hint: '可以到「我的預約」查看這筆預約。',
 }
@@ -40,11 +43,13 @@ const NOTICE_LINK_CLASS =
 
 /** 不能進入預約表單時的提示卡片（時段已不可預約、讀不到時段資料、已預約這個時段共用同一個版型） */
 function SlotNotice({
+  kicker,
   title,
   hint,
   tenantSlug,
   showMyBookingsLink = false,
 }: {
+  kicker: string
   title: string
   hint: string
   tenantSlug: string | null
@@ -54,7 +59,7 @@ function SlotNotice({
     <main className="grid min-h-screen place-items-center bg-background p-6">
       <div className="max-w-md rounded-2xl border border-border bg-card p-10 text-center">
         <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-          UNAVAILABLE
+          {kicker}
         </div>
         <h2 className="font-display mt-4 text-2xl uppercase">{title}</h2>
         <p className="font-cjk mt-2 text-sm text-muted-foreground">{hint}</p>
