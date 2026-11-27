@@ -6,6 +6,7 @@ import { ArrowLeft, Calendar, ClipboardList, ExternalLink, Package, Users } from
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
+import { formatTaipeiDate } from '@/lib/taipei-time'
 
 const TZ_OFFSET_HOURS = 8
 const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
@@ -52,7 +53,7 @@ export default async function PlatformTenantDetailPage({
               >
                 {tenant.status === 'active' ? '啟用中' : '已暫停'}
               </span>
-              <span>建立於 {format(new Date(tenant.created_at), 'yyyy/MM/dd')}</span>
+              <span>建立於 {formatTaipeiDate(tenant.created_at)}</span>
             </div>
           </div>
           <Link
@@ -160,9 +161,7 @@ async function MembersBlock({ tenantId }: { tenantId: string }) {
                 {m.role === 'owner' ? 'Owner' : 'Staff'} · {m.status}
               </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              {format(new Date(m.created_at), 'yyyy/MM/dd')}
-            </div>
+            <div className="text-xs text-muted-foreground">{formatTaipeiDate(m.created_at)}</div>
           </div>
         ))}
         {!members?.length && (

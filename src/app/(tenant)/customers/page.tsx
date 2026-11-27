@@ -1,11 +1,11 @@
 import Link from 'next/link'
-import { format } from 'date-fns'
 import { Search, Users } from 'lucide-react'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { SectionHead } from '@/components/ui/section-head'
 import { EmptyState } from '@/components/ui/empty-state'
 import { cn } from '@/lib/utils'
+import { formatTaipeiDate, formatTaipeiMonthDayTime, taipeiDateKey } from '@/lib/taipei-time'
 import CustomerRow, {
   type CustomerDrawerData,
   type CustomerRowData,
@@ -13,9 +13,6 @@ import CustomerRow, {
   type DrawerPackage,
 } from './customer-row'
 import type { StatusType } from '@/components/ui/badge'
-
-const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 type StatusFilter = 'all' | 'active' | 'blocked'
 
@@ -130,7 +127,7 @@ export default async function CustomersPage({
         const ts = b.availability_slots?.start_at ?? b.created_at
         if (ts && (!lastSeenIso || ts > lastSeenIso)) lastSeenIso = ts
       }
-      const lastSeenLabel = lastSeenIso ? format(toLocal(lastSeenIso), 'MM/dd') : null
+      const lastSeenLabel = lastSeenIso ? formatTaipeiDate(lastSeenIso).slice(5) : null
 
       const rowData: CustomerRowData = {
         customerId: c.id,
@@ -152,8 +149,8 @@ export default async function CustomersPage({
       const drawerBookings: DrawerBooking[] = sortedBookings.slice(0, 10).map((b) => {
         const startIso = b.availability_slots?.start_at ?? null
         const startAtLabel = startIso
-          ? format(toLocal(startIso), 'MM/dd HH:mm')
-          : format(toLocal(b.created_at), 'MM/dd HH:mm')
+          ? formatTaipeiMonthDayTime(startIso)
+          : formatTaipeiMonthDayTime(b.created_at)
         const bookingStatus = (
           ALLOWED_BOOKING_STATUSES.has(b.status as StatusType)
             ? (b.status as StatusType)
@@ -172,7 +169,7 @@ export default async function CustomersPage({
           const total = p.classes_total ?? 0
           const used = p.classes_used ?? 0
           const remaining = Math.max(0, total - used)
-          const expiresLabel = p.expires_at ? format(toLocal(p.expires_at), 'yyyy-MM-dd') : '無期限'
+          const expiresLabel = p.expires_at ? taipeiDateKey(p.expires_at) : '無期限'
           const pkgName =
             p.service_packages?.name ??
             (p.services?.name ? `${p.services.name} · ${total} 堂` : `${total} 堂課`)

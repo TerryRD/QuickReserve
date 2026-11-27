@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { format } from 'date-fns'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PrimaryCta } from '@/components/ui/primary-cta'
 import { SectionHead } from '@/components/ui/section-head'
+import { formatTaipeiDate } from '@/lib/taipei-time'
 import { createBookingAction } from './actions'
 
 type PurchaseOption = {
@@ -83,7 +83,7 @@ export default function BookForm({
                         {remaining}/{total} 堂
                         {p.expires_at ? (
                           <>
-                            {' · '}期限 {format(new Date(p.expires_at), 'yyyy/MM/dd')}
+                            {' · '}期限 {formatTaipeiDate(p.expires_at)}
                           </>
                         ) : null}
                       </div>
