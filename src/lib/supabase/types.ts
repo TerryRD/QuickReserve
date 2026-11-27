@@ -549,6 +549,7 @@ export type Database = {
       }
       notification_log: {
         Row: {
+          body: string | null
           channel: string
           error_message: string | null
           id: string
@@ -557,10 +558,13 @@ export type Database = {
           scheduled_for: string | null
           sent_at: string
           status: string
+          title: string | null
           type: string
+          url: string | null
           user_id: string
         }
         Insert: {
+          body?: string | null
           channel?: string
           error_message?: string | null
           id?: string
@@ -569,10 +573,13 @@ export type Database = {
           scheduled_for?: string | null
           sent_at?: string
           status: string
+          title?: string | null
           type: string
+          url?: string | null
           user_id: string
         }
         Update: {
+          body?: string | null
           channel?: string
           error_message?: string | null
           id?: string
@@ -581,7 +588,9 @@ export type Database = {
           scheduled_for?: string | null
           sent_at?: string
           status?: string
+          title?: string | null
           type?: string
+          url?: string | null
           user_id?: string
         }
         Relationships: []

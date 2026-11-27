@@ -82,12 +82,8 @@ export default function CalendarPanel({
           daysCount={7}
         />
       )}
-      {view === 'list' && (
-        <CalendarListView slots={slots} showMemberLabel={showMemberLabel} />
-      )}
-      {view === 'month' && (
-        <MonthView monthAnchor={monthAnchor} slots={slots} />
-      )}
+      {view === 'list' && <CalendarListView slots={slots} showMemberLabel={showMemberLabel} />}
+      {view === 'month' && <MonthView monthAnchor={monthAnchor} slots={slots} />}
     </div>
   )
 }
