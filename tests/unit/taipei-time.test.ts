@@ -1,9 +1,12 @@
 import { afterAll, describe, expect, it } from 'vitest'
 import {
+  formatTaipeiDate,
   formatTaipeiDateTime,
   formatTaipeiMonthDayTime,
   formatTaipeiSlotRange,
   formatTaipeiTime,
+  taipeiDateKey,
+  taipeiDayStart,
   taipeiParts,
 } from '@/lib/taipei-time'
 
@@ -81,6 +84,53 @@ describe('台灣時間格式', () => {
     for (const tz of ['Asia/Taipei', 'UTC', 'America/New_York', 'Pacific/Kiritimati']) {
       process.env.TZ = tz
       expect(allFormats(), tz).toEqual(expected)
+    }
+  })
+})
+
+describe('台灣日期與日界', () => {
+  afterAll(() => {
+    if (ORIGINAL_TZ === undefined) delete process.env.TZ
+    else process.env.TZ = ORIGINAL_TZ
+  })
+
+  it('台灣日期：UTC 前一天 16:00 起算是台灣隔天', () => {
+    expect(taipeiDateKey('2026-12-01T16:00:00Z')).toBe('2026-12-02')
+    expect(taipeiDateKey('2026-12-01T15:59:59Z')).toBe('2026-12-01')
+    expect(taipeiDateKey(new Date('2026-12-31T16:00:00Z'))).toBe('2027-01-01')
+  })
+
+  it('台灣該日 00:00 的時間點', () => {
+    expect(taipeiDayStart('2026-12-02')).toEqual(new Date('2026-12-01T16:00:00.000Z'))
+    expect(taipeiDayStart('2027-01-01')).toEqual(new Date('2026-12-31T16:00:00.000Z'))
+    expect(taipeiDayStart('2028-02-29')).toEqual(new Date('2028-02-28T16:00:00.000Z'))
+  })
+
+  it('日期格式不對或日期不存在時丟出錯誤', () => {
+    for (const bad of ['2026-02-30', '2026-13-40', '2026-12-2', '2026/12/02', '', 'abc']) {
+      expect(() => taipeiDayStart(bad), bad).toThrow(RangeError)
+    }
+    expect(() => taipeiDateKey('not-a-date')).toThrow(RangeError)
+    expect(() => formatTaipeiDate('not-a-date')).toThrow(RangeError)
+  })
+
+  it('只有日期：例 2026/12/02', () => {
+    expect(formatTaipeiDate('2026-12-01T16:00:00Z')).toBe('2026/12/02')
+    expect(formatTaipeiDate(new Date('2026-12-01T15:59:59Z'))).toBe('2026/12/01')
+  })
+
+  it('不論執行環境的時區為何，結果都相同', () => {
+    for (const tz of ['Asia/Taipei', 'UTC', 'America/New_York', 'Pacific/Kiritimati']) {
+      process.env.TZ = tz
+      expect(
+        [
+          taipeiDateKey('2026-12-01T16:00:00Z'),
+          taipeiDateKey('2026-12-01T15:59:59Z'),
+          taipeiDayStart('2026-12-02').toISOString(),
+          formatTaipeiDate('2026-12-01T16:00:00Z'),
+        ],
+        tz,
+      ).toEqual(['2026-12-02', '2026-12-01', '2026-12-01T16:00:00.000Z', '2026/12/02'])
     }
   })
 })

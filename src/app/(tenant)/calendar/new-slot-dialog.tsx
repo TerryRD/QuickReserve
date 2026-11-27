@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { formatTaipeiDateTime } from '@/lib/taipei-time'
 import { createSlotAction } from './actions'
 
 type Service = { id: string; name: string; duration_minutes: number }
@@ -30,9 +31,10 @@ export default function NewSlotDialog({
   weekStart,
 }: {
   services: Service[]
+  /** 該週週一的台灣日期，例：2026-11-30 */
   weekStart: string
 }) {
-  const defaultDate = weekStart.slice(0, 10)
+  const defaultDate = weekStart
   const [open, setOpen] = useState(false)
   const [serviceId, setServiceId] = useState(services[0]?.id ?? '')
   const [date, setDate] = useState(defaultDate)
@@ -128,8 +130,8 @@ export default function NewSlotDialog({
               <ul className="space-y-1">
                 {conflicts.map((c) => (
                   <li key={c.id}>
-                    {new Date(c.startAt).toLocaleString('zh-TW')} —{' '}
-                    {new Date(c.endAt).toLocaleString('zh-TW')}
+                    {formatTaipeiDateTime(c.startAt, { withYear: true })} —{' '}
+                    {formatTaipeiDateTime(c.endAt, { withYear: true })}
                     {c.serviceName ? ` (${c.serviceName})` : ''}
                   </li>
                 ))}

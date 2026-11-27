@@ -2,7 +2,6 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { parseISO } from 'date-fns'
 import WeekGrid from './week-grid'
 import CalendarListView from './list-view'
 import MonthView from './month-view'
@@ -31,15 +30,14 @@ export default function CalendarPanel({
   weekStart,
   monthAnchor,
   slots,
-  tzOffsetHours,
   showMemberLabel,
 }: {
   initialView: View
-  weekStart: string // ISO of Monday 00:00
-  /** ISO of the first day of the month currently in scope (for month view). */
+  /** 該週週一的台灣日期，例：2026-11-30 */
+  weekStart: string
+  /** 月檢視要顯示的月份第一天（台灣日期 yyyy-MM-01）。 */
   monthAnchor: string
   slots: SlotDisplay[]
-  tzOffsetHours: number
   showMemberLabel: boolean
 }) {
   const router = useRouter()
@@ -72,30 +70,23 @@ export default function CalendarPanel({
     syncUrl(next)
   }
 
-  const weekAnchor = parseISO(weekStart)
-
   return (
     <div className="space-y-4">
       <ViewTabs current={view} onChange={onViewChange} />
 
       {view === 'week' && (
         <WeekGrid
-          weekStart={weekAnchor}
+          weekStart={weekStart}
           slots={slots}
-          tzOffsetHours={tzOffsetHours}
           showMemberLabel={showMemberLabel}
           daysCount={7}
         />
       )}
       {view === 'list' && (
-        <CalendarListView
-          slots={slots}
-          tzOffsetHours={tzOffsetHours}
-          showMemberLabel={showMemberLabel}
-        />
+        <CalendarListView slots={slots} showMemberLabel={showMemberLabel} />
       )}
       {view === 'month' && (
-        <MonthView monthAnchor={monthAnchor} slots={slots} tzOffsetHours={tzOffsetHours} />
+        <MonthView monthAnchor={monthAnchor} slots={slots} />
       )}
     </div>
   )

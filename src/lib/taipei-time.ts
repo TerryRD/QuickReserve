@@ -58,3 +58,25 @@ export function formatTaipeiMonthDayTime(input: string | Date): string {
 export function formatTaipeiSlotRange(start: string | Date, end: string | Date): string {
   return `${formatTaipeiDateTime(start, { withYear: true })}–${formatTaipeiTime(end)}`
 }
+
+/** 台灣日期，例：2026-12-02 */
+export function taipeiDateKey(input: string | Date): string {
+  const p = taipeiParts(input)
+  return `${p.year}-${pad(p.month)}-${pad(p.day)}`
+}
+
+/** 台灣該日 00:00 的時間點；dateKey 格式 yyyy-MM-dd，格式不對或日期不存在（如 2026-02-30）丟 RangeError */
+export function taipeiDayStart(dateKey: string): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey)
+  if (!m) throw new RangeError('無法辨識的日期')
+  const start = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) - TAIPEI_OFFSET_MS)
+  // 2026-02-30 這類不存在的日期會被 Date.UTC 進位成別天，轉回來比對就能擋下
+  if (taipeiDateKey(start) !== dateKey) throw new RangeError('無法辨識的日期')
+  return start
+}
+
+/** 只有日期，例：2026/12/02 */
+export function formatTaipeiDate(input: string | Date): string {
+  const p = taipeiParts(input)
+  return `${p.year}/${pad(p.month)}/${pad(p.day)}`
+}
