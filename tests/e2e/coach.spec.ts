@@ -85,11 +85,11 @@ test.describe('coach owner (王教練)', () => {
     await page.goto('/notifications')
     // Inbox title
     await expect(page.getByRole('heading', { name: '通知' })).toBeVisible()
-    // 4 tabs
-    await expect(page.getByRole('link', { name: /ALL/ })).toBeVisible()
-    await expect(page.getByRole('link', { name: /BOOKINGS/ })).toBeVisible()
-    await expect(page.getByRole('link', { name: /PACKAGES/ })).toBeVisible()
-    await expect(page.getByRole('link', { name: /SYSTEM/ })).toBeVisible()
+    // 4 tabs（只有中文，沒有英文小字）
+    for (const name of ['全部', '預約', '購課', '系統']) {
+      await expect(page.getByRole('link', { name, exact: true })).toBeVisible()
+    }
+    await expect(page.getByRole('link', { name: /BOOKINGS|PACKAGES|SYSTEM/ })).toHaveCount(0)
     // Preferences link
     await expect(page.getByRole('link', { name: /推播偏好/ })).toBeVisible()
   })

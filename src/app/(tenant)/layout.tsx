@@ -6,6 +6,8 @@ import { getTenantContext } from '@/lib/auth/get-tenant-context'
 import { QRMark } from '@/components/brand/qr-mark'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AccountChip } from '@/components/shell/account-chip'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { countUnread } from '@/lib/notifications'
 import SidebarNav from './sidebar-nav'
 import MobileSidebar from './mobile-sidebar'
 
@@ -35,6 +37,8 @@ export default async function TenantLayout({ children }: { children: React.React
 
   const roleLabel = session.role === 'tenant_owner' ? 'Owner' : 'Staff'
   const isOwner = session.role === 'tenant_owner'
+  // 側欄「通知」的未讀數；讀不到時是 null（不顯示數字與小紅點）
+  const unread = await countUnread(await createSupabaseServerClient(), session.userId)
 
   return (
     <div className="md:grid md:min-h-screen md:grid-cols-[240px_1fr]">
@@ -45,6 +49,7 @@ export default async function TenantLayout({ children }: { children: React.React
         isOwner={isOwner}
         displayName={session.displayName}
         email={session.email}
+        unread={unread}
       />
       <aside className="hidden flex-col bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:flex md:h-screen">
         {/* Logo block */}
@@ -79,7 +84,7 @@ export default async function TenantLayout({ children }: { children: React.React
 
         {/* Nav */}
         <div className="flex-1 overflow-y-auto p-3">
-          <SidebarNav isOwner={isOwner} />
+          <SidebarNav isOwner={isOwner} unread={unread} />
         </div>
 
         {/* Bottom: public link + theme toggle + logout */}
