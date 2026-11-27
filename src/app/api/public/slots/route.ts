@@ -3,6 +3,8 @@ import { addDays, parseISO, startOfDay } from 'date-fns'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { publicSlotsTag } from '@/lib/cache-tags'
+import { toPublicSlots } from '@/lib/public-slots'
+import type { Database } from '@/lib/supabase/types'
 
 const QuerySchema = z.object({
   tenantId: z.string().uuid(),
@@ -13,56 +15,31 @@ const QuerySchema = z.object({
 function getAnonClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  return createClient(url, key, {
+  return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 }
 
-type ServiceRel = { max_capacity: number } | { max_capacity: number }[] | null
-type BookingRel = { status: string }
-
-function readMaxCapacity(rel: ServiceRel): number {
-  if (!rel) return 1
-  if (Array.isArray(rel)) return rel[0]?.max_capacity ?? 1
-  return rel.max_capacity
-}
-
+/**
+ * 某一天還能預約的時段。透過資料庫函式 public_bookable_slots 查詢：
+ * 只回傳教練未停用、狀態為沒人預約或有人預約但未額滿、尚未開課的時段，
+ * 已佔名額由資料庫算好（未登入也算得到正確人數），這裡只負責轉成前端的形狀。
+ * 查詢失敗直接 throw，由 GET 回 500，不回空清單。
+ */
 async function fetchSlots(tenantId: string, serviceId: string, date: string) {
   const supabase = getAnonClient()
   const dayStart = startOfDay(parseISO(date)).toISOString()
   const dayEnd = addDays(startOfDay(parseISO(date)), 1).toISOString()
-  const { data, error } = await supabase
-    .from('availability_slots')
-    .select('id, start_at, end_at, services(max_capacity), bookings(status)')
-    .eq('tenant_id', tenantId)
-    .eq('service_id', serviceId)
-    // 'pending' is included so group classes mid-fill stay bookable.
-    .in('status', ['available', 'pending'])
-    .gte('start_at', dayStart)
-    .lt('start_at', dayEnd)
-    .order('start_at')
+  const { data, error } = await supabase.rpc('public_bookable_slots', {
+    p_tenant_id: tenantId,
+    p_service_id: serviceId,
+    p_from: dayStart,
+    p_to: dayEnd,
+  })
   if (error) throw new Error(error.message)
+  if (!Array.isArray(data)) throw new Error('public_bookable_slots 沒有回傳資料')
 
-  return (
-    (data ?? [])
-      .map((s) => {
-        const svc = s.services as ServiceRel
-        const bookings = (s.bookings as BookingRel[] | null) ?? []
-        const current = bookings.filter((b) => b.status !== 'cancelled').length
-        const max = readMaxCapacity(svc)
-        return {
-          id: s.id,
-          start_at: s.start_at,
-          end_at: s.end_at,
-          max_capacity: max,
-          current_bookings: current,
-        }
-      })
-      // Defensive: book_with_purchase now flips status to 'booked' at full so
-      // the .in() above already excludes these, but a race between cancel and
-      // re-fetch can briefly let a full row through. Filter anyway.
-      .filter((s) => s.current_bookings < s.max_capacity)
-  )
+  return toPublicSlots(data)
 }
 
 export async function GET(request: Request) {

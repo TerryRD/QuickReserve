@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { Calendar } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { StatusBadge, type StatusType } from '@/components/ui/badge'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { DateStrip, type DateStripGroup } from '@/components/bookings/date-strip'
@@ -192,14 +193,18 @@ function BookingCard({ b, cancelReasons }: { b: BookingRow; cancelReasons: strin
               </span>
             )
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto text-muted-foreground"
-            render={<Link href={`/my-bookings/${b.id}`} />}
+          <Link
+            href={`/my-bookings/${b.id}`}
+            className={cn(
+              buttonVariants({
+                variant: 'ghost',
+                size: 'sm',
+                className: 'ml-auto text-muted-foreground',
+              }),
+            )}
           >
             查看明細
-          </Button>
+          </Link>
         </div>
       </div>
     </div>

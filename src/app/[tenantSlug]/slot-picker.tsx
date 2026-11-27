@@ -6,8 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { addMonths, format, parseISO, startOfMonth } from 'date-fns'
 import { BookingCalendar } from '@/components/booking/booking-calendar'
 import { TimeChip } from '@/components/booking/time-chip'
-import { Button } from '@/components/ui/button'
+import { ArrowRight } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
 import { formatTaipeiTime, taipeiParts } from '@/lib/taipei-time'
+import { cn } from '@/lib/utils'
 
 type Slot = {
   id: string
@@ -212,18 +214,13 @@ export default function SlotPicker({
                 {Number(servicePrice ?? 0).toLocaleString()}
               </span>
             </div>
-            <Button
-              variant="accent"
-              size="pill"
-              withArrow="inline"
-              render={
-                <Link
-                  href={`/book/${selectedSlot.id}${rescheduleFrom ? `?reschedule=${rescheduleFrom}` : ''}`}
-                />
-              }
+            <Link
+              href={`/book/${selectedSlot.id}${rescheduleFrom ? `?reschedule=${rescheduleFrom}` : ''}`}
+              className={cn(buttonVariants({ variant: 'accent', size: 'pill' }))}
             >
               {rescheduleFrom ? '改期到此時段' : '前往預約'}
-            </Button>
+              <ArrowRight className="ml-0.5 size-[14px]" aria-hidden />
+            </Link>
           </div>
         )}
       </section>

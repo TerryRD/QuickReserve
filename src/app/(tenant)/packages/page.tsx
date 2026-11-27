@@ -159,7 +159,7 @@ export default async function PackagesPage({
         <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-16 text-center">
           <PackageIcon className="mx-auto size-10 text-muted-foreground" />
           <div className="font-mono mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            NO SERVICES
+            沒有服務
           </div>
           <p className="font-cjk mt-2 text-sm text-muted-foreground">
             請先建立服務，才能為服務新增可購買的 N 堂課。
@@ -177,7 +177,7 @@ export default async function PackagesPage({
           {groups.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-12 text-center">
               <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                NO MATCHING PACKAGES
+                沒有符合的項目
               </div>
               <p className="font-cjk mt-2 text-sm text-muted-foreground">
                 此分類目前沒有可購買的 N 堂課
@@ -303,7 +303,7 @@ function DraftSection({
     return (
       <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-12 text-center">
         <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-          NO DRAFTS
+          沒有項目
         </div>
         <p className="font-cjk mt-2 text-sm text-muted-foreground">沒有已刪除的 N 堂課</p>
       </div>
