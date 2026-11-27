@@ -28,6 +28,8 @@
 - 不強制 TDD；每個任務列出要補的測試與驗證指令。
 - 實作由 Opus 子代理執行；規格、計畫、SQL 設計由 Fable 負責。
 
+> **SQL 草稿的位置（2026-11-27）：** 6 份草稿放在 `docs/superpowers/plans/sql-drafts/`，**不在** `supabase/migrations/`。原因：還沒經 terry 同意執行的 SQL，不該放在會被資料庫推送指令當成正式 migration 的位置。各組實作 PR 要用時，再把對應的檔搬回 `supabase/migrations/` 並把檔名的時間改成當時的時間；本文件裡出現的檔名（例如 `20261127100100_…`）指的都是草稿資料夾裡的檔。
+
 ## Global Constraints
 
 - 畫面、通知、錯誤訊息一律用設計文件 §2 的用語。禁用詞：**套裝、課卡、套票、方案（指預購堂數時）、已完成、未到場**；「退還」寫「退回」。`tests/unit/forbidden-terms.test.ts` 必須維持全過。
@@ -302,7 +304,7 @@ terry 的要求是「要能指定幫誰改」。三個入口都做（N3 決議�
 
 ### Task 4A: Migration — 通知紀錄加標題、內文、連結
 
-**Files:** `supabase/migrations/20261126120000_in_app_notifications.sql`（草稿已在本分支）
+**Files:** `docs/superpowers/plans/sql-drafts/20261126120000_in_app_notifications.sql`（草稿；實作時搬回 `supabase/migrations/` 並改檔名時間）
 
 **Interfaces:** `notification_log.title | body | url`（皆可空；`url` 限站內路徑）。`read_at` 與未讀索引是既有的。
 
@@ -575,7 +577,7 @@ export function toPushPrefs(row: { channels: unknown; quiet_hours_start: string 
 
 ### Task 4J: Migration — 把四個舊開關轉進勾選表
 
-**Files:** `supabase/migrations/20261126130000_notification_prefs_unify.sql`（草稿已在本分支）
+**Files:** `docs/superpowers/plans/sql-drafts/20261126130000_notification_prefs_unify.sql`（草稿；實作時搬回 `supabase/migrations/` 並改檔名時間）
 
 - [ ] **Step 1:** 衝突規則已定：「關的優先」（W1 決議），草稿照此。確認事件清單的每個「可以關」的鍵都出現在 SQL 的對應表裡（含 `package_request`、`leave_request`）。
 - [ ] **Step 2:** 回報附轉換前預覽 A、B 與轉換後驗證查詢。**不得自己執行。**
@@ -625,7 +627,7 @@ export function toPushPrefs(row: { channels: unknown; quiet_hours_start: string 
 
 ### Task 5: Migration 1 — 資料表
 
-**Files:** `supabase/migrations/20261127100000_bfv2_p2_tables.sql`
+**Files:** `docs/superpowers/plans/sql-drafts/20261127100000_bfv2_p2_tables.sql`（草稿；實作時搬回 `supabase/migrations/` 並改檔名時間）
 
 **Interfaces:** `availability_slots.formed_at`；`customer_purchases.source_booking_id`；表 `leave_requests(id, tenant_id, booking_id, customer_id, reason, requested_slot_id, status, handled_by, handled_at, handle_note, handled_by_system, created_at)`，唯一索引 `leave_requests_one_pending`。
 
@@ -634,7 +636,7 @@ export function toPushPrefs(row: { channels: unknown; quiet_hours_start: string 
 
 ### Task 6: Migration 2 — 預約、取消、改期、成班的函式
 
-**Files:** `supabase/migrations/20261127100100_bfv2_p2_booking_functions.sql`
+**Files:** `docs/superpowers/plans/sql-drafts/20261127100100_bfv2_p2_booking_functions.sql`（草稿；實作時搬回 `supabase/migrations/` 並改檔名時間）
 
 **Interfaces（後續任務依賴這些名稱）:**
 
@@ -678,7 +680,7 @@ export function toPushPrefs(row: { channels: unknown; quiet_hours_start: string 
 
 ### Task 7: Migration 3 — 請假申請的函式
 
-**Files:** `supabase/migrations/20261127100200_bfv2_p2_leave_functions.sql`
+**Files:** `docs/superpowers/plans/sql-drafts/20261127100200_bfv2_p2_leave_functions.sql`（草稿；實作時搬回 `supabase/migrations/` 並改檔名時間）
 
 **Interfaces:**
 
@@ -709,7 +711,7 @@ export function toPushPrefs(row: { channels: unknown; quiet_hours_start: string 
 
 ### Task 8: Migration 4 — 既有資料轉換
 
-**Files:** `supabase/migrations/20261127100300_bfv2_p2_data_conversion.sql`
+**Files:** `docs/superpowers/plans/sql-drafts/20261127100300_bfv2_p2_data_conversion.sql`（草稿；實作時搬回 `supabase/migrations/` 並改檔名時間）
 
 - [ ] **Step 1:** 預覽查詢 B 的結果是 1 筆；terry 決定取消並退回堂數（第四輪回覆）。草稿的第二段就是做這件事，執行前先跑該段上方的預覽查詢，確認只有預期的那幾筆。
 - [ ] **Step 1b:** 確認轉換會替每位學員寫一筆站內通知（不推播），而且前置的 `20261126120000` 已執行。

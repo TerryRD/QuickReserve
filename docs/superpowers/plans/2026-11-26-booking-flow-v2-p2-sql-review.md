@@ -8,6 +8,8 @@
 
 ---
 
+> **SQL 草稿的位置（2026-11-27）：** 6 份草稿放在 `docs/superpowers/plans/sql-drafts/`，**不在** `supabase/migrations/`。原因：還沒經 terry 同意執行的 SQL，不該放在會被資料庫推送指令當成正式 migration 的位置。各組實作 PR 要用時，再把對應的檔搬回 `supabase/migrations/` 並把檔名的時間改成當時的時間；本文件裡出現的檔名（例如 `20261127100100_…`）指的都是草稿資料夾裡的檔。
+
 ## 總覽
 
 | 順序 | 檔案 | 動到什麼 | 可以單獨上嗎 |
@@ -22,7 +24,7 @@
 
 ## 第 1 個檔　站內通知
 
-**檔案：** `supabase/migrations/20261126120000_in_app_notifications.sql`
+**檔案：** `docs/superpowers/plans/sql-drafts/20261126120000_in_app_notifications.sql`
 
 | 項目 | 內容 |
 |---|---|
@@ -41,7 +43,7 @@
 
 ## 第 2 個檔　資料表
 
-**檔案：** `supabase/migrations/20261127100000_bfv2_p2_tables.sql`
+**檔案：** `docs/superpowers/plans/sql-drafts/20261127100000_bfv2_p2_tables.sql`
 
 | 哪張表 | 加什麼 | 為什麼 | 怎麼還原 |
 |---|---|---|---|
@@ -60,7 +62,7 @@
 
 ## 第 3 個檔　預約、取消、改期、成班的函式
 
-**檔案：** `supabase/migrations/20261127100100_bfv2_p2_booking_functions.sql`
+**檔案：** `docs/superpowers/plans/sql-drafts/20261127100100_bfv2_p2_booking_functions.sql`
 
 不改任何表的結構。改的是「規則」，請看這張前後對照：
 
@@ -113,7 +115,7 @@ select s.id, s.start_at, sv.name, sv.min_attendance, sv.cancel_deadline_hours,
 
 ## 第 4 個檔　請假申請的函式
 
-**檔案：** `supabase/migrations/20261127100200_bfv2_p2_leave_functions.sql`
+**檔案：** `docs/superpowers/plans/sql-drafts/20261127100200_bfv2_p2_leave_functions.sql`
 
 不改任何表的結構，新增 5 支函式：
 
@@ -133,7 +135,7 @@ select s.id, s.start_at, sv.name, sv.min_attendance, sv.cancel_deadline_hours,
 
 ## 第 5 個檔　既有資料轉換
 
-**檔案：** `supabase/migrations/20261127100300_bfv2_p2_data_conversion.sql`
+**檔案：** `docs/superpowers/plans/sql-drafts/20261127100300_bfv2_p2_data_conversion.sql`
 
 | 做什麼 | 影響範圍 | 為什麼 |
 |---|---|---|
@@ -148,7 +150,7 @@ select s.id, s.start_at, sv.name, sv.min_attendance, sv.cancel_deadline_hours,
 
 ## 第 6 個檔　推播偏好整合成一份（新增）
 
-**檔案：** `supabase/migrations/20261126130000_notification_prefs_unify.sql`
+**檔案：** `docs/superpowers/plans/sql-drafts/20261126130000_notification_prefs_unify.sql`
 
 | 項目 | 內容 |
 |---|---|
