@@ -24,10 +24,10 @@ export default async function TenantLayout({ children }: { children: React.React
       <main className="grid min-h-screen place-items-center bg-background p-8">
         <div className="max-w-md rounded-2xl border border-border bg-card p-10 text-center">
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            SUSPENDED
+            暫停服務
           </div>
-          <h2 className="font-display mt-4 text-2xl uppercase">租戶已被暫停</h2>
-          <p className="font-cjk mt-2 text-sm text-muted-foreground">請聯絡平台管理員恢復服務。</p>
+          <h2 className="font-display mt-4 text-2xl uppercase">帳號已被暫停</h2>
+          <p className="font-cjk mt-2 text-sm text-muted-foreground">請聯絡平台客服恢復服務。</p>
         </div>
       </main>
     )

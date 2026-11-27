@@ -10,7 +10,8 @@ import { getTenantBySlug } from '@/lib/auth/get-tenant-context'
 import { getSession } from '@/lib/auth/get-session'
 import { getCoachMediaPublicUrl } from '@/lib/storage'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { PrimaryCtaLink } from '@/components/ui/primary-cta'
 import { SectionHead } from '@/components/ui/section-head'
 import { VideoEmbed } from '@/components/public-page/video-embed'
@@ -54,7 +55,7 @@ export default async function TenantPublicPage({
       <main className="grid min-h-screen place-items-center bg-background p-8">
         <div className="max-w-md rounded-2xl border border-border bg-card p-10 text-center">
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            SUSPENDED
+            暫停服務
           </div>
           <h2 className="font-display mt-4 text-2xl uppercase">服務暫停中</h2>
           <p className="font-cjk mt-2 text-sm text-muted-foreground">
@@ -209,13 +210,12 @@ export default async function TenantPublicPage({
               <PrimaryCtaLink href={`/login?redirect=${encodeURIComponent(returnPath)}`} size="lg">
                 登入預約
               </PrimaryCtaLink>
-              <Button
-                variant="pill-outline"
-                size="xl"
-                render={<Link href={`/signup?redirect=${encodeURIComponent(returnPath)}`} />}
+              <Link
+                href={`/signup?redirect=${encodeURIComponent(returnPath)}`}
+                className={cn(buttonVariants({ variant: 'pill-outline', size: 'xl' }))}
               >
                 建立帳號
-              </Button>
+              </Link>
               <span className="font-mono text-[10.5px] tracking-[0.12em] text-muted-foreground">
                 訪客可瀏覽 · 預約需登入
               </span>
