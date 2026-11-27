@@ -54,7 +54,7 @@ export default async function TenantPublicPage({
       <main className="grid min-h-screen place-items-center bg-background p-8">
         <div className="max-w-md rounded-2xl border border-border bg-card p-10 text-center">
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            SUSPENDED
+            暫停服務
           </div>
           <h2 className="font-display mt-4 text-2xl uppercase">服務暫停中</h2>
           <p className="font-cjk mt-2 text-sm text-muted-foreground">
