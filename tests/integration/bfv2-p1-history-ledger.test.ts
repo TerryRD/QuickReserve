@@ -77,7 +77,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 describe('bfv2 P1：歷程與堂數明細', () => {
   beforeAll(async () => {
-    ctx = await setupBfv2('history')
+    ctx = await setupBfv2('history', ['owner', 'customer', 'otherCustomer'])
     soloPurchase = await makePurchase(ctx, {
       customerId: ctx.customer.userId,
       serviceId: ctx.soloServiceId,

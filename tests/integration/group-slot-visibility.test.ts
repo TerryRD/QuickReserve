@@ -129,7 +129,7 @@ function groupSlot() {
 
 describe('團班時段可見性：有人預約後其他學員與訪客看得到、人數正確', () => {
   beforeAll(async () => {
-    ctx = await setupBfv2('gsv')
+    ctx = await setupBfv2('gsv', ['customer', 'otherCustomer'])
     anon = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

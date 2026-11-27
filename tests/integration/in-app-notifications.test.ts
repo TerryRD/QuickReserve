@@ -74,7 +74,7 @@ async function unreadCount(client: SupabaseClient<Database>, userId: string): Pr
 
 describe('站內通知：讀寫範圍與限制', () => {
   beforeAll(async () => {
-    ctx = await setupBfv2('inapp')
+    ctx = await setupBfv2('inapp', ['owner', 'staffA', 'customer', 'otherCustomer'])
   }, 120_000)
 
   afterAll(async () => {
