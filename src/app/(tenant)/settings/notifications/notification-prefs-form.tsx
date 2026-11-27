@@ -132,7 +132,9 @@ export default function NotificationPrefsForm({
                   <div className="font-cjk truncate text-sm font-semibold">{d.label}</div>
                   <div className="font-mono mt-0.5 text-xs text-muted-foreground">
                     最後使用{' '}
-                    {d.last_used_at ? formatTaipeiDateTime(d.last_used_at, { withYear: true }) : '—'}
+                    {d.last_used_at
+                      ? formatTaipeiDateTime(d.last_used_at, { withYear: true })
+                      : '—'}
                   </div>
                 </div>
                 <Button

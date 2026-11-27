@@ -1,8 +1,7 @@
 name: E2E (Production)
 
+# 先改成手動觸發，確認穩定後再評估是否恢復 push master 自動跑
 on:
-  push:
-    branches: [master]
   workflow_dispatch:
     inputs:
       base_url:
@@ -10,9 +9,16 @@ on:
         required: false
         default: 'https://quick-reserve-mu.vercel.app'
 
+# 同時只跑一輪：新觸發的會排隊，不取消正在跑的
+concurrency:
+  group: e2e-production
+  cancel-in-progress: false
+
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    # Playwright 1.60 不支援 ubuntu 26.04（ubuntu-latest 已指向 26.04）；
+    # 升級 Playwright 到支援的版本後才可改回 ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -27,25 +33,22 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Wait for Vercel deploy to settle
-        if: github.event_name == 'push'
-        run: |
-          # Vercel typically takes 1-3 minutes to build + deploy after a push
-          # to master. Wait, then poll the URL to confirm it's responding.
-          echo "Sleeping 90s for Vercel build…"
-          sleep 90
-          URL="${{ github.event.inputs.base_url || 'https://quick-reserve-mu.vercel.app' }}"
-          for i in 1 2 3 4 5; do
-            CODE=$(curl -s -o /dev/null -w "%{http_code}" -A "GitHubActions/e2e" "$URL")
-            echo "attempt $i: $URL → $CODE"
-            if [ "$CODE" = "200" ]; then break; fi
-            sleep 20
-          done
-
       - name: Run Playwright tests
         env:
           E2E_BASE_URL: ${{ github.event.inputs.base_url || 'https://quick-reserve-mu.vercel.app' }}
-        run: npm run test:e2e -- --reporter=list
+        # 正式站只跑不寫資料的檔（白名單）。
+        # booking-flow-v2-p1.spec.ts（以及同樣使用 bfv2-fixture.ts 的 group-slot-visibility.spec.ts）
+        # 會用最高權限金鑰建／刪測試資料，不可加入。
+        # 新增的測試檔預設不會在正式站跑，確認只讀不寫才加進這份清單。
+        # 用白名單而不改 playwright.config.ts 的 testIgnore，是為了讓本機與其他情境的
+        # npm run test:e2e 完全不受影響。
+        run: >-
+          npm run test:e2e -- --reporter=list
+          tests/e2e/public.spec.ts
+          tests/e2e/coach.spec.ts
+          tests/e2e/customer.spec.ts
+          tests/e2e/flows.spec.ts
+          tests/e2e/platform.spec.ts
 
       - name: Upload Playwright report on failure
         if: failure()

@@ -26,7 +26,8 @@ export default async function TenantDashboard() {
         />
         <div className="relative">
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary-foreground/70">
-            DASHBOARD · {format(parseISO(taipeiDateKey(now)), 'EEE yyyy.MM.dd').toUpperCase()} · {tenant.name}
+            DASHBOARD · {format(parseISO(taipeiDateKey(now)), 'EEE yyyy.MM.dd').toUpperCase()} ·{' '}
+            {tenant.name}
           </div>
           <h1 className="font-display mt-3 flex flex-wrap items-baseline gap-3.5 text-4xl uppercase leading-[0.95] tracking-tight sm:text-6xl">
             <span className="font-cjk">
