@@ -81,6 +81,22 @@ async function readSlotAs(client: DbClient, slotId: string) {
   return data
 }
 
+/**
+ * 模仿預約確認頁 src/app/book/[slotId]/page.tsx：以登入學員身分查自己在這個時段的未取消預約。
+ * 查詢失敗直接 throw（等同斷言沒有 error）。
+ */
+async function ownActiveBookings(client: DbClient, slotId: string, customerId: string) {
+  const { data, error } = await client
+    .from('bookings')
+    .select('id')
+    .eq('slot_id', slotId)
+    .eq('customer_id', customerId)
+    .neq('status', 'cancelled')
+    .limit(1)
+  if (error) throw new Error(`查本人預約: ${error.message}`)
+  return data
+}
+
 /** 用 service role 讀時段實際狀態 */
 async function slotStatus(slotId: string): Promise<string> {
   const { data, error } = await admin
@@ -197,6 +213,16 @@ describe('團班時段可見性：有人預約後其他學員與訪客看得到�
         const { data, error } = await anon.from('bookings').select('id').eq('slot_id', slotId)
         expect(error).toBeNull()
         expect(data ?? []).toHaveLength(0)
+      })
+
+      it('甲查自己在這個時段的有效預約：1 筆（預約確認頁據此顯示「你已預約這個時段」）', async () => {
+        const rows = await ownActiveBookings(ctx.customer.client, slotId, ctx.customer.userId)
+        expect(rows).toHaveLength(1)
+      })
+
+      it('丙（尚未預約）查自己在這個時段的有效預約：0 筆', async () => {
+        const rows = await ownActiveBookings(third.client, slotId, third.userId)
+        expect(rows).toHaveLength(0)
       })
     })
 

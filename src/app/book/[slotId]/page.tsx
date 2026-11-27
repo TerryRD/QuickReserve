@@ -30,15 +30,25 @@ const LOAD_FAILED_NOTICE = {
   hint: '請稍後再試。',
 }
 
-/** 不能進入預約表單時的提示卡片（時段已不可預約、讀不到時段資料共用同一個版型） */
+const ALREADY_BOOKED_NOTICE = {
+  title: '你已預約這個時段',
+  hint: '可以到「我的預約」查看這筆預約。',
+}
+
+const NOTICE_LINK_CLASS =
+  'font-mono inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs uppercase tracking-wider hover:bg-muted'
+
+/** 不能進入預約表單時的提示卡片（時段已不可預約、讀不到時段資料、已預約這個時段共用同一個版型） */
 function SlotNotice({
   title,
   hint,
   tenantSlug,
+  showMyBookingsLink = false,
 }: {
   title: string
   hint: string
   tenantSlug: string | null
+  showMyBookingsLink?: boolean
 }) {
   return (
     <main className="grid min-h-screen place-items-center bg-background p-6">
@@ -48,13 +58,19 @@ function SlotNotice({
         </div>
         <h2 className="font-display mt-4 text-2xl uppercase">{title}</h2>
         <p className="font-cjk mt-2 text-sm text-muted-foreground">{hint}</p>
-        {tenantSlug && (
-          <Link
-            href={`/${tenantSlug}`}
-            className="font-mono mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs uppercase tracking-wider hover:bg-muted"
-          >
-            <ArrowLeft className="size-3" /> 回教練頁
-          </Link>
+        {(tenantSlug || showMyBookingsLink) && (
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {tenantSlug && (
+              <Link href={`/${tenantSlug}`} className={NOTICE_LINK_CLASS}>
+                <ArrowLeft className="size-3" /> 回教練頁
+              </Link>
+            )}
+            {showMyBookingsLink && (
+              <Link href="/my-bookings" className={NOTICE_LINK_CLASS}>
+                查看我的預約
+              </Link>
+            )}
+          </div>
         )}
       </div>
     </main>
@@ -84,6 +100,26 @@ export default async function BookConfirmPage({
   const slotTenant = slot.tenants as { slug: string } | null
   const slotTenantSlug = slotTenant?.slug ?? null
 
+  // 已登入時先查本人是否已預約這個時段（含已額滿的時段）；查詢失敗就擋下，不當成沒預約
+  const session = await getSession()
+  if (session) {
+    const { data: ownBookings, error: ownBookingsError } = await supabase
+      .from('bookings')
+      .select('id')
+      .eq('slot_id', slotId)
+      .eq('customer_id', session.userId)
+      .neq('status', 'cancelled')
+      .limit(1)
+    if (ownBookingsError) {
+      return <SlotNotice {...LOAD_FAILED_NOTICE} tenantSlug={slotTenantSlug} />
+    }
+    if (ownBookings && ownBookings.length > 0) {
+      return (
+        <SlotNotice {...ALREADY_BOOKED_NOTICE} tenantSlug={slotTenantSlug} showMyBookingsLink />
+      )
+    }
+  }
+
   // 沒人預約（available）或有人預約但未額滿（pending）才可能還能約；其他狀態直接擋下
   if (slot.status !== 'available' && slot.status !== 'pending') {
     return <SlotNotice {...UNAVAILABLE_NOTICE} tenantSlug={slotTenantSlug} />
@@ -102,7 +138,6 @@ export default async function BookConfirmPage({
     return <SlotNotice {...UNAVAILABLE_NOTICE} tenantSlug={slotTenantSlug} />
   }
 
-  const session = await getSession()
   if (!session) {
     redirect(`/login?redirect=/book/${slotId}`)
   }
