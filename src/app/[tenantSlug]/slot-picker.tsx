@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { addMonths, format, parseISO, startOfDay, startOfMonth } from 'date-fns'
+import { addMonths, format, parseISO, startOfMonth } from 'date-fns'
 import { BookingCalendar } from '@/components/booking/booking-calendar'
 import { TimeChip } from '@/components/booking/time-chip'
 import { Button } from '@/components/ui/button'
+import { formatTaipeiTime, taipeiParts } from '@/lib/taipei-time'
 
 type Slot = {
   id: string
@@ -26,9 +27,6 @@ type SlotPickerProps = {
   initialDate: string
   rescheduleFrom: string | null
 }
-
-const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 export default function SlotPicker({
   tenantSlug,
@@ -52,7 +50,11 @@ export default function SlotPicker({
   const [error, setError] = useState<string | null>(null)
   const [dayCounts, setDayCounts] = useState<Record<string, number> | null>(null)
 
-  const today = useMemo(() => format(startOfDay(new Date()), 'yyyy-MM-dd'), [])
+  // 「今天」以台灣時間（UTC+8）為準，不跟瀏覽器時區。
+  const today = useMemo(() => {
+    const p = taipeiParts(new Date())
+    return `${p.year}-${String(p.month).padStart(2, '0')}-${String(p.day).padStart(2, '0')}`
+  }, [])
 
   // Fetch which days in the visible month have bookable slots.
   useEffect(() => {
@@ -117,7 +119,7 @@ export default function SlotPicker({
   }
 
   function goToday() {
-    setMonthAnchor(format(startOfMonth(new Date()), 'yyyy-MM-dd'))
+    setMonthAnchor(`${today.slice(0, 7)}-01`)
     selectDate(today)
   }
 
@@ -180,7 +182,6 @@ export default function SlotPicker({
         ) : (
           <div className="flex flex-wrap gap-2">
             {slots.map((s) => {
-              const start = toLocal(s.start_at)
               const isSelected = s.id === selectedSlotId
               const isGroup = s.max_capacity > 1
               const state = isSelected ? 'selected' : isGroup ? 'group' : 'open'
@@ -190,7 +191,7 @@ export default function SlotPicker({
               return (
                 <TimeChip
                   key={s.id}
-                  time={format(start, 'HH:mm')}
+                  time={formatTaipeiTime(s.start_at)}
                   state={state}
                   group={group}
                   onSelect={() => setSelectedSlotId(s.id)}
@@ -204,7 +205,7 @@ export default function SlotPicker({
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-primary px-5 py-4 text-primary-foreground sm:px-6 sm:py-5">
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-1">
               <span className="font-display text-2xl font-normal sm:text-3xl">
-                {format(parseISO(date), 'M/d')} · {format(toLocal(selectedSlot.start_at), 'HH:mm')}
+                {format(parseISO(date), 'M/d')} · {formatTaipeiTime(selectedSlot.start_at)}
               </span>
               <span className="font-cjk text-xs opacity-70 sm:text-sm">
                 · {serviceName} · {serviceDuration} 分鐘 · NT${' '}
