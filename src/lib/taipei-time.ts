@@ -54,6 +54,12 @@ export function formatTaipeiMonthDayTime(input: string | Date): string {
   return `${pad(p.month)}/${pad(p.day)} ${pad(p.hour)}:${pad(p.minute)}`
 }
 
+/** 例：12/2 19:00（月、日不補零；通知清單等較早的時間用） */
+export function formatTaipeiShortMonthDayTime(input: string | Date): string {
+  const p = taipeiParts(input)
+  return `${p.month}/${p.day} ${pad(p.hour)}:${pad(p.minute)}`
+}
+
 /** 時段區間，例：2026/12/06（日）14:00–15:30 */
 export function formatTaipeiSlotRange(start: string | Date, end: string | Date): string {
   return `${formatTaipeiDateTime(start, { withYear: true })}–${formatTaipeiTime(end)}`

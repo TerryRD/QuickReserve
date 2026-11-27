@@ -60,6 +60,7 @@ node scripts/seed-test-data.mjs  # 終端 B：重置 demo 測試資料（冪等�
 | 10 | 開 `/demo-lin-coach/packages` | 看到「購買堂數」頁，教練公開販售的 N 堂課（單堂 / 10 堂課） |
 | 11 | 開 `/demo-lin-coach/purchases` | 看到「購課紀錄」：自己已購買的堂數與剩餘堂數 |
 | 12 | 開 `/account/notifications` | 可管理個人通知偏好 |
+| 13 | 點頁首的鈴鐺 → 點「看全部通知」 | 小視窗列出最近 5 則通知；進入 `/my-notifications` 看到全部通知，可標為已讀 |
 
 **邊界測試**：改用王教練 `/demo-wang-coach` 嘗試預約 → 因小明在王教練的堂數已用完，`/book` 頁顯示「**沒有可用的剩餘堂數**／先購買堂數才能預約」，無送出按鈕（預期行為）。
 
@@ -103,7 +104,7 @@ node scripts/seed-test-data.mjs  # 終端 B：重置 demo 測試資料（冪等�
 |---|---|---|
 | 13 | `/staff` → 填 Email → 「**送出邀請**」 | toast「已建立邀請」，畫面出現「邀請連結（請傳給助教）」 |
 | 14 | 開該邀請連結 `/invite/<token>` | 顯示「**接受邀請**」畫面（租戶名稱＋登入帳號＋接受按鈕）。未登入者會被導向 `/signup?invite=...` |
-| 15 | `/notifications` | 通知收件匣四分頁（全部／預約／購課／系統）＋「推播偏好」入口 |
+| 15 | `/notifications`（側欄「通知」，有未讀時顯示則數） | 通知清單四分頁（全部／預約／購課／系統），每則有標題與內文，點了標為已讀；＋「推播偏好」入口 |
 | 16 | `/settings/profile` | 個人/品牌設定多區塊（基本資料、Hero 等） |
 | 17 | `/settings/notifications` | 事件 × 通道通知矩陣（多個勾選）＋「勿擾時段」 |
 
@@ -169,7 +170,7 @@ node scripts/seed-test-data.mjs  # 終端 B：重置 demo 測試資料（冪等�
 - [ ] `/notifications`　- [ ] `/settings/profile`　- [ ] `/settings/notifications`
 
 **學員（customer）+ 公開頁**
-- [ ] `/my-bookings`（改期/取消）　- [ ] `/account/notifications`
+- [ ] `/my-bookings`（改期/取消）　- [ ] `/account/notifications`　- [ ] `/my-notifications`（2026-11 新增，不在原本的 26 頁內）
 - [ ] `/<slug>`（選服務→時段）　- [ ] `/<slug>/packages`　- [ ] `/<slug>/purchases`
 - [ ] `/book/<slotId>`（送出預約申請）
 

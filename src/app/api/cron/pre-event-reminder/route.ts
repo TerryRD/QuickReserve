@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { pushToUser } from '@/lib/push'
+import { preEventScheduledFor } from '@/lib/pre-event-reminder'
 
 /**
  * Vercel Cron: every minute.
@@ -50,6 +51,15 @@ export async function GET(request: Request) {
     const matched = userMinutes.find((m) => Math.abs(m - diffMin) <= 1)
     if (matched === undefined) continue
 
+    let scheduledFor: string
+    try {
+      scheduledFor = preEventScheduledFor(slot.start_at, matched)
+    } catch (err) {
+      // 開課時間異常：略過這筆，不讓整支排程中斷
+      console.error('[pre-event-reminder] skip booking with invalid start_at', b.id, err)
+      continue
+    }
+
     const svc = b.services as { name: string } | null
     const res = await pushToUser(admin, {
       userId: b.customer_id,
@@ -61,7 +71,7 @@ export async function GET(request: Request) {
         tag: `pre-event-${b.id}-${matched}`,
       },
       relatedId: b.id,
-      scheduledFor: `${slot.start_at}-${matched}`, // dedup key per (booking, advance interval)
+      scheduledFor, // dedup key per (booking, advance interval)：開課時間往前推提前量的 ISO 時間
     })
     sent += res.sent
   }
