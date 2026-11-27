@@ -175,7 +175,7 @@ export default function SlotPicker({
         ) : !slots || slots.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-muted/50 p-8 text-center">
             <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              NO SLOTS
+              沒有時段
             </div>
             <p className="font-cjk mt-2 text-sm text-muted-foreground">當天沒有可預約時段</p>
           </div>

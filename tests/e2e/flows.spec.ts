@@ -115,8 +115,8 @@ test.describe('reschedule flow (no submit)', () => {
     // New-slot picker should still render in reschedule mode (no-submit;
     // selecting a chip + clicking the CTA would trigger a real reschedule).
     // Just confirm the picker section is present — chips OR the empty
-    // "NO SLOTS" placeholder both count as the picker having rendered.
-    const pickerArea = page.getByText(/SLOTS|NO SLOTS/).first()
+    // 「沒有時段」 placeholder both count as the picker having rendered.
+    const pickerArea = page.getByText(/SLOTS|沒有時段/).first()
     await expect(pickerArea).toBeVisible({ timeout: 5_000 })
   })
 })
