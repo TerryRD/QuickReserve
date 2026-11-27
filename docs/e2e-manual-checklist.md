@@ -92,14 +92,19 @@
 - [ ] **第一筆 PurchaseRow 有 accent ring + 黃色 tint**(強調最舊)
 - [ ] 確認 / 拒絕按鈕還能用(本來就有的 action)
 
-### `/notifications`(P3-7 重寫)
-- [ ] **這是 inbox 不是設定頁** — 跟舊版差很大
-- [ ] **4 個 tab**(全部 / 預約 / 購課 / 系統)按 type prefix 過濾
-- [ ] 每筆 row 左側有 Bell icon
-- [ ] **24h 內事件:左側黃色側條 + 字重粗 + Bell icon 黑色**(cosmetic「未讀」)
-- [ ] 較舊事件:opacity 70% + 字重正常
+### `/notifications`(P3-7 重寫;2026-11 改為站內通知清單)
+- [ ] **這是通知清單不是設定頁**
+- [ ] 側欄項目叫「**通知**」(鈴鐺圖示),有未讀時右側顯示未讀則數
+- [ ] 手機:選單按鈕有未讀時顯示小紅點;打開選單後「通知」旁有未讀則數
+- [ ] **4 個 tab**(全部 / 預約 / 購課 / 系統)按 type prefix 過濾;tab 上只有中文
+- [ ] 每則顯示**標題 + 內文 + 時間**;畫面上沒有英文代碼、通道或狀態字樣
+- [ ] 沒有內文的舊通知:只顯示通知名稱
+- [ ] **未讀:左側黃色側條 + 字重粗**(由 `read_at` 決定);已讀較淡
+- [ ] 點一則未讀 → 標為已讀、未讀數減少,有連結時前往該頁
+- [ ] 「全部標為已讀(N)」可用;沒有未讀時不顯示
 - [ ] 右上「推播偏好」outline button 跳 `/settings/notifications`
 - [ ] EmptyState 顯示「沒有通知」when filter 沒結果
+- [ ] 學員送出購買申請 → 教練這頁出現「新的購買申請」,點了到 `/packages/pending`
 
 ### `/settings/profile`
 - [ ] 上方 Kicker + h1 + **SubNav**(公開頁 / 通知 / 作息 / 重複)4 個 pill,當前 active
@@ -202,6 +207,14 @@
 - [ ] 可達(P4 route fix 後)
 - [ ] PushOptIn + 偏好設定(4 個 boolean toggle:週報 / 每日提醒 / 課前提醒 / 預約狀態變更)
 
+### 頁首鈴鐺 + `/my-notifications`(2026-11 新增)
+- [ ] 學員每一頁的頁首都有鈴鐺;有未讀時顯示未讀則數
+- [ ] 點鈴鐺 → 跳出小視窗,列最近 5 則(標題 + 內文 + 時間);**打開不會把通知標為已讀**
+- [ ] 點其中一則 → 標為已讀、前往相關頁面
+- [ ] 點「看全部通知」→ `/my-notifications`
+- [ ] `/my-notifications`:列全部通知 + 「全部標為已讀」+ 「推播偏好」跳 `/account/notifications`
+- [ ] 沒有通知時顯示「沒有通知」
+
 ---
 
 ## 跨角色 / 安全驗收
@@ -210,6 +223,7 @@
 - [ ] 學員試打 `/platform/dashboard` → 同上 redirect
 - [ ] 學員試打 `/packages` → redirect(P4 middleware fix 後不會 500)
 - [ ] 學員試打 `/account/notifications` → 自己可以,但 unauth 也 redirect 到 login
+- [ ] 未登入試打 `/my-notifications` → redirect 到 login
 - [ ] 助教試打 `/settings/profile` → forbidden
 - [ ] 教練 A 試打教練 B 的 `/dashboard` → 看到自己的(因為 dashboard 走 session,自動帶自己的 tenant)
 
@@ -219,7 +233,6 @@
 - `/book` 剩餘堂數 radio 是視覺只讀(RPC 強制選最舊到期的 — Phase 2)
 - `/signup?invite=` banner 沒顯示 tenant_name(沒 public endpoint — Phase 2)
 - Web Push 真實訂閱(瀏覽器 permission + push)目前只有 UI 殼,不會實際 push — Phase 2
-- `/notifications` 24h 內黃色側條是 cosmetic,**不會記** read state(沒 read_at column — Phase 2)
 - Calendar slot popover 沒有 live conflict-detection inline(Phase 2)
 
 ## 找到 bug 怎麼回報

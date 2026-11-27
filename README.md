@@ -60,7 +60,7 @@
   /bookings/[bookingId]        預約明細（取消紀錄 + 歷程）（P1）
   /customers                   學員管理（搜尋 + 篩選 + 詳情 drawer）
   /staff                       助教管理（Owner 限定）
-  /notifications               通知收件匣 ?tab=all|bookings|packages|system（notification_log inbox）
+  /notifications               通知清單 ?tab=all|bookings|packages|system（標題 + 內文 + 連結；側欄「通知」顯示未讀數）
   /settings/profile            租戶資料 6 sections + sticky save bar（Owner 限定）
   /settings/notifications      通知偏好 — 事件×通道矩陣（web_push + in_app）+ 勿擾時段
   /settings/account            個人帳號設定（姓名 / 密碼 / Email）— Owner & Staff
@@ -72,6 +72,7 @@
   /my-bookings/[bookingId]     預約明細（取消紀錄 + 歷程）（P1）
   /account                     個人帳號設定（姓名 / 密碼 / Email）
   /account/notifications       通知偏好（學員端,獨立於 tenant /settings/notifications）
+  /my-notifications            通知清單（學員端；頁首鈴鐺點開先列最近 5 則，「看全部通知」進這頁）
 
 [tenantSlug] — 公開預約頁
   /[slug]                      教練介紹 + hero meta + bio + video + gallery + services + slot picker
@@ -389,6 +390,36 @@ pg_cron 所需的 Vault secrets：`app_base_url`（應用 base URL）、`cron_se
 
 ---
 
+## 站內通知
+
+每一則通知不論有沒有推播出去（沒開推播、關掉那一類、沒設定推播金鑰），都會在 `notification_log` 留一筆，使用者可以在站內看到。
+
+### 入口
+
+| 角色 | 入口 | 清單頁 |
+|------|------|--------|
+| 教練 Owner / Staff | 側欄「通知」（顯示未讀數）；手機選單按鈕有未讀時顯示小紅點 | `/notifications` |
+| 學員 | 頁首鈴鐺（顯示未讀數）；點開先列最近 5 則，再點「看全部通知」 | `/my-notifications` |
+
+- 點一則通知會標為已讀，並前往該通知的連結（有連結時）。打開鈴鐺小視窗本身不會標為已讀。
+- 新增欄位之前的舊紀錄沒有標題與內文，清單只顯示通知類型的名稱。
+
+### 資料模型
+
+- `notification_log.title` / `body` / `url`（皆可空）— 標題、內文、點了要去的站內路徑。`url` 有 check 限制，只能是 `/` 開頭的站內路徑（`//`、`/\` 開頭會被擋）。
+- `status`：`sent`（至少一台裝置推播成功）／`failed`（推播都失敗）／`skipped`（沒有推播，只留站內紀錄）。
+- 權限：讀取只有自己（與平台管理員）；新增只有後端（service role）；登入的使用者**只能改自己那幾筆的 `read_at`**，其他欄位改不到（欄位層級權限，`20261127120000`）。
+
+### 程式入口
+
+- `src/lib/push.ts` 的 `pushToUser` 是唯一的發送入口：同一事件已發過（`user_id` + `type` + `related_id` + `scheduled_for` 相同）就不再發也不再寫；其餘情況一定寫一筆紀錄。寫紀錄失敗只記 log，不會讓呼叫端的主要動作失敗。
+- `src/lib/notification-events.ts` 是通知事件清單的唯一定義處（名稱、對象、是否「只留最新一則未讀」）。每日提醒與每週摘要只留最新一則未讀：寫入新的一則前，會把同類型的舊未讀標為已讀。
+- `src/lib/notifications.ts`：`listInbox`（清單，最多 100 筆）、`countUnread`（未讀數）。
+- 課前提醒（`/api/cron/pre-event-reminder`）的 `scheduled_for` = 開課時間減去提前分鐘數（`src/lib/pre-event-reminder.ts`），同一堂課同一個提前量只會提醒一次。
+- 學員送出購買申請時，會通知該教練團隊的所有成員（類型 `package_request`，連到 `/packages/pending`）。
+
+---
+
 ## 個人帳號設定
 
 所有登入者皆可自助修改個人資料，頁面渲染在各自的後台框架內（保留側欄／頂列），網址依角色：
@@ -608,7 +639,7 @@ UUID 可以在 Supabase Dashboard → Authentication → Users 找到。
 通知（3 表）
   push_subscriptions — Web Push 訂閱
   notification_preferences — 使用者偏好
-  notification_log — 去重 + 審計
+  notification_log — 站內通知紀錄（標題 / 內文 / 站內連結 / 已讀時間）+ 去重；每則通知不論有沒有推播出去都留一筆
 ```
 
 關鍵 RPC 函式：
