@@ -404,3 +404,162 @@ export async function insertInAppNotification(
     'notification_log',
   )
 }
+
+// ---------------------------------------------------------------------------
+// 團班時段可見性（tests/e2e/group-slot-visibility.spec.ts）專用
+// ---------------------------------------------------------------------------
+
+/** 團班可見性情境的服務名稱 */
+export const GSV_SERVICE_NAME = 'E2E 團班可見性'
+
+export type GroupVisibilityE2e = {
+  tenantId: string
+  slug: string
+  serviceId: string
+  slotId: string
+  /** 時段開始時間的 UTC 日期（yyyy-MM-dd），公開頁以這個日期分組 */
+  slotDate: string
+  /** 時段開始時間（台灣時間 HH:mm），畫面上時段按鈕顯示的文字 */
+  slotTimeLocal: string
+  /** 已預約的學員甲 */
+  first: { email: string; userId: string }
+  /** 還沒預約、要從畫面預約的學員乙 */
+  second: { email: string; userId: string }
+}
+
+/**
+ * 建立一個獨立的測試租戶（slug 前綴 bfv2e2e-）、一個團班服務（名額 3、開班 2）與一個未來時段，
+ * 兩位學員各有一筆已核准的購買，學員甲已透過資料庫函式預約（時段停在待確認、1/3）。
+ * 清理沿用 cleanupBfv2E2e()。
+ */
+export async function setupGroupVisibilityE2e(): Promise<GroupVisibilityE2e> {
+  await cleanupBfv2E2e()
+  try {
+    return await buildGroupVisibility()
+  } catch (e) {
+    await cleanupBfv2E2e()
+    throw e
+  }
+}
+
+async function buildGroupVisibility(): Promise<GroupVisibilityE2e> {
+  const ts = Date.now()
+  const slug = `${E2E_PREFIX}gsv-${ts}`
+  const tenant = check(
+    await admin
+      .from('tenants')
+      .insert({ slug, name: `E2E 團班可見性 ${ts}`, status: 'active' })
+      .select('id')
+      .single(),
+    'tenants gsv',
+  )
+
+  const ownerEmail = `${E2E_PREFIX}gsv-owner-${ts}@example.com`
+  const firstEmail = `${E2E_PREFIX}gsv-first-${ts}@example.com`
+  const secondEmail = `${E2E_PREFIX}gsv-second-${ts}@example.com`
+  const ownerUserId = await createUser(ownerEmail, 'E2E團班教練')
+  const firstUserId = await createUser(firstEmail, 'E2E學員甲')
+  const secondUserId = await createUser(secondEmail, 'E2E學員乙')
+
+  const ownerMember = check(
+    await admin
+      .from('tenant_members')
+      .insert({ tenant_id: tenant.id, user_id: ownerUserId, role: 'owner', status: 'active' })
+      .select('id')
+      .single(),
+    'tenant_members gsv owner',
+  )
+  for (const [id, name] of [
+    [firstUserId, 'E2E學員甲'],
+    [secondUserId, 'E2E學員乙'],
+  ] as const) {
+    const { error } = await admin.from('customers').insert({ id, display_name: name })
+    if (error) throw new Error(`customers ${name}: ${error.message}`)
+  }
+
+  const service = check(
+    await admin
+      .from('services')
+      .insert({
+        tenant_id: tenant.id,
+        name: GSV_SERVICE_NAME,
+        duration_minutes: 60,
+        max_capacity: 3,
+        min_attendance: 2,
+        cancel_deadline_hours: 24,
+      })
+      .select('id')
+      .single(),
+    'services gsv',
+  )
+
+  for (const customerId of [firstUserId, secondUserId]) {
+    check(
+      await admin
+        .from('customer_purchases')
+        .insert({
+          tenant_id: tenant.id,
+          customer_id: customerId,
+          service_id: service.id,
+          classes_total: 5,
+          classes_used: 0,
+          approval_status: 'confirmed',
+          approved_at: new Date().toISOString(),
+          payment_self_reported: 'claimed_paid',
+        })
+        .select('id')
+        .single(),
+      'customer_purchases gsv',
+    )
+  }
+
+  // 8 天後的 UTC 04:00（台灣時間 12:00）：不論伺服器時區是 UTC 或 +8，都落在同一個日期的查詢範圍內
+  const day = new Date(Date.now() + 8 * DAY)
+  const start = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 4, 0, 0)
+  const slot = check(
+    await admin
+      .from('availability_slots')
+      .insert({
+        tenant_id: tenant.id,
+        member_id: ownerMember.id,
+        service_id: service.id,
+        start_at: new Date(start).toISOString(),
+        end_at: new Date(start + 60 * MIN).toISOString(),
+      })
+      .select('id')
+      .single(),
+    'availability_slots gsv',
+  )
+
+  // 學員甲先預約（1/3，未達開班人數，停在待確認）
+  const firstClient = await signedInClient(firstEmail)
+  const { data, error } = await firstClient.rpc('book_with_purchase', {
+    p_slot_id: slot.id,
+    p_customer_id: firstUserId,
+  })
+  if (error) throw new Error(`book_with_purchase gsv: ${error.message}`)
+  const row = (data as Array<{ booking_id: string; auto_confirmed: boolean }>)[0]
+  if (!row || row.auto_confirmed) throw new Error('book_with_purchase gsv: 預約應停在待確認')
+
+  return {
+    tenantId: tenant.id,
+    slug,
+    serviceId: service.id,
+    slotId: slot.id,
+    slotDate: new Date(start).toISOString().slice(0, 10),
+    slotTimeLocal: '12:00',
+    first: { email: firstEmail, userId: firstUserId },
+    second: { email: secondEmail, userId: secondUserId },
+  }
+}
+
+/** 用 service role 數時段的有效（未取消）預約筆數 */
+export async function countActiveBookings(slotId: string): Promise<number> {
+  const { data, error } = await admin
+    .from('bookings')
+    .select('id')
+    .eq('slot_id', slotId)
+    .neq('status', 'cancelled')
+  if (error) throw new Error(`bookings: ${error.message}`)
+  return data.length
+}

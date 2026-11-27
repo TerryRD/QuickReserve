@@ -229,7 +229,6 @@
 
 ## 已知限制(不必驗,看到不要當 bug)
 
-- 公開頁 SlotPicker 看不到 group N/M 真實計數(`/api/public/slots` 沒返回 group_filled — Phase 2)
 - `/book` 剩餘堂數 radio 是視覺只讀(RPC 強制選最舊到期的 — Phase 2)
 - `/signup?invite=` banner 沒顯示 tenant_name(沒 public endpoint — Phase 2)
 - Web Push 真實訂閱(瀏覽器 permission + push)目前只有 UI 殼,不會實際 push — Phase 2
