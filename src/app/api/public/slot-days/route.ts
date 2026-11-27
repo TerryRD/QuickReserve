@@ -1,16 +1,20 @@
 import { unstable_cache } from 'next/cache'
-import { addDays, parseISO, startOfMonth, startOfWeek } from 'date-fns'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { publicSlotsTag } from '@/lib/cache-tags'
-import { countSlotsByDay } from '@/lib/public-slots'
+import { isDateKey } from '@/lib/date-key'
+import { countSlotsByDay, publicMonthGridRange } from '@/lib/public-slots'
 import type { Database } from '@/lib/supabase/types'
 
 const QuerySchema = z.object({
   tenantId: z.string().uuid(),
   serviceId: z.string().uuid(),
   // Any date inside the month to summarise (yyyy-MM-dd).
-  month: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  // 格式對但不存在的日期（如 2026-02-30）也回 400
+  month: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(isDateKey),
 })
 
 function getAnonClient() {
@@ -23,25 +27,25 @@ function getAnonClient() {
 
 /**
  * Returns a map of `yyyy-MM-dd` → bookable-slot count for the calendar grid
- * (6 weeks) covering `month`. Days are bucketed by the UTC date of the slot's
- * start, identical to /api/public/slots, so the calendar's "has slots" flag
- * matches exactly what that endpoint returns when the day is selected.
+ * (6 weeks, starting at Taipei 00:00 of the Sunday on or before the 1st of
+ * `month`). Days are bucketed by the Taipei (UTC+8) date of the slot's start,
+ * identical to /api/public/slots (which also cuts days at Taipei 00:00), so the
+ * calendar's "has slots" flag matches exactly what that endpoint returns when
+ * the day is selected.
  *
  * 透過資料庫函式 public_bookable_slots 查詢（與 /api/public/slots 同一支）：
  * 只算教練未停用、沒人預約或有人預約但未額滿、尚未開課的時段，人數由資料庫算好。
  * 查詢失敗直接 throw，由 GET 回 500，不回空的月曆。
  */
 async function fetchSlotDays(tenantId: string, serviceId: string, month: string) {
-  const gridStart = startOfWeek(startOfMonth(parseISO(month)), { weekStartsOn: 0 })
-  const windowStart = gridStart.toISOString()
-  const windowEnd = addDays(gridStart, 42).toISOString()
+  const { from, to } = publicMonthGridRange(month)
 
   const supabase = getAnonClient()
   const { data, error } = await supabase.rpc('public_bookable_slots', {
     p_tenant_id: tenantId,
     p_service_id: serviceId,
-    p_from: windowStart,
-    p_to: windowEnd,
+    p_from: from,
+    p_to: to,
   })
   if (error) throw new Error(error.message)
   if (!Array.isArray(data)) throw new Error('public_bookable_slots 沒有回傳資料')

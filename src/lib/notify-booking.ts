@@ -1,6 +1,7 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { pushToUser } from '@/lib/push'
 import { previewReason } from '@/lib/booking-terms'
+import { formatTaipeiDateTime } from '@/lib/taipei-time'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
 
@@ -152,9 +153,7 @@ export async function notifyBookingChange(
 
     const customerUserId = booking.customer_id
     const memberUserId = slot?.tenant_members?.user_id ?? null
-    const startAt = slot?.start_at
-      ? new Date(new Date(slot.start_at).getTime() + 8 * 3600 * 1000).toLocaleString('zh-TW')
-      : ''
+    const startAt = slot?.start_at ? formatTaipeiDateTime(slot.start_at, { withYear: true }) : ''
 
     if (event === 'created' && memberUserId) {
       await pushToUser(admin, {
@@ -412,7 +411,7 @@ export async function notifyGroupAutoConfirm(slotId: string): Promise<void> {
       const slot = b.availability_slots as { start_at: string } | null
       const tenant = b.tenants as { name: string } | null
       const startLabel = slot?.start_at
-        ? new Date(new Date(slot.start_at).getTime() + 8 * 3600 * 1000).toLocaleString('zh-TW')
+        ? formatTaipeiDateTime(slot.start_at, { withYear: true })
         : ''
       await pushToUser(admin, {
         userId: b.customer_id,
@@ -439,9 +438,7 @@ export async function notifyGroupAutoCancel(
 ): Promise<void> {
   try {
     const admin = createSupabaseAdminClient()
-    const startLabel = new Date(new Date(slotStartAt).getTime() + 8 * 3600 * 1000).toLocaleString(
-      'zh-TW',
-    )
+    const startLabel = formatTaipeiDateTime(slotStartAt, { withYear: true })
     // Customer notification
     await pushToUser(admin, {
       userId: customerId,

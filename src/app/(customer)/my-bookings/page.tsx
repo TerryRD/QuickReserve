@@ -4,6 +4,7 @@ import { Calendar, Settings, Filter } from 'lucide-react'
 import { requireSession } from '@/lib/auth/get-session'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { taipeiParts } from '@/lib/taipei-time'
 import { Badge } from '@/components/ui/badge'
 import PushOptIn from '@/components/push-opt-in'
 import MyBookingsContent, { MyBookingsContentSkeleton } from './my-bookings-content'
@@ -30,7 +31,7 @@ export default async function MyBookingsPage() {
               狀態 · 全部
             </Badge>
             <Badge variant="outline" icon={<Calendar className="size-3" />}>
-              本月 · {now.getMonth() + 1} 月
+              本月 · {taipeiParts(now).month} 月
             </Badge>
             <Link
               href="/account/notifications"

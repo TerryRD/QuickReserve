@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { Mail, Phone, MessageCircle, MapPin, Star } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -12,15 +12,13 @@ import { getCoachMediaPublicUrl } from '@/lib/storage'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { formatTaipeiTime, taipeiDateKey } from '@/lib/taipei-time'
 import { PrimaryCtaLink } from '@/components/ui/primary-cta'
 import { SectionHead } from '@/components/ui/section-head'
 import { VideoEmbed } from '@/components/public-page/video-embed'
 import { RescheduleBanner } from '@/components/booking/reschedule-banner'
 import { QRMark } from '@/components/brand/qr-mark'
 import SlotPicker from './slot-picker'
-
-const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 type RescheduleBookingRow = {
   id: string
@@ -101,7 +99,7 @@ export default async function TenantPublicPage({
   const returnPath = `/${tenantSlug}`
   const activeServiceId = selectedServiceId ?? services?.[0]?.id ?? null
   const activeService = services?.find((s) => s.id === activeServiceId) ?? services?.[0] ?? null
-  const dateStr = selectedDate ?? format(new Date(), 'yyyy-MM-dd')
+  const dateStr = selectedDate ?? taipeiDateKey(new Date())
 
   return (
     <div className="min-h-screen bg-background">
@@ -226,11 +224,11 @@ export default async function TenantPublicPage({
         {rescheduleFrom && rescheduleBooking?.availability_slots && rescheduleBooking.services && (
           <section className="border-t border-border px-5 py-5 sm:px-10 lg:px-[72px]">
             <RescheduleBanner
-              originalSlotLabel={format(
-                toLocal(rescheduleBooking.availability_slots.start_at),
-                'M/d (E) HH:mm',
+              originalSlotLabel={`${format(
+                parseISO(taipeiDateKey(rescheduleBooking.availability_slots.start_at)),
+                'M/d (E)',
                 { locale: zhTW },
-              )}
+              )} ${formatTaipeiTime(rescheduleBooking.availability_slots.start_at)}`}
               serviceName={rescheduleBooking.services.name}
               exitHref={`/${tenantSlug}`}
             />

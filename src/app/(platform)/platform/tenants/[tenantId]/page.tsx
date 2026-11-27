@@ -1,15 +1,11 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { format } from 'date-fns'
 import { ArrowLeft, Calendar, ClipboardList, ExternalLink, Package, Users } from 'lucide-react'
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
-import { formatTaipeiDate } from '@/lib/taipei-time'
-
-const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
+import { formatTaipeiDate, formatTaipeiShortMonthDayTime } from '@/lib/taipei-time'
 
 export default async function PlatformTenantDetailPage({
   params,
@@ -230,7 +226,7 @@ async function RecentBookingsBlock({ tenantId }: { tenantId: string }) {
               <div>
                 <div className="font-medium">{c?.display_name ?? '匿名'}</div>
                 <div className="text-xs text-muted-foreground">
-                  {sv?.name} · {sl ? format(toLocal(sl.start_at), 'M/d HH:mm') : ''}
+                  {sv?.name} · {sl ? formatTaipeiShortMonthDayTime(sl.start_at) : ''}
                 </div>
               </div>
               <span

@@ -1,10 +1,20 @@
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   countSlotsByDay,
   isSlotBookable,
+  publicDayRange,
+  publicMonthGridRange,
   toPublicSlots,
   type BookableSlotRow,
 } from '@/lib/public-slots'
+
+const ORIGINAL_TZ = process.env.TZ
+
+// 每種執行環境時區的實際位移（分鐘，getTimezoneOffset 的正負號與 UTC 位移相反）
+const ZONES = [
+  { tz: 'Asia/Taipei', offset: -480 },
+  { tz: 'UTC', offset: 0 },
+] as const
 
 function row(over: Partial<BookableSlotRow> = {}): BookableSlotRow {
   return {
@@ -88,21 +98,35 @@ describe('toPublicSlots', () => {
   })
 })
 
-describe('countSlotsByDay', () => {
+describe.each(ZONES)('countSlotsByDay（執行環境時區 $tz）', ({ tz, offset }) => {
+  beforeAll(() => {
+    process.env.TZ = tz
+  })
+
+  afterAll(() => {
+    if (ORIGINAL_TZ === undefined) delete process.env.TZ
+    else process.env.TZ = ORIGINAL_TZ
+  })
+
+  it('確實切到這個時區', () => {
+    expect(new Date('2026-12-02T04:00:00Z').getTimezoneOffset()).toBe(offset)
+  })
+
   it('沒有資料時回傳空物件', () => {
     expect(countSlotsByDay([])).toEqual({})
   })
 
   it('同一天的多個時段合計', () => {
     const rows = [
+      // 台灣 12/3 10:00、12:00、23:00
       row({ id: 'a', start_at: '2026-12-03T02:00:00+00:00' }),
       row({ id: 'b', start_at: '2026-12-03T04:00:00+00:00' }),
-      row({ id: 'c', start_at: '2026-12-03T23:00:00+00:00' }),
+      row({ id: 'c', start_at: '2026-12-03T15:00:00+00:00' }),
     ]
     expect(countSlotsByDay(rows)).toEqual({ '2026-12-03': 3 })
   })
 
-  it('依開始時間的 UTC 日期分組（台灣時間跨日的時段算在 UTC 那天）', () => {
+  it('依開始時間的台灣日期分組（台灣清晨的時段算在台灣那天，不算在 UTC 前一天）', () => {
     const rows = [
       row({ id: 'a', start_at: '2026-12-03T02:00:00+00:00' }),
       // 台灣時間 12/5 早上 7 點，UTC 仍是 12/4
@@ -112,8 +136,7 @@ describe('countSlotsByDay', () => {
     ]
     expect(countSlotsByDay(rows)).toEqual({
       '2026-12-03': 1,
-      '2026-12-04': 1,
-      '2026-12-05': 2,
+      '2026-12-05': 3,
     })
   })
 
@@ -123,6 +146,58 @@ describe('countSlotsByDay', () => {
 
   it('已佔名額不是數字時丟錯，不默默計入', () => {
     expect(() => countSlotsByDay([row(), bad({ taken: null })])).toThrow(/taken/)
+  })
+})
+
+describe.each(ZONES)('公開頁查詢範圍（執行環境時區 $tz）', ({ tz, offset }) => {
+  beforeAll(() => {
+    process.env.TZ = tz
+  })
+
+  afterAll(() => {
+    if (ORIGINAL_TZ === undefined) delete process.env.TZ
+    else process.env.TZ = ORIGINAL_TZ
+  })
+
+  it('確實切到這個時區', () => {
+    expect(new Date('2026-12-02T04:00:00Z').getTimezoneOffset()).toBe(offset)
+  })
+
+  it('publicDayRange：台灣當日 00:00 到隔日 00:00', () => {
+    expect(publicDayRange('2026-12-03')).toEqual({
+      from: '2026-12-02T16:00:00.000Z',
+      to: '2026-12-03T16:00:00.000Z',
+    })
+  })
+
+  it('publicDayRange：跨月、跨年', () => {
+    expect(publicDayRange('2026-12-31')).toEqual({
+      from: '2026-12-30T16:00:00.000Z',
+      to: '2026-12-31T16:00:00.000Z',
+    })
+  })
+
+  it('publicMonthGridRange：從月初當天或之前的週日（台灣 00:00）起 42 天', () => {
+    // 2026-12-01 是週二，往前到 11/29 週日；42 天後是 2027-01-10
+    expect(publicMonthGridRange('2026-12-15')).toEqual({
+      from: '2026-11-28T16:00:00.000Z',
+      to: '2027-01-09T16:00:00.000Z',
+    })
+  })
+
+  it('publicMonthGridRange：月初剛好是週日時從月初起算', () => {
+    // 2026-11-01 是週日
+    expect(publicMonthGridRange('2026-11-30')).toEqual({
+      from: '2026-10-31T16:00:00.000Z',
+      to: '2026-12-12T16:00:00.000Z',
+    })
+  })
+
+  it('日期不存在或格式不對時丟 RangeError', () => {
+    expect(() => publicDayRange('2026-02-30')).toThrow(RangeError)
+    expect(() => publicDayRange('2026-12-3')).toThrow(RangeError)
+    expect(() => publicMonthGridRange('2026-02-30')).toThrow(RangeError)
+    expect(() => publicMonthGridRange('2026-13-01')).toThrow(RangeError)
   })
 })
 
