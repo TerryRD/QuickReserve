@@ -14,6 +14,9 @@ import { defineConfig, devices } from '@playwright/test'
  * Or against a specific URL (e.g. production):
  *     E2E_BASE_URL=https://quick-reserve-mu.vercel.app npm run test:e2e
  *
+ * 正式站流程（.github/workflows/e2e.yml）：只能手動觸發，且只跑 workflow 裡明列的
+ * 唯讀測試檔（白名單），會寫資料的檔（如 booking-flow-v2-p1.spec.ts）不在正式站跑。
+ *
  * Test users are seeded by scripts/seed-test-data.mjs (run once); accounts use
  * password "Test1234!" and emails prefixed "demo-".
  */

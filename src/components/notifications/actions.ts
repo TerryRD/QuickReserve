@@ -6,6 +6,8 @@ import { actionClient } from '@/lib/safe-action'
 import { requireSession } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError } from '@/lib/errors'
+import { listInbox, type InboxItem } from '@/lib/notifications'
+import { RECENT_NOTIFICATION_LIMIT } from '@/lib/notification-events'
 
 const MarkReadSchema = z.object({ id: z.string().uuid() })
 
@@ -26,7 +28,7 @@ export const markNotificationReadAction = actionClient
       .is('read_at', null)
     if (error) throw new AppError('MARK_READ_FAILED', error.message)
 
-    revalidatePath('/notifications')
+    revalidatePath('/', 'layout')
     return { ok: true }
   })
 
@@ -43,6 +45,24 @@ export const markAllNotificationsReadAction = actionClient
       .is('read_at', null)
     if (error) throw new AppError('MARK_ALL_READ_FAILED', error.message)
 
-    revalidatePath('/notifications')
+    revalidatePath('/', 'layout')
     return { ok: true }
   })
+
+/**
+ * 頁首小視窗用：登入者自己最近 5 則通知（新到舊）。只讀，不會標為已讀。
+ * 讀取失敗回 { ok: false } 並記錄錯誤——畫面據此顯示讀取失敗，不可當成「沒有通知」。
+ */
+export const listRecentAction = actionClient.action(
+  async (): Promise<{ ok: true; items: InboxItem[] } | { ok: false }> => {
+    try {
+      const session = await requireSession()
+      const supabase = await createSupabaseServerClient()
+      const items = await listInbox(supabase, session.userId, RECENT_NOTIFICATION_LIMIT)
+      return { ok: true, items }
+    } catch (err) {
+      console.error('[notifications] 最近通知讀取失敗', err)
+      return { ok: false }
+    }
+  },
+)
