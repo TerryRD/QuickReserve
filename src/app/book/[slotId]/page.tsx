@@ -1,20 +1,18 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Package } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/get-session'
 import { findActivePurchaseForBooking } from '@/lib/purchases-server'
 import { isActivePurchase, type CustomerPurchase } from '@/lib/purchases'
 import { isSlotBookable } from '@/lib/public-slots'
+import { formatTaipeiTime, taipeiDateKey } from '@/lib/taipei-time'
 import { SectionHead } from '@/components/ui/section-head'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PrimaryCtaLink } from '@/components/ui/primary-cta'
 import BookForm from './book-form'
-
-const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 type ActivePurchaseRow = CustomerPurchase & {
   service_packages: { name: string } | null
@@ -207,9 +205,6 @@ export default async function BookConfirmPage({
     (p) => isActivePurchase(p, now),
   )
 
-  const start = toLocal(slot.start_at)
-  const end = toLocal(slot.end_at)
-
   return (
     <div className="min-h-screen bg-background">
       <main className="mx-auto max-w-[920px] space-y-7 px-5 py-10 sm:px-10 sm:py-14">
@@ -243,11 +238,13 @@ export default async function BookConfirmPage({
         {/* Slot detail card */}
         <Card className="p-7">
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            {format(start, 'EEEE, MMM dd')}
+            {format(parseISO(taipeiDateKey(slot.start_at)), 'EEEE, MMM dd')}
           </div>
           <div className="font-display mt-1 text-5xl leading-none tracking-tight">
-            {format(start, 'HH:mm')}
-            <span className="text-muted-foreground/60 ml-3 text-2xl">–{format(end, 'HH:mm')}</span>
+            {formatTaipeiTime(slot.start_at)}
+            <span className="text-muted-foreground/60 ml-3 text-2xl">
+              –{formatTaipeiTime(slot.end_at)}
+            </span>
           </div>
           <div className="font-cjk mt-3 text-base">
             {service?.name} · {service?.duration_minutes} 分鐘

@@ -1,15 +1,19 @@
 import { unstable_cache } from 'next/cache'
-import { addDays, parseISO, startOfDay } from 'date-fns'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { publicSlotsTag } from '@/lib/cache-tags'
-import { toPublicSlots } from '@/lib/public-slots'
+import { isDateKey } from '@/lib/date-key'
+import { publicDayRange, toPublicSlots } from '@/lib/public-slots'
 import type { Database } from '@/lib/supabase/types'
 
 const QuerySchema = z.object({
   tenantId: z.string().uuid(),
   serviceId: z.string().uuid(),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  // 台灣日期；格式對但不存在的日期（如 2026-02-30）也回 400
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(isDateKey),
 })
 
 function getAnonClient() {
@@ -21,20 +25,19 @@ function getAnonClient() {
 }
 
 /**
- * 某一天還能預約的時段。透過資料庫函式 public_bookable_slots 查詢：
+ * 某一天（台灣 00:00 到隔日 00:00）還能預約的時段。透過資料庫函式 public_bookable_slots 查詢：
  * 只回傳教練未停用、狀態為沒人預約或有人預約但未額滿、尚未開課的時段，
  * 已佔名額由資料庫算好（未登入也算得到正確人數），這裡只負責轉成前端的形狀。
  * 查詢失敗直接 throw，由 GET 回 500，不回空清單。
  */
 async function fetchSlots(tenantId: string, serviceId: string, date: string) {
   const supabase = getAnonClient()
-  const dayStart = startOfDay(parseISO(date)).toISOString()
-  const dayEnd = addDays(startOfDay(parseISO(date)), 1).toISOString()
+  const { from, to } = publicDayRange(date)
   const { data, error } = await supabase.rpc('public_bookable_slots', {
     p_tenant_id: tenantId,
     p_service_id: serviceId,
-    p_from: dayStart,
-    p_to: dayEnd,
+    p_from: from,
+    p_to: to,
   })
   if (error) throw new Error(error.message)
   if (!Array.isArray(data)) throw new Error('public_bookable_slots 沒有回傳資料')

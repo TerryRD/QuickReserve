@@ -1,15 +1,12 @@
 import Link from 'next/link'
-import { format } from 'date-fns'
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { Kicker } from '@/components/ui/kicker'
 import { EmptyState } from '@/components/ui/empty-state'
 import { StatusBadge, type StatusType } from '@/components/ui/badge'
 import { ClipboardList } from 'lucide-react'
 import { BOOKING_STATUS_LABEL } from '@/lib/booking-terms'
+import { formatTaipeiShortMonthDayTime } from '@/lib/taipei-time'
 import TenantFilter from './tenant-filter'
-
-const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 const STATUS_TYPES: ReadonlyArray<StatusType> = [
   'pending',
@@ -129,13 +126,13 @@ export default async function PlatformBookingsPage({
                     <td className="p-3.5 font-cjk">{c?.display_name ?? '匿名'}</td>
                     <td className="p-3.5 font-cjk text-xs">{sv?.name}</td>
                     <td className="p-3.5 font-mono text-xs tabular-nums">
-                      {sl ? format(toLocal(sl.start_at), 'M/d HH:mm') : ''}
+                      {sl ? formatTaipeiShortMonthDayTime(sl.start_at) : ''}
                     </td>
                     <td className="p-3.5">
                       <StatusBadge status={asStatus(b.status)} />
                     </td>
                     <td className="p-3.5 font-mono text-xs tabular-nums text-muted-foreground">
-                      {format(new Date(b.created_at), 'M/d HH:mm')}
+                      {formatTaipeiShortMonthDayTime(b.created_at)}
                     </td>
                   </tr>
                 )

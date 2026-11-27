@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseAdminClient: vi.fn() }))
 vi.mock('@/lib/push', () => ({ pushToUser: vi.fn() }))
@@ -6,6 +6,9 @@ vi.mock('@/lib/push', () => ({ pushToUser: vi.fn() }))
 import {
   buildCancelNotice,
   buildPurchaseRequestNotice,
+  notifyBookingChange,
+  notifyGroupAutoCancel,
+  notifyGroupAutoConfirm,
   notifyPurchaseRequested,
   purchaseRejectedBody,
   purchaseReviewerUserIds,
@@ -19,7 +22,7 @@ const base: CancelNoticeInput = {
   tenantName: '羽球王教練',
   customerName: '陳小明',
   serviceName: '一對一基礎課',
-  startAt: '2026/12/3 下午7:00:00',
+  startAt: '2026/12/03（四）19:00',
   category: 'coach_cancelled',
   reason: '場地臨時整修',
   disposition: 'refunded',
@@ -35,7 +38,7 @@ describe('buildCancelNotice', () => {
     const n = buildCancelNotice(base)
     expect(n.toCustomer?.title).toBe('預約已取消')
     expect(n.toCustomer?.body).toBe(
-      '羽球王教練 取消了您的預約（2026/12/3 下午7:00:00）。原因：場地臨時整修。已退回 1 堂。',
+      '羽球王教練 取消了您的預約（2026/12/03（四）19:00）。原因：場地臨時整修。已退回 1 堂。',
     )
     expect(n.toCoach).toBeUndefined()
     expect(n.toOwners).toBeUndefined()
@@ -49,7 +52,7 @@ describe('buildCancelNotice', () => {
     })
     expect(n.toCustomer?.title).toBe('預約未被接受')
     expect(n.toCustomer?.body).toBe(
-      '羽球王教練 未接受您的預約（2026/12/3 下午7:00:00）。原因：這個時段臨時有事。已退回 1 堂。',
+      '羽球王教練 未接受您的預約（2026/12/03（四）19:00）。原因：這個時段臨時有事。已退回 1 堂。',
     )
     expect(n.toCustomer?.body).not.toContain('取消了您的預約')
   })
@@ -95,7 +98,7 @@ describe('buildCancelNotice', () => {
     for (const reason of [null, '   ']) {
       const n = buildCancelNotice({ ...base, reason })
       expect(n.toCustomer?.body).toBe(
-        '羽球王教練 取消了您的預約（2026/12/3 下午7:00:00）。已退回 1 堂。',
+        '羽球王教練 取消了您的預約（2026/12/03（四）19:00）。已退回 1 堂。',
       )
     }
   })
@@ -118,14 +121,14 @@ describe('buildCancelNotice', () => {
     expect(n.toCustomer).toBeUndefined()
     expect(n.toCoach?.title).toBe('預約已取消')
     expect(n.toCoach?.body).toBe(
-      '陳小明 取消了預約（2026/12/3 下午7:00:00）。原因：工作：臨時要加班。已過取消期限，不退回。',
+      '陳小明 取消了預約（2026/12/03（四）19:00）。原因：工作：臨時要加班。已過取消期限，不退回。',
     )
   })
 
   it('學員期限內取消 → 教練通知含原因與「已退回 1 堂」', () => {
     const n = buildCancelNotice({ ...base, category: 'customer', actorRole: 'customer' })
     expect(n.toCoach?.body).toBe(
-      '陳小明 取消了預約（2026/12/3 下午7:00:00）。原因：場地臨時整修。已退回 1 堂。',
+      '陳小明 取消了預約（2026/12/03（四）19:00）。原因：場地臨時整修。已退回 1 堂。',
     )
     expect(n.toCoach?.body).not.toContain('不退回')
   })
@@ -138,7 +141,7 @@ describe('buildCancelNotice', () => {
       disposition: 'transferred',
     })
     expect(n.toCoach?.title).toBe('預約已改期')
-    expect(n.toCoach?.body).toBe('陳小明 將預約改期（原時間 2026/12/3 下午7:00:00）')
+    expect(n.toCoach?.body).toBe('陳小明 將預約改期（原時間 2026/12/03（四）19:00）')
     expect(n.toCoach?.body).not.toContain('取消了預約')
     expect(n.toCustomer).toBeUndefined()
   })
@@ -148,7 +151,7 @@ describe('buildCancelNotice', () => {
     expect(staff.toCustomer).toBeDefined()
     expect(staff.toOwners?.title).toBe('助教取消了預約')
     expect(staff.toOwners?.body).toBe(
-      '陳小明 的 一對一基礎課（2026/12/3 下午7:00:00）。原因：場地臨時整修。',
+      '陳小明 的 一對一基礎課（2026/12/03（四）19:00）。原因：場地臨時整修。',
     )
 
     const staffReject = buildCancelNotice({
@@ -384,5 +387,96 @@ describe('notifyPurchaseRequested', () => {
       'p-1',
       expect.anything(),
     )
+  })
+})
+
+const ORIGINAL_TZ = process.env.TZ
+const SLOT_START_AT = '2026-12-03T11:00:00Z' // 台灣 2026/12/03（四）19:00
+const SLOT_LABEL = '2026/12/03（四）19:00'
+
+// 每種執行環境時區的實際位移（分鐘，getTimezoneOffset 的正負號與 UTC 位移相反）
+const ZONES = [
+  { tz: 'Asia/Taipei', offset: -480 },
+  { tz: 'UTC', offset: 0 },
+] as const
+
+describe.each(ZONES)('預約通知內文的上課時間（執行環境時區 $tz）', ({ tz, offset }) => {
+  const push = vi.mocked(pushToUser)
+  const adminFactory = vi.mocked(createSupabaseAdminClient)
+
+  beforeAll(() => {
+    process.env.TZ = tz
+  })
+
+  afterAll(() => {
+    if (ORIGINAL_TZ === undefined) delete process.env.TZ
+    else process.env.TZ = ORIGINAL_TZ
+  })
+
+  beforeEach(() => {
+    push.mockReset()
+    adminFactory.mockReset()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  it('確實切到這個時區', () => {
+    expect(new Date('2026-12-02T04:00:00Z').getTimezoneOffset()).toBe(offset)
+  })
+
+  it('新預約申請通知教練：內文是台灣時間', async () => {
+    adminFactory.mockReturnValue(
+      fakeAdmin({
+        bookings: [
+          {
+            id: 'b-1',
+            customer_id: 'u-student',
+            customers: { display_name: '陳小明' },
+            services: { name: '一對一基礎課' },
+            availability_slots: {
+              start_at: SLOT_START_AT,
+              tenant_members: { user_id: 'u-coach' },
+            },
+            tenants: { name: '羽球王教練', slug: 'badminton' },
+          },
+        ],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any,
+    )
+    await notifyBookingChange('b-1', 'created', 'u-student')
+    expect(push).toHaveBeenCalledTimes(1)
+    expect(push.mock.calls[0]![1].payload.body).toBe(`陳小明 申請 一對一基礎課 (${SLOT_LABEL})`)
+  })
+
+  it('團班開課通知學員：內文是台灣時間', async () => {
+    adminFactory.mockReturnValue(
+      fakeAdmin({
+        bookings: [
+          {
+            id: 'b-1',
+            slot_id: 's-1',
+            status: 'confirmed',
+            customer_id: 'u-student',
+            services: { name: '團體班' },
+            availability_slots: { start_at: SLOT_START_AT },
+            tenants: { name: '羽球王教練' },
+          },
+        ],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any,
+    )
+    await notifyGroupAutoConfirm('s-1')
+    expect(push).toHaveBeenCalledTimes(1)
+    expect(push.mock.calls[0]![1].payload.body).toContain(`(${SLOT_LABEL})`)
+  })
+
+  it('團班人數不足取消：學員與教練的內文都是台灣時間', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    adminFactory.mockReturnValue(fakeAdmin({}) as any)
+    await notifyGroupAutoCancel('u-student', 'u-coach', '團體班', SLOT_START_AT)
+    expect(push).toHaveBeenCalledTimes(2)
+    for (const [, d] of push.mock.calls) {
+      expect(d.payload.body).toContain(`團體班 (${SLOT_LABEL})`)
+    }
   })
 })

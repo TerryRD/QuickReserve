@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { format, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { ArrowRight, Calendar, Check, Clock, Sparkles, Users } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -9,11 +9,8 @@ import { Kicker } from '@/components/ui/kicker'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { StatusBadge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { formatTaipeiTime } from '@/lib/taipei-time'
+import { formatTaipeiShortMonthDayTime, formatTaipeiTime } from '@/lib/taipei-time'
 import { dashboardRange } from './dashboard-range'
-
-const TZ_OFFSET_HOURS = 8
-const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
 
 type TodayBookingRow = {
   id: string
@@ -272,7 +269,7 @@ export default async function DashboardContent({
                         </div>
                         <div className="font-cjk mt-1 text-xs text-muted-foreground">
                           {service?.name ?? '—'}
-                          {slot && <> · {format(toLocal(slot.start_at), 'M/d HH:mm')}</>}
+                          {slot && <> · {formatTaipeiShortMonthDayTime(slot.start_at)}</>}
                           {' · '}
                           {since}
                         </div>
