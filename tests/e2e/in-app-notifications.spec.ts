@@ -74,6 +74,9 @@ test.describe('學員端', () => {
     page,
     context,
   }) => {
+    // 這一案步驟多（兩次登入、多次換頁），在剛啟動的 dev server 上會超過預設的 30 秒
+    test.setTimeout(90_000)
+
     // 教練在畫面上取消學員已確認的預約
     await login(page, ctx.owner.email)
     await page.goto('/bookings')
