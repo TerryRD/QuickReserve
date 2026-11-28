@@ -192,4 +192,4 @@ node scripts/seed-test-data.mjs  # 終端 B：重置 demo 測試資料（冪等�
 本文件的人工測試路徑，與自動錄製的教學影片 / E2E 互相對應：
 
 - 教學影片（含真實操作）：`docs/tutorials-recording.md`、`npm run tutorial:record`
-- 既有 E2E 煙霧測試：`tests/e2e/*.spec.ts`、`npm run test:e2e`
+- 既有 E2E 煙霧測試：`tests/e2e/*.spec.ts`、`npm run test:e2e`（第一次先 `npm run test:e2e:install` 安裝瀏覽器）

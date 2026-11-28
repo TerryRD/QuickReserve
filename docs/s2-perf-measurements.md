@@ -10,6 +10,7 @@
 
 執行：
 ```bash
+npm run test:e2e:install               # 第一次在這台機器跑（或升級 Playwright 後）先裝瀏覽器
 node scripts/perf-audit.mjs            # 預設打 production
 E2E_BASE_URL=http://localhost:3000 node scripts/perf-audit.mjs   # 本地
 ```

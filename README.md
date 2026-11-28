@@ -162,6 +162,8 @@ npm run format:check     # Prettier 檢查（CI 用）
 npm run typecheck        # TypeScript 檢查
 npm run test             # Unit tests (Vitest)
 npm run test:integration # 對 live Supabase 跑整合測試
+npm run test:e2e:install # 安裝 E2E 用的瀏覽器到 QuickReserve 專屬資料夾（每台機器第一次、或升級 Playwright 後跑一次）
+npm run test:e2e         # 瀏覽器 E2E（Playwright；需先 npm run dev，或用 E2E_BASE_URL 指定網址）
 npm run db:push          # 套 migrations 到 cloud
 npm run db:diff          # 看 cloud vs local schema diff
 npm run db:types         # 從 cloud schema 重新產生 src/lib/supabase/types.ts（需先 `npx supabase login` 並在 .env.local 設 SUPABASE_DB_PASSWORD；script 已自動載入 .env.local。若不想設定，可改用 Supabase MCP 的 generate_typescript_types 工具重生型別）

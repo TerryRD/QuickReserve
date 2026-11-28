@@ -19,6 +19,8 @@
 import ws from 'ws'
 globalThis.WebSocket = ws
 import { createClient } from '@supabase/supabase-js'
+// 要排在 @playwright/test 之前：先把瀏覽器位置指到 QuickReserve 專屬資料夾
+import './playwright-browsers-path.cjs'
 import { chromium } from '@playwright/test'
 import { config } from 'dotenv'
 import { writeFileSync } from 'node:fs'
