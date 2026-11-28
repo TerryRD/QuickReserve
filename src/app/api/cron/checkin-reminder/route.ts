@@ -122,33 +122,18 @@ export async function GET(request: Request) {
   await Promise.all(pending)
 
   // No-show sweep: confirmed + not-checked-in + slot already ended -> mark no_show.
-  // Label only: the class was deducted at booking and is forfeited by not being
-  // refunded (no classes_used change here). 30-day floor avoids scanning ancient rows
-  // on first run; once marked, rows leave the 'confirmed' set and aren't rescanned.
-  const noShowFloor = new Date(now.getTime() - 30 * 24 * 3600 * 1000).toISOString()
-  const { data: endedRows } = await admin
-    .from('bookings')
-    .select('id, availability_slots!inner(end_at)')
-    .eq('status', 'confirmed')
-    .is('checked_in_at', null)
-    .lt('availability_slots.end_at', now.toISOString())
-    .gte('availability_slots.end_at', noShowFloor)
-  const noShowIds = (endedRows ?? []).map((r) => r.id)
-  let noShowMarked = 0
-  if (noShowIds.length > 0) {
-    const { error: nsErr } = await admin
-      .from('bookings')
-      .update({ status: 'no_show' })
-      .in('id', noShowIds)
-    if (!nsErr) noShowMarked = noShowIds.length
-  }
+  // 交給資料庫函式處理，同一交易寫入歷程（booking.no_show）；不再直接改 bookings 表。
+  const { data: noShowMarked, error: nsErr } = await admin.rpc('mark_no_show_bookings')
+  if (nsErr) console.error('[checkin-reminder] mark_no_show_bookings', nsErr.message)
 
   return NextResponse.json({
     scanned: rows.length,
     reminders,
     missingStudents: planned.filter((p) => p.kind === 'missing').length,
     coachAlerts,
-    noShowMarked,
+    noShowMarked: nsErr ? 0 : (noShowMarked ?? 0),
+    // 標記未出席失敗時為 true，避免 noShowMarked: 0 被誤讀成「沒有要標的預約」
+    noShowFailed: !!nsErr,
     timestamp: now.toISOString(),
   })
 }

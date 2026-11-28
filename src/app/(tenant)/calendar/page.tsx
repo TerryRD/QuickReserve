@@ -1,17 +1,8 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import {
-  addDays,
-  addWeeks,
-  endOfWeek,
-  format,
-  parseISO,
-  startOfMonth,
-  startOfWeek,
-  subWeeks,
-} from 'date-fns'
 import { X } from 'lucide-react'
 import { requireTenantMember } from '@/lib/auth/get-session'
+import { memberDisplayName } from '@/lib/auth/display-name'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { buttonVariants } from '@/components/ui/button'
 import { SectionHead } from '@/components/ui/section-head'
@@ -21,8 +12,7 @@ import NewSlotDialog from './new-slot-dialog'
 import RecurringRuleDialog from './recurring-rule-dialog'
 import MemberFilter from './member-filter'
 import CalendarPanel from './calendar-panel'
-
-const TZ_OFFSET_HOURS = 8
+import { calendarRange } from './calendar-range'
 
 type View = 'week' | 'list' | 'month'
 
@@ -40,23 +30,17 @@ export default async function CalendarPage({
   const params = await searchParams
   const initialView: View = params.view === 'list' || params.view === 'month' ? params.view : 'week'
 
-  // Week anchor drives both week + list views. Month view uses its own anchor
-  // but we still compute weekStart for navigation and slot-create defaults.
-  const weekAnchor = params.week ? parseISO(params.week) : new Date()
-  const weekStart = startOfWeek(weekAnchor, { weekStartsOn: 1 })
-  const weekEnd = endOfWeek(weekAnchor, { weekStartsOn: 1 })
-
-  // Month range covers a 6-row × 7-col grid: from the Sunday on/before
-  // startOfMonth to the Saturday on/after endOfMonth. Sized to match the
-  // mockup grid so off-month days still show empty.
-  const monthStart = startOfMonth(weekAnchor)
-  const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 })
-  const gridEnd = addDays(gridStart, 41) // 42 cells = 6 weeks
-
-  // Decide the fetch range based on view. We keep this narrow to avoid
-  // pulling a month of slots when only a week is shown.
-  const fetchStart = initialView === 'month' ? gridStart : weekStart
-  const fetchEnd = initialView === 'month' ? gridEnd : weekEnd
+  // 週、清單、月檢視的日期範圍一律以台灣日界計算（不受伺服器時區影響）。
+  // 抓資料的範圍依檢視而定：月檢視抓滿 6 週的月曆格，其他只抓一週；上界不含。
+  const {
+    weekStartKey,
+    weekEndKey,
+    monthStartKey,
+    prevWeekKey,
+    nextWeekKey,
+    fetchStart,
+    fetchEndExclusive,
+  } = calendarRange({ weekParam: params.week, now: new Date(), view: initialView })
 
   const supabase = await createSupabaseServerClient()
 
@@ -69,14 +53,18 @@ export default async function CalendarPage({
   if (session.role === 'tenant_owner') {
     const { data } = await supabase
       .from('tenant_members')
-      .select('id, role, invited_email, user_id')
+      .select('id, role, display_name, invited_email, user_id')
       .eq('tenant_id', session.tenantId)
       .eq('status', 'active')
       .order('role', { ascending: false })
     allMembers = (data ?? []).map((m) => ({
       id: m.id,
       role: m.role,
-      label: m.role === 'owner' ? '我' : (m.invited_email?.split('@')[0] ?? 'Staff'),
+      label:
+        m.role === 'owner'
+          ? '我'
+          : (memberDisplayName({ displayName: m.display_name, invitedEmail: m.invited_email }) ??
+            'Staff'),
       isSelf: m.id === session.memberId,
     }))
   } else {
@@ -101,7 +89,7 @@ export default async function CalendarPage({
     .select('id, start_at, end_at, status, member_id, service_id, services(name, max_capacity)')
     .in('member_id', effectiveIds)
     .gte('start_at', fetchStart.toISOString())
-    .lte('start_at', fetchEnd.toISOString())
+    .lt('start_at', fetchEndExclusive.toISOString())
     .order('start_at')
 
   const slotIds = (slots ?? []).map((s) => s.id)
@@ -139,7 +127,7 @@ export default async function CalendarPage({
     .select('id, member_id, start_at, end_at, reason')
     .in('member_id', effectiveIds)
     .gte('end_at', fetchStart.toISOString())
-    .lte('start_at', fetchEnd.toISOString())
+    .lt('start_at', fetchEndExclusive.toISOString())
   const unavailableEvents = (rawEvents ?? []).map((e) => ({
     id: e.id,
     memberId: e.member_id,
@@ -150,8 +138,6 @@ export default async function CalendarPage({
 
   // Week navigation (week view only). For month view we still preserve query
   // params; the user navigates by week even when month-viewing.
-  const prevWeek = format(subWeeks(weekStart, 1), 'yyyy-MM-dd')
-  const nextWeek = format(addWeeks(weekStart, 1), 'yyyy-MM-dd')
   const baseQs = new URLSearchParams()
   if (params.members) baseQs.set('members', params.members)
   if (initialView !== 'week') baseQs.set('view', initialView)
@@ -162,13 +148,13 @@ export default async function CalendarPage({
     const s = qs.toString()
     return `/calendar${s ? `?${s}` : ''}`
   }
-  const navPrevHref = buildHref(prevWeek)
-  const navNextHref = buildHref(nextWeek)
+  const navPrevHref = buildHref(prevWeekKey)
+  const navNextHref = buildHref(nextWeekKey)
   const navTodayHref = buildHref(null)
   const navLabel =
     initialView === 'month'
-      ? format(monthStart, 'yyyy/MM')
-      : `${format(weekStart, 'yyyy/MM/dd')} – ${format(weekEnd, 'MM/dd')}`
+      ? monthStartKey.slice(0, 7).replaceAll('-', '/')
+      : `${weekStartKey.replaceAll('-', '/')} – ${weekEndKey.slice(5).replaceAll('-', '/')}`
 
   // Build the "clear filter" href once for the chip.
   const clearMemberHref = (() => {
@@ -254,7 +240,7 @@ export default async function CalendarPage({
                 管理重複規則
               </Link>
               <RecurringRuleDialog services={services ?? []} />
-              <NewSlotDialog services={services ?? []} weekStart={weekStart.toISOString()} />
+              <NewSlotDialog services={services ?? []} weekStart={weekStartKey} />
             </>
           )}
           {!viewingSelfOnly && (
@@ -268,10 +254,9 @@ export default async function CalendarPage({
       <Suspense fallback={null}>
         <CalendarPanel
           initialView={initialView}
-          weekStart={weekStart.toISOString()}
-          monthAnchor={monthStart.toISOString()}
+          weekStart={weekStartKey}
+          monthAnchor={monthStartKey}
           slots={slotDisplays}
-          tzOffsetHours={TZ_OFFSET_HOURS}
           showMemberLabel={!viewingSelfOnly}
         />
       </Suspense>

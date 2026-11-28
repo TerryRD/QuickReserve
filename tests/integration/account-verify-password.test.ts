@@ -25,11 +25,11 @@ describe('verifyCurrentPassword', () => {
     })
     if (error || !data?.user) throw new Error(`create user failed: ${error?.message}`)
     userId = data.user.id
-  })
+  }, 120_000)
 
   afterAll(async () => {
     if (userId) await admin.auth.admin.deleteUser(userId)
-  })
+  }, 120_000)
 
   it('returns true for the correct password', async () => {
     expect(await verifyCurrentPassword(email, password)).toBe(true)

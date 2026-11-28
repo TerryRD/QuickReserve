@@ -138,10 +138,10 @@ export default function CustomerRow({
 
         <div className="space-y-6 px-4 pb-4">
           <section className="space-y-2">
-            <Kicker>PACKAGES · 套裝餘額</Kicker>
+            <Kicker>PACKAGES · 剩餘堂數</Kicker>
             {drawer.packages.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border bg-muted/40 p-4 font-cjk text-xs text-muted-foreground">
-                尚無有效套裝
+                目前沒有可用的堂數
               </div>
             ) : (
               drawer.packages.map((p) => {

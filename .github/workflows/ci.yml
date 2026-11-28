@@ -34,7 +34,24 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
 
       - name: Build
-        run: npm run build
+        # next/font 向 Google 抓字型偶發失敗（重跑即過）；只針對這個錯誤重試，最多 3 次。
+        # 其他建置錯誤照舊立刻失敗。
+        shell: bash
+        run: |
+          set -o pipefail
+          for attempt in 1 2 3; do
+            if npm run build 2>&1 | tee build.log; then
+              exit 0
+            fi
+            if ! grep -q 'An error occurred in `next/font`' build.log; then
+              echo "建置失敗，且不是 next/font 抓字型的問題，不重試。"
+              exit 1
+            fi
+            echo "::warning::第 ${attempt} 次建置因 next/font 抓字型失敗"
+            if [ "$attempt" -lt 3 ]; then sleep 15; fi
+          done
+          echo "連續 3 次都因 next/font 失敗。"
+          exit 1
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy

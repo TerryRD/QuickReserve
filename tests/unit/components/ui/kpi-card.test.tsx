@@ -10,14 +10,14 @@ describe('KpiCard', () => {
         label="本週待確認"
         value={5}
         unit="筆"
-        hint="教練核可中"
+        hint="等教練確認"
         icon={<Clock data-testid="kpi-icon" />}
       />,
     )
     expect(screen.getByText('本週待確認')).toBeInTheDocument()
     expect(screen.getByText('5')).toBeInTheDocument()
     expect(screen.getByText('筆')).toBeInTheDocument()
-    expect(screen.getByText('教練核可中')).toBeInTheDocument()
+    expect(screen.getByText('等教練確認')).toBeInTheDocument()
     expect(screen.getByTestId('kpi-icon')).toBeInTheDocument()
   })
 

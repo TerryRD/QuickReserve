@@ -1,11 +1,17 @@
 import Link from 'next/link'
-import { format, startOfMonth, subDays } from 'date-fns'
+import { subDays } from 'date-fns'
 import { ArrowLeft, ClipboardCheck, Clock, Inbox, ListChecks, TrendingUp } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { SectionHead } from '@/components/ui/section-head'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { EmptyState } from '@/components/ui/empty-state'
+import {
+  formatTaipeiDate,
+  formatTaipeiTime,
+  taipeiDateKey,
+  taipeiDayStart,
+} from '@/lib/taipei-time'
 import PurchaseRow from './purchase-row'
 
 export default async function PendingPurchasesPage() {
@@ -14,7 +20,7 @@ export default async function PendingPurchasesPage() {
 
   const now = new Date()
   const weekStart = subDays(now, 7).toISOString()
-  const monthStart = startOfMonth(now).toISOString()
+  const monthStart = taipeiDayStart(`${taipeiDateKey(now).slice(0, 7)}-01`).toISOString()
 
   const [purchasesRes, totalPendingRes, weekNewRes, approvedMonthRes] = await Promise.all([
     supabase
@@ -62,14 +68,14 @@ export default async function PendingPurchasesPage() {
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        回套裝管理
+        回課堂管理
       </Link>
 
       <SectionHead
-        kicker="PENDING REVIEW · 套裝審核"
-        title="套裝審核佇列"
+        kicker="PENDING REVIEW · 購買申請"
+        title="購買申請"
         eng="PENDING"
-        hint="學員提交的購買申請，確認收款後點「確認」開放餘額"
+        hint="學員送出的購買申請。確認收到款項後按「核准」，學員就能開始用堂數預約"
       />
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -99,7 +105,7 @@ export default async function PendingPurchasesPage() {
           label="本月通過"
           value={approvedMonth}
           unit="筆"
-          hint="本月已核可"
+          hint="本月已核准"
           icon={<ListChecks className="size-3.5" />}
         />
       </section>
@@ -108,7 +114,7 @@ export default async function PendingPurchasesPage() {
         <EmptyState
           icon={<ClipboardCheck className="size-5" />}
           title="NO PENDING"
-          hint="無待審核項目"
+          hint="沒有審核中的申請"
         />
       ) : (
         <div className="space-y-3">
@@ -131,7 +137,7 @@ export default async function PendingPurchasesPage() {
                     | 'awaiting_payment'
                     | 'partial_paid',
                   receiptNote: p.receipt_note,
-                  createdAt: format(new Date(p.created_at), 'yyyy/MM/dd HH:mm'),
+                  createdAt: `${formatTaipeiDate(p.created_at)} ${formatTaipeiTime(p.created_at)}`,
                 }}
               />
             )

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { addDays, format, formatDistanceToNow, startOfDay, startOfMonth } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { ArrowRight, Calendar, Check, Clock, Sparkles, Users } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -9,6 +9,8 @@ import { Kicker } from '@/components/ui/kicker'
 import { KpiCard } from '@/components/ui/kpi-card'
 import { StatusBadge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { formatTaipeiTime } from '@/lib/taipei-time'
+import { dashboardRange } from './dashboard-range'
 
 const TZ_OFFSET_HOURS = 8
 const toLocal = (iso: string) => new Date(new Date(iso).getTime() + TZ_OFFSET_HOURS * 3600 * 1000)
@@ -45,10 +47,7 @@ export default async function DashboardContent({
   const supabase = await createSupabaseServerClient()
 
   const now = new Date()
-  const todayStart = startOfDay(now).toISOString()
-  const tomorrowStart = addDays(startOfDay(now), 1).toISOString()
-  const weekEnd = addDays(startOfDay(now), 7).toISOString()
-  const monthStart = startOfMonth(now).toISOString()
+  const { todayStart, tomorrowStart, weekEnd, monthStart } = dashboardRange(now)
 
   const [
     pendingRes,
@@ -189,7 +188,7 @@ export default async function DashboardContent({
                     )}
                   >
                     <div className="font-display w-16 text-xl leading-none tabular-nums tracking-[0.02em]">
-                      {slot ? format(toLocal(slot.start_at), 'HH:mm') : '—'}
+                      {slot ? formatTaipeiTime(slot.start_at) : '—'}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-cjk truncate text-sm font-semibold">

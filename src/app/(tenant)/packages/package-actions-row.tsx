@@ -38,8 +38,8 @@ export default function PackageActionsRow({ id, isActive }: { id: string; isActi
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       }
-      title="刪除此套裝？"
-      description="刪除後學員端不再顯示此套裝。既有 confirmed 購買記錄不受影響、學員仍可繼續使用餘額。可從『已刪除』分頁重新啟用。"
+      title="刪除這個 N 堂課？"
+      description="刪除後學員端不再顯示。已核准的購買不受影響，學員仍可繼續使用剩餘堂數。可從「已刪除」分頁重新啟用。"
       confirmLabel="刪除"
       variant="destructive"
       onConfirm={() => del.execute({ id })}

@@ -1,25 +1,31 @@
-import { addDays, format, startOfDay } from 'date-fns'
 import { requireTenantMember } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { fetchActiveTemplate, fetchUnavailableEvents } from '@/lib/availability-server'
 import { effectiveAvailability } from '@/lib/availability'
+import { formatTaipeiTime, taipeiDateKey, taipeiDayStart, taipeiParts } from '@/lib/taipei-time'
 
 const TZ_OFFSET_HOURS = 8
 const PREVIEW_DAYS = 14
+// 台灣無日光節約，一天固定 24 小時
+const DAY_MS = 86400000
 
-const WEEKDAY_LABEL = ['日', '一', '二', '三', '四', '五', '六']
+const pad = (n: number) => String(n).padStart(2, '0')
 
 export default async function EffectivePreview() {
   const session = await requireTenantMember()
   const supabase = await createSupabaseServerClient()
 
-  const today = startOfDay(new Date())
-  const rangeEnd = addDays(today, PREVIEW_DAYS)
+  // 台灣今天 00:00
+  const today = taipeiDayStart(taipeiDateKey(new Date()))
+  const rangeEnd = new Date(today.getTime() + PREVIEW_DAYS * DAY_MS)
 
   const template = await fetchActiveTemplate(supabase, session.memberId, today)
   const events = await fetchUnavailableEvents(supabase, session.memberId, today, rangeEnd)
 
-  const days = Array.from({ length: PREVIEW_DAYS }, (_, i) => addDays(today, i))
+  const days = Array.from(
+    { length: PREVIEW_DAYS },
+    (_, i) => new Date(today.getTime() + i * DAY_MS),
+  )
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
@@ -36,11 +42,11 @@ export default async function EffectivePreview() {
               unavailableEvents: events,
               tzOffsetHours: TZ_OFFSET_HOURS,
             })
-            const jsDay = d.getDay()
+            const p = taipeiParts(d)
             return (
               <div key={d.toISOString()} className="flex items-center gap-3 text-sm">
                 <div className="w-24 shrink-0 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-                  {format(d, 'MM/dd')}（{WEEKDAY_LABEL[jsDay]}）
+                  {pad(p.month)}/{pad(p.day)}（{p.weekday}）
                 </div>
                 <div className="flex-1">
                   {ranges.length === 0 ? (
@@ -52,7 +58,7 @@ export default async function EffectivePreview() {
                           key={idx}
                           className="font-mono rounded-md border border-border bg-muted px-2 py-0.5 text-xs text-foreground"
                         >
-                          {format(r.start, 'HH:mm')}–{format(r.end, 'HH:mm')}
+                          {formatTaipeiTime(r.start)}–{formatTaipeiTime(r.end)}
                         </span>
                       ))}
                     </div>

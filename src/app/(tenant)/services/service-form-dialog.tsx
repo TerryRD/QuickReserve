@@ -167,7 +167,7 @@ export default function ServiceFormDialog(props: Props) {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              達最少人數時自動確認；過取消截止 (slot 開始前 N 小時) 仍不足、自動取消並退課數。
+              達最少人數時自動確認；過取消截止 (slot 開始前 N 小時) 仍不足、自動取消並退回堂數。
             </p>
           </div>
           {isEdit && (
