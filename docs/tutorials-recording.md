@@ -14,6 +14,7 @@
 ## 需求
 
 - Node（專案既有版本）
+- Playwright 瀏覽器：第一次在這台機器跑（或升級 Playwright 之後）先執行 `npm run test:e2e:install`，會裝到 QuickReserve 專屬資料夾
 - **ffmpeg**（webm → mp4 必要）：`winget install ffmpeg` 或 `choco install ffmpeg`
 - 本機 `npm run dev` 運行中（或以 `TUTORIAL_BASE_URL` 指向其他環境）
 - 平台教學需平台管理員密碼（否則該支自動跳過）

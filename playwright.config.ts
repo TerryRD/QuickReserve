@@ -1,4 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
+// 瀏覽器放 QuickReserve 專屬資料夾，不與同機其他專案共用（原因與位置見該檔）
+import './scripts/playwright-browsers-path.cjs'
 
 /**
  * E2E smoke tests for QuickReserve.
@@ -6,6 +8,9 @@ import { defineConfig, devices } from '@playwright/test'
  * Browser-level coverage that complements:
  *   - tests/integration/*.ts     — Supabase RLS + RPC integration tests (Vitest)
  *   - scripts/e2e-verify.mjs     — API-level booking flow end-to-end
+ *
+ * 第一次在這台機器跑（或升級 Playwright 之後）要先裝瀏覽器到專屬資料夾：
+ *     npm run test:e2e:install
  *
  * Run locally against `npm run dev`:
  *     npm run dev           # in one terminal

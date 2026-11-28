@@ -1,4 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
+// 瀏覽器放 QuickReserve 專屬資料夾，不與同機其他專案共用（原因與位置見該檔）
+import './scripts/playwright-browsers-path.cjs'
 
 /**
  * 教學影片錄製專用設定（與 playwright.config.ts 分離，不進 CI smoke）。
