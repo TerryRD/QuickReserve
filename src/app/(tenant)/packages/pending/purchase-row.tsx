@@ -51,7 +51,7 @@ export default function PurchaseRow({ purchase, emphasized = false }: Props) {
   const [reason, setReason] = useState('')
 
   const approve = useAction(approvePurchaseAction, {
-    onSuccess: () => toast.success('已確認'),
+    onSuccess: () => toast.success('已核准'),
     onError: ({ error }) => toast.error(error.serverError?.message ?? '失敗'),
   })
   const reject = useAction(rejectPurchaseAction, {
@@ -89,7 +89,7 @@ export default function PurchaseRow({ purchase, emphasized = false }: Props) {
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => approve.execute({ id: purchase.id })} disabled={approve.isPending}>
-            {approve.isPending ? '處理中...' : '確認'}
+            {approve.isPending ? '處理中...' : '核准'}
           </Button>
           <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
             <DialogTrigger render={<Button variant="outline">拒絕</Button>} />

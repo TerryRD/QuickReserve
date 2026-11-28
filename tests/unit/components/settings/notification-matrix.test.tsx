@@ -7,7 +7,7 @@ import {
 
 const EVENTS = [
   { key: 'booking_created', label: '新預約' },
-  { key: 'package_request', label: '套裝申請' },
+  { key: 'package_request', label: '購買申請' },
 ] as const
 
 const PREFS: NotificationPrefs = {
@@ -19,7 +19,7 @@ describe('NotificationMatrix', () => {
   it('renders one row per event and two channel checkboxes per row', () => {
     render(<NotificationMatrix events={[...EVENTS]} prefs={PREFS} onToggle={() => {}} />)
     expect(screen.getByText('新預約')).toBeInTheDocument()
-    expect(screen.getByText('套裝申請')).toBeInTheDocument()
+    expect(screen.getByText('購買申請')).toBeInTheDocument()
     expect(screen.getAllByRole('checkbox')).toHaveLength(EVENTS.length * 2)
   })
 

@@ -23,10 +23,10 @@ export const approvePurchaseAction = actionClient
       )
       .eq('id', parsedInput.id)
       .maybeSingle()
-    if (!purchase) throw new NotFoundError('購買記錄')
-    if (purchase.tenant_id !== session.tenantId) throw new NotFoundError('購買記錄')
+    if (!purchase) throw new NotFoundError('購買紀錄')
+    if (purchase.tenant_id !== session.tenantId) throw new NotFoundError('購買紀錄')
     if (purchase.approval_status !== 'pending_review')
-      throw new AppError('INVALID_STATE', '只能審核待審核狀態的購買')
+      throw new AppError('INVALID_STATE', '只能處理審核中的購買申請')
 
     const now = new Date()
     const pkg = purchase.service_packages as { expires_in_days: number | null } | null
@@ -67,9 +67,9 @@ export const rejectPurchaseAction = actionClient
       .select('tenant_id, approval_status')
       .eq('id', parsedInput.id)
       .maybeSingle()
-    if (!purchase || purchase.tenant_id !== session.tenantId) throw new NotFoundError('購買記錄')
+    if (!purchase || purchase.tenant_id !== session.tenantId) throw new NotFoundError('購買紀錄')
     if (purchase.approval_status !== 'pending_review')
-      throw new AppError('INVALID_STATE', '只能審核待審核狀態的購買')
+      throw new AppError('INVALID_STATE', '只能處理審核中的購買申請')
 
     const { error } = await supabase
       .from('customer_purchases')

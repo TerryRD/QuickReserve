@@ -1,9 +1,9 @@
 // src/lib/notify-checkin.ts
 import { createSupabaseAdminClient } from '@/lib/supabase/server'
 import { pushToUser } from '@/lib/push'
+import { formatTaipeiDateTime } from '@/lib/taipei-time'
 
-const tzLabel = (iso: string) =>
-  new Date(new Date(iso).getTime() + 8 * 3600 * 1000).toLocaleString('zh-TW')
+const tzLabel = (iso: string) => formatTaipeiDateTime(iso, { withYear: true })
 
 /** Flow 1: student checked in -> notify the slot's coach. Called from the check-in action. Repeated calls produce repeated log rows/pushes; the browser `tag` dedups the visible notification. */
 export async function notifyCheckinDone(bookingId: string): Promise<void> {

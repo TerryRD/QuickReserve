@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { BOOKING_STATUS_LABEL, type BookingStatus } from '@/lib/booking-terms'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
@@ -35,7 +36,7 @@ export function Badge({ children, icon, className, variant, ...rest }: Props) {
   )
 }
 
-export type StatusType = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'
+export type StatusType = BookingStatus
 
 const STATUS_VARIANT: Record<StatusType, Props['variant']> = {
   pending: 'yellow',
@@ -45,18 +46,10 @@ const STATUS_VARIANT: Record<StatusType, Props['variant']> = {
   no_show: 'outline',
 }
 
-const STATUS_LABEL: Record<StatusType, string> = {
-  pending: '待確認',
-  confirmed: '已確認',
-  cancelled: '已取消',
-  completed: '已完成',
-  no_show: '未到場',
-}
-
 export function StatusBadge({ status, className }: { status: StatusType; className?: string }) {
   return (
     <Badge variant={STATUS_VARIANT[status]} className={className}>
-      {STATUS_LABEL[status]}
+      {BOOKING_STATUS_LABEL[status]}
     </Badge>
   )
 }

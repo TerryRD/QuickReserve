@@ -4,7 +4,7 @@ import { narrate, pace, highlight } from './tutorial-helpers'
 import { writeFileSync, mkdirSync } from 'node:fs'
 
 const visited: string[] = []
-// 用林教練：小明持有 10 堂「網球初級班」有效套裝，可實際送出預約。
+// 用林教練：小明在「網球初級班」還有剩餘堂數（10 堂課），可實際送出預約。
 const slug = ACCOUNTS.coachLin.slug // demo-lin-coach
 
 /** 回傳本機 today+offset 的 YYYY-MM-DD（與 seed 的 todayStr 對齊）。 */
@@ -28,7 +28,7 @@ test('學員完整操作教學', async ({ page }: { page: Page }) => {
   // ── 2. 我的預約 ──
   await page.goto('/my-bookings')
   visited.push('/my-bookings')
-  await narrate(page, '步驟 2：我的預約', '本週／待回覆／已完成／已取消')
+  await narrate(page, '步驟 2：我的預約', '本週／待回覆／已出席／已取消')
   // exact:true 以避開字幕橫幅內含「待回覆」造成的 strict-mode 衝突
   await expect(page.getByText('待回覆', { exact: true }).first()).toBeVisible()
   await pace(page)
@@ -40,14 +40,14 @@ test('學員完整操作教學', async ({ page }: { page: Page }) => {
   await expect(page.getByText(/時段|SLOTS/i).first()).toBeVisible()
   await pace(page)
 
-  // ── 4. 公開套票 + 我的購買 ──
+  // ── 4. 購買堂數 + 購課紀錄 ──
   await page.goto(`/${slug}/packages`)
   visited.push(`/${slug}/packages`)
-  await narrate(page, '步驟 4：選購套票', '查看教練提供的課程套票')
+  await narrate(page, '步驟 4：購買堂數', '查看教練提供的 N 堂課')
   await pace(page)
   await page.goto(`/${slug}/purchases`)
   visited.push(`/${slug}/purchases`)
-  await narrate(page, '步驟 4-1：我的套裝', '查看已購買／可用的套裝')
+  await narrate(page, '步驟 4-1：購課紀錄', '查看已購買的堂數與剩餘堂數')
   await pace(page)
 
   // ── 5. 送出預約（實際操作）──

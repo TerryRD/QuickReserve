@@ -53,8 +53,8 @@ function SignupForm() {
           </div>
           <div className="font-cjk mt-1 text-sm text-foreground">
             {inviteTenantName
-              ? `您正在接受 ${inviteTenantName} 的教練邀請，完成註冊後將自動接受邀請、可立即購買該教練的套裝。`
-              : '您正在接受教練邀請，完成註冊後將自動接受邀請、可立即購買該教練的套裝。'}
+              ? `您正在接受 ${inviteTenantName} 的教練邀請，完成註冊後將自動接受邀請、可立即購買該教練的堂數。`
+              : '您正在接受教練邀請，完成註冊後將自動接受邀請、可立即購買該教練的堂數。'}
           </div>
         </div>
       )}

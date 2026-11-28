@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { format } from 'date-fns'
 import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PrimaryCta } from '@/components/ui/primary-cta'
 import { SectionHead } from '@/components/ui/section-head'
+import { formatTaipeiDate } from '@/lib/taipei-time'
 import { createBookingAction } from './actions'
 
 type PurchaseOption = {
@@ -53,17 +53,17 @@ export default function BookForm({
         <>
           <section>
             <SectionHead
-              kicker="PACKAGE · 套裝餘額"
+              kicker="PACKAGE · 剩餘堂數"
               title="本次將扣除"
               eng="DEDUCT"
-              hint="預設挑最快到期的；可手動切換成其他有效套裝。"
+              hint="預設使用最快到期的；可以改選其他可用的堂數。"
             />
             <div className="grid gap-3">
               {purchases.map((p) => {
                 const remaining = p.classes_total - p.classes_used
                 const total = p.classes_total
                 const percent = total > 0 ? (remaining / total) * 100 : 0
-                const pkgName = p.service_packages?.name ?? '套裝'
+                const pkgName = p.service_packages?.name ?? `${p.classes_total} 堂課`
                 return (
                   <label
                     key={p.id}
@@ -83,7 +83,7 @@ export default function BookForm({
                         {remaining}/{total} 堂
                         {p.expires_at ? (
                           <>
-                            {' · '}期限 {format(new Date(p.expires_at), 'yyyy/MM/dd')}
+                            {' · '}期限 {formatTaipeiDate(p.expires_at)}
                           </>
                         ) : null}
                       </div>
