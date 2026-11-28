@@ -37,7 +37,7 @@ export default function PurchaseRequestForm({
 
   const { execute, isPending } = useAction(requestPurchaseAction, {
     onSuccess: () => {
-      toast.success(`「${packageName}」申請已送出,等教練核可`)
+      toast.success(`「${packageName}」申請已送出，等教練核准`)
       setOpen(false)
     },
     onError: ({ error }) => toast.error(error.serverError?.message ?? '送出失敗'),
@@ -63,7 +63,7 @@ export default function PurchaseRequestForm({
         withArrow="inline"
         onClick={() => setOpen(true)}
       >
-        申請此套裝
+        購買這個 N 堂課
       </Button>
     )
   }
@@ -74,9 +74,9 @@ export default function PurchaseRequestForm({
         <span className="inline-flex size-[22px] items-center justify-center rounded-full bg-accent text-accent-foreground">
           <Info className="size-3" />
         </span>
-        <span className="font-cjk text-[13px] font-semibold">申請套裝</span>
+        <span className="font-cjk text-[13px] font-semibold">購買申請</span>
         <span className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">
-          · 教練核可後生效
+          · 教練核准後可使用
         </span>
       </div>
 

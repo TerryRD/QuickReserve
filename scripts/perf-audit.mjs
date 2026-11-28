@@ -8,10 +8,12 @@
  *   3. Cold = run #1; warm-median = median(runs 3,4,5)
  *   4. Output JSON to docs/perf-audit-results.json
  *
- * Run:  E2E_BASE_URL=https://quick-reserve-mu.vercel.app node scripts/perf-audit.mjs
+ * Run:  PLATFORM_ADMIN_EMAIL=... PLATFORM_ADMIN_PWD=... \
+ *         E2E_BASE_URL=https://quick-reserve-mu.vercel.app node scripts/perf-audit.mjs
  *
- * Env vars (read from .env.local):
- *   - PLATFORM_ADMIN_EMAIL / PLATFORM_ADMIN_PWD (default: terry@gmail.com / Nx7$kPm9!Lq3vRz2)
+ * Env vars (shell or .env.local):
+ *   - PLATFORM_ADMIN_EMAIL / PLATFORM_ADMIN_PWD — required, no default; the script exits
+ *     immediately (non-zero) if either is missing.
  *   - All demo-* accounts use Test1234! (seeded by scripts/seed-test-data.mjs)
  */
 import ws from 'ws'
@@ -22,14 +24,21 @@ import { config } from 'dotenv'
 import { writeFileSync } from 'node:fs'
 config({ path: '.env.local' })
 
+const PLATFORM_EMAIL = process.env.PLATFORM_ADMIN_EMAIL
+const PLATFORM_PWD = process.env.PLATFORM_ADMIN_PWD
+if (!PLATFORM_EMAIL || !PLATFORM_PWD) {
+  console.error(
+    '錯誤：缺少平台管理員帳密。請先設定環境變數 PLATFORM_ADMIN_EMAIL 與 PLATFORM_ADMIN_PWD（可寫在 .env.local 或執行前於命令列設定），再執行本腳本。',
+  )
+  process.exit(1)
+}
+
 const BASE = process.env.E2E_BASE_URL ?? 'https://quick-reserve-mu.vercel.app'
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const admin = createClient(SUPABASE_URL, SERVICE_KEY)
 
 const PWD = 'Test1234!'
-const PLATFORM_EMAIL = process.env.PLATFORM_ADMIN_EMAIL ?? 'terry@gmail.com'
-const PLATFORM_PWD = process.env.PLATFORM_ADMIN_PWD ?? 'Nx7$kPm9!Lq3vRz2'
 
 const RUNS = 5
 const WARM_INDICES = [2, 3, 4] // 3rd, 4th, 5th run (0-indexed)

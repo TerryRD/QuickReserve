@@ -6,6 +6,7 @@ import { actionClient } from '@/lib/safe-action'
 import { requireSession } from '@/lib/auth/get-session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError, NotFoundError } from '@/lib/errors'
+import { notifyPurchaseRequested } from '@/lib/notify-booking'
 
 const RequestSchema = z.object({
   packageId: z.string().uuid(),
@@ -24,7 +25,7 @@ export const requestPurchaseAction = actionClient
       .select('id, tenant_id, service_id, class_count, is_active')
       .eq('id', parsedInput.packageId)
       .maybeSingle()
-    if (!pkg || !pkg.is_active) throw new NotFoundError('套裝')
+    if (!pkg || !pkg.is_active) throw new NotFoundError('N 堂課')
 
     // Ensure tenant_customers bridge
     await supabase
@@ -41,18 +42,26 @@ export const requestPurchaseAction = actionClient
         ? null
         : parsedInput.receiptNote?.trim() || null
 
-    const { error } = await supabase.from('customer_purchases').insert({
-      tenant_id: pkg.tenant_id,
-      customer_id: session.userId,
-      service_id: pkg.service_id,
-      package_id: pkg.id,
-      classes_total: pkg.class_count,
-      classes_used: 0,
-      payment_self_reported: parsedInput.paymentSelfReported,
-      receipt_note: receiptNote,
-      approval_status: 'pending_review',
-    })
-    if (error) throw new AppError('REQUEST_FAILED', error.message)
+    const { data: created, error } = await supabase
+      .from('customer_purchases')
+      .insert({
+        tenant_id: pkg.tenant_id,
+        customer_id: session.userId,
+        service_id: pkg.service_id,
+        package_id: pkg.id,
+        classes_total: pkg.class_count,
+        classes_used: 0,
+        payment_self_reported: parsedInput.paymentSelfReported,
+        receipt_note: receiptNote,
+        approval_status: 'pending_review',
+      })
+      .select('id')
+      .single()
+    if (error || !created) {
+      throw new AppError('REQUEST_FAILED', error?.message ?? '購買申請送出失敗')
+    }
+
+    void notifyPurchaseRequested(created.id)
 
     revalidatePath('/[tenantSlug]/packages', 'layout')
     return { ok: true }

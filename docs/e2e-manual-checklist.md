@@ -39,7 +39,7 @@
 
 ### `/platform/bookings`
 - [ ] Kicker + display h1「全平台預約」
-- [ ] **Pill 風格 segmented filter**(全部 / 待確認 / 已確認 / 已完成 / 已取消)— 點切換有 query param
+- [ ] **Pill 風格 segmented filter**(全部 / 待確認 / 已確認 / 已出席 / 未出席 / 已取消)— 點切換有 query param
 - [ ] 旁邊 tenant filter dropdown 過濾
 - [ ] Table 用 mono uppercase tracking 表頭、`StatusBadge` 4 狀態
 - [ ] 沒資料時顯示 `EmptyState`(dashed 框 + Bell icon)
@@ -52,7 +52,7 @@
 - [ ] **黑底 hero card** 佔 hero 區、右上半透明黃色大圓裝飾
 - [ ] 上面 mono kicker `DASHBOARD · 日期 · 教練名`
 - [ ] 大 display 早安/午安/晚安 + 教練名 + 黃圓點
-- [ ] hero 內 3 顆按鈕:**黃 pill accent**「開啟今日行事曆」+ outline「建立可用時段」+ ghost「開放新套裝」
+- [ ] hero 內 3 顆按鈕:**黃 pill accent**「開啟今日行事曆」+ outline「建立可用時段」+ ghost「新增 N 堂課」
 - [ ] hero 下方:**4 個 KpiCard**(本週待確認 / 本週時段 / 今日預約 / 本月新學員)
 - [ ] **兩欄 layout**(lg 寬):左 Today timeline + 右 Pending column
 - [ ] Today timeline:每個 row time 用 `font-display tabular-nums`,**NEXT UP row 黃底**,團班 row 右側 GROUP/N/M badge
@@ -79,27 +79,32 @@
 - [ ] **Status filter chip**(全部 / 啟用 / 封鎖)— 每個 chip 旁顯示 count
 - [ ] 列表 row 卡片:左 avatar 圓圈含 initial + 名字 + StatusBadge(封鎖時)+ 統計(BOOKINGS / BALANCE / LAST SEEN)
 - [ ] 點任一 row → **右側 Sheet drawer 滑出**
-- [ ] Drawer 內:PACKAGES section 每張套裝顯示「N/M 堂」+ **進度條** + 期限;BOOKINGS section 列最近 10 筆 + StatusBadge;ACTIONS 區 BlockButton 還在
+- [ ] Drawer 內:PACKAGES section 每筆剩餘堂數顯示「N/M 堂」+ **進度條** + 期限;BOOKINGS section 列最近 10 筆 + StatusBadge;ACTIONS 區 BlockButton 還在
 
 ### `/packages`
 - [ ] **segmented tab**(全部 / 一對一 / 團班 / 草稿)
 - [ ] **按服務分組** — 每組 SectionHead + 內含 2~3 欄 PackageCard grid
 - [ ] PackageCard:`is_popular` 顯示 **黃色 POPULAR pill** 右上角;`is_active=false` 顯示 outline「草稿」badge
-- [ ] 每組最後 **dashed 新增套裝 placeholder**(點開預選該 service)
+- [ ] 每組最後 **dashed 新增 N 堂課 placeholder**(點開預選該 service)
 
 ### `/packages/pending`
 - [ ] 上方 **4 KpiCard 列**(總待審 / 等待最久 / 本週新進 / 本月通過)— 總待審 > 0 時 accent border
 - [ ] **第一筆 PurchaseRow 有 accent ring + 黃色 tint**(強調最舊)
 - [ ] 確認 / 拒絕按鈕還能用(本來就有的 action)
 
-### `/notifications`(P3-7 重寫)
-- [ ] **這是 inbox 不是設定頁** — 跟舊版差很大
-- [ ] **4 個 tab**(全部 / 預約 / 套裝 / 系統)按 type prefix 過濾
-- [ ] 每筆 row 左側有 Bell icon
-- [ ] **24h 內事件:左側黃色側條 + 字重粗 + Bell icon 黑色**(cosmetic「未讀」)
-- [ ] 較舊事件:opacity 70% + 字重正常
+### `/notifications`(P3-7 重寫;2026-11 改為站內通知清單)
+- [ ] **這是通知清單不是設定頁**
+- [ ] 側欄項目叫「**通知**」(鈴鐺圖示),有未讀時右側顯示未讀則數
+- [ ] 手機:選單按鈕有未讀時顯示小紅點;打開選單後「通知」旁有未讀則數
+- [ ] **4 個 tab**(全部 / 預約 / 購課 / 系統)按 type prefix 過濾;tab 上只有中文
+- [ ] 每則顯示**標題 + 內文 + 時間**;畫面上沒有英文代碼、通道或狀態字樣
+- [ ] 沒有內文的舊通知:只顯示通知名稱
+- [ ] **未讀:左側黃色側條 + 字重粗**(由 `read_at` 決定);已讀較淡
+- [ ] 點一則未讀 → 標為已讀、未讀數減少,有連結時前往該頁
+- [ ] 「全部標為已讀(N)」可用;沒有未讀時不顯示
 - [ ] 右上「推播偏好」outline button 跳 `/settings/notifications`
 - [ ] EmptyState 顯示「沒有通知」when filter 沒結果
+- [ ] 學員送出購買申請 → 教練這頁出現「新的購買申請」,點了到 `/packages/pending`
 
 ### `/settings/profile`
 - [ ] 上方 Kicker + h1 + **SubNav**(公開頁 / 通知 / 作息 / 重複)4 個 pill,當前 active
@@ -113,7 +118,7 @@
 - [ ] SubNav active 在「通知」
 - [ ] 上方 **Web Push 訂閱卡**(PushOptIn)+ 啟用按鈕(瀏覽器同意 push 權限後 endpoint 寫進 push_subscriptions)
 - [ ] **已訂閱裝置列表**:看到 UA-parsed 裝置名 + 「最後使用」+ 移除 button
-- [ ] **9 events × 2 channels 矩陣**(列= 新預約 / 預約已確認 / 取消 / 改期 / 套裝申請 / 套裝核准 / 課前提醒 / 每日提醒 / 每週摘要,欄= WEB PUSH / IN-APP)
+- [ ] **9 events × 2 channels 矩陣**(列= 新預約 / 預約已確認 / 取消 / 改期 / 購買申請 / 購買已核准 / 課前提醒 / 每日提醒 / 每週摘要,欄= WEB PUSH / IN-APP)
 - [ ] **無 Email 欄**(本期不做)
 - [ ] **勿擾時段** checkbox + 兩個 time input,跨午夜時段(22:00 → 07:00)可設
 - [ ] 「儲存設定」按鈕 → server action upsert,toast 「儲存成功」+ 「已儲存 HH:MM:SS」
@@ -160,7 +165,7 @@
 - [ ] **Services** section(muted bg) — 3 欄 service cards
 - [ ] **SlotPicker**:`DateRibbon` 橫向 chip row + `TimeChip` 4 state(open / full / group / selected)
 - [ ] **選到時段 → 黑底 selected slot recap bar 出現**(大 display 時段 + 服務 + 「前往預約」accent button)
-- [ ] **Footer**:`QRMark` + mono 文字 + 套裝/我的預約/登入 navi
+- [ ] **Footer**:`QRMark` + mono 文字 + 購買堂數/我的預約/登入 navi
 
 ### 公開頁改期模式 `/demo-wang-coach?reschedule=<bookingId>`
 - [ ] 上方出現 **黃色 RescheduleBanner** + Calendar icon + 退出 link
@@ -169,14 +174,14 @@
 
 ### `/demo-wang-coach/packages`
 - [ ] 按服務分組,每組 SectionHead
-- [ ] `is_popular` 套裝顯示 **黃色 POPULAR pill 含 Star icon** 右上角
-- [ ] 點「申請此套裝」→ **in-card 表單展開**(不是 modal)
+- [ ] `is_popular` 的 N 堂課顯示 **黃色 POPULAR pill 含 Star icon** 右上角
+- [ ] 點「購買這個 N 堂課」→ **in-card 表單展開**(不是 modal)
 - [ ] **付款狀態 segmented**(2 chips:claimed_paid / awaiting_payment)— 第 3 種「部份付」現在沒有(deferred)
 
 ### `/book/<slotId>`(P2-3)
 - [ ] **大 display slot card**:`EEEE, MMM dd` mono kicker + 大字時間 + CJK 服務名/時長
-- [ ] 有套裝時:**radio cards 每張顯示「remaining/total 堂」+ 進度條**(注:目前是 read-only,RPC 自動選最舊的)
-- [ ] 沒套裝時:**dashed EmptyState** + Package icon + 「瀏覽套裝」CTA 跳 `/<slug>/packages`
+- [ ] 有剩餘堂數時:**radio cards 每張顯示「remaining/total 堂」+ 進度條**(注:目前是 read-only,RPC 自動選最舊的)
+- [ ] 沒有剩餘堂數時:**dashed EmptyState** + Package icon + 「去購買堂數」CTA 跳 `/<slug>/packages`
 - [ ] **Cancellation policy frame**(muted-40 bg + mono kicker)正常顯示 `cancel_deadline_hours`
 
 ### `/login`(P2-4)
@@ -192,7 +197,7 @@
 - [ ] Submit 後跳 `/login?signedup=1` 或自動 sign-in
 
 ### `/my-bookings`(P2-6)
-- [ ] 上方 **4 KpiCard 列**(本週 / 待回覆 / 已完成 / 已取消)— 待回覆 > 0 時 accent border
+- [ ] 上方 **4 KpiCard 列**(本週 / 待回覆 / 已出席 / 已取消)— 待回覆 > 0 時 accent border
 - [ ] 中間「我的教練」聚合區
 - [ ] 下方按時間群組,每組 header 用 **`<DateStrip>` primitive**(今日 / 本週 / 之後 / 已過)+ count
 - [ ] 每筆 booking card:date strip + status badge + 服務名 + 時間 + **改期 link**(active booking 才有)
@@ -202,6 +207,14 @@
 - [ ] 可達(P4 route fix 後)
 - [ ] PushOptIn + 偏好設定(4 個 boolean toggle:週報 / 每日提醒 / 課前提醒 / 預約狀態變更)
 
+### 頁首鈴鐺 + `/my-notifications`(2026-11 新增)
+- [ ] 學員每一頁的頁首都有鈴鐺;有未讀時顯示未讀則數
+- [ ] 點鈴鐺 → 跳出小視窗,列最近 5 則(標題 + 內文 + 時間);**打開不會把通知標為已讀**
+- [ ] 點其中一則 → 標為已讀、前往相關頁面
+- [ ] 點「看全部通知」→ `/my-notifications`
+- [ ] `/my-notifications`:列全部通知 + 「全部標為已讀」+ 「推播偏好」跳 `/account/notifications`
+- [ ] 沒有通知時顯示「沒有通知」
+
 ---
 
 ## 跨角色 / 安全驗收
@@ -210,16 +223,15 @@
 - [ ] 學員試打 `/platform/dashboard` → 同上 redirect
 - [ ] 學員試打 `/packages` → redirect(P4 middleware fix 後不會 500)
 - [ ] 學員試打 `/account/notifications` → 自己可以,但 unauth 也 redirect 到 login
+- [ ] 未登入試打 `/my-notifications` → redirect 到 login
 - [ ] 助教試打 `/settings/profile` → forbidden
 - [ ] 教練 A 試打教練 B 的 `/dashboard` → 看到自己的(因為 dashboard 走 session,自動帶自己的 tenant)
 
 ## 已知限制(不必驗,看到不要當 bug)
 
-- 公開頁 SlotPicker 看不到 group N/M 真實計數(`/api/public/slots` 沒返回 group_filled — Phase 2)
-- `/book` 套裝 radio 是視覺只讀(RPC 強制選最舊到期的 — Phase 2)
+- `/book` 剩餘堂數 radio 是視覺只讀(RPC 強制選最舊到期的 — Phase 2)
 - `/signup?invite=` banner 沒顯示 tenant_name(沒 public endpoint — Phase 2)
 - Web Push 真實訂閱(瀏覽器 permission + push)目前只有 UI 殼,不會實際 push — Phase 2
-- `/notifications` 24h 內黃色側條是 cosmetic,**不會記** read state(沒 read_at column — Phase 2)
 - Calendar slot popover 沒有 live conflict-detection inline(Phase 2)
 
 ## 找到 bug 怎麼回報

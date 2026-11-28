@@ -6,6 +6,8 @@
 **Baseline**：warm 中位 server-timing ≤ 500ms。
 **最近一次跑**：2026-05-30（Vercel region 從 iad1 切到 hnd1 後）。
 
+執行前必須先設定環境變數 `PLATFORM_ADMIN_EMAIL` 與 `PLATFORM_ADMIN_PWD`（寫在 `.env.local` 或命令列帶入），缺少時腳本會直接中止。
+
 執行：
 ```bash
 node scripts/perf-audit.mjs            # 預設打 production
@@ -93,6 +95,8 @@ E2E_BASE_URL=http://localhost:3000 node scripts/perf-audit.mjs   # 本地
 ## 量測 flow（給跑量測的人看）
 
 ```bash
+# 0. 先設定 PLATFORM_ADMIN_EMAIL、PLATFORM_ADMIN_PWD（.env.local 或命令列），否則腳本直接中止
+
 # 1. Production
 node scripts/perf-audit.mjs
 

@@ -6,6 +6,7 @@ import { Calendar, LogOut, Menu } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { AccountChip } from '@/components/shell/account-chip'
+import { hasUnread } from '@/components/notifications/unread-badge'
 import SidebarNav from './sidebar-nav'
 
 export default function MobileSidebar({
@@ -15,6 +16,7 @@ export default function MobileSidebar({
   isOwner,
   displayName,
   email,
+  unread,
 }: {
   tenantName: string
   tenantSlug: string
@@ -22,16 +24,31 @@ export default function MobileSidebar({
   isOwner: boolean
   displayName: string | null
   email: string | null
+  /** 未讀通知數；查詢失敗為 null（不顯示小紅點與數字） */
+  unread: number | null
 }) {
   const [open, setOpen] = useState(false)
+  const showDot = hasUnread(unread)
   const close = () => setOpen(false)
   return (
     <div className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-3 md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger
           render={
-            <Button variant="ghost" size="icon">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              aria-label={showDot ? '選單，有未讀通知' : '選單'}
+            >
               <Menu className="h-5 w-5" />
+              {showDot && (
+                <span
+                  aria-hidden
+                  data-testid="menu-unread-dot"
+                  className="absolute top-1 right-1 size-2 rounded-full bg-destructive"
+                />
+              )}
             </Button>
           }
         />
@@ -53,7 +70,7 @@ export default function MobileSidebar({
             </Link>
           </div>
           <div className="flex-1 overflow-y-auto p-3">
-            <SidebarNav isOwner={isOwner} onNavigate={close} />
+            <SidebarNav isOwner={isOwner} unread={unread} onNavigate={close} />
           </div>
           <div className="border-t border-sidebar-border p-3">
             <div className="pb-2">

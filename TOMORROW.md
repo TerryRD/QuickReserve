@@ -33,7 +33,7 @@
 - 真實 bug found by E2E: customer hit `/dashboard` 會 500(無 tenant membership 但 middleware 不知道)— 加 role-based redirect 在 tenant/platform layout 修掉
 - `docs/e2e-manual-checklist.md`: 4 角色 × 17 頁手動 walkthrough checklist(含已知 deferred 提示,不會 false-positive)
 - **Playwright E2E suite 設好**: 31 tests(28 active + 3 skipped platform),covers public + coach + customer + flows against production
-- **GitHub Actions e2e workflow**: push to master → 90s 等 Vercel deploy → 跑全 suite + 失敗時 upload artifacts
+- **GitHub Actions e2e workflow**: 改成手動觸發(`workflow_dispatch`)→ 固定 `ubuntu-24.04` → 只跑 5 個唯讀檔(public / coach / customer / flows / platform)+ 同時只跑一輪 + 失敗時 upload artifacts
 - `claudeDesign/` 推上 GitHub(含 README + 對照表),`uploads/` 守 .gitignore(真實行事曆 PNG 不上)
 - Supabase types regen(`npm run db:types`)— manual patches 已乾淨,只多 `service_packages.is_popular`
 - **S7 audit report 寫好**:`docs/superpowers/specs/2026-05-28-s7-audit-report.md` — 補完 advisor 沒覆蓋的部分(open-redirect / 權限矩陣 / 檔案大小 / 機密 / test coverage)

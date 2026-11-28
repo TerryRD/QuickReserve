@@ -33,7 +33,7 @@ test('助教完整操作教學', async ({ page }: { page: Page }) => {
   await visit(page, '/bookings', '步驟 4：預約', '協助處理學員預約')
   await visit(page, '/customers', '步驟 5：客戶', '查看客戶資料')
   await visit(page, '/services', '步驟 6：服務', '查看課程服務')
-  await visit(page, '/packages', '步驟 7：套票', '查看套票')
+  await visit(page, '/packages', '步驟 7：課堂管理', '查看可購買的 N 堂課')
   await visit(page, '/notifications', '步驟 8：通知', '助教的通知收件匣')
   await visit(page, '/settings/profile', '步驟 9：個人設定', '助教的個人設定')
 

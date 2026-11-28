@@ -7,14 +7,15 @@ import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { Kicker } from '@/components/ui/kicker'
 import { SidePanel } from '../side-panel'
 import { loginAction } from './actions'
 
 const SIDE_LINES = [
-  '登入後可購買套裝、預約時段、改期或取消預約。',
-  '教練核可後會以 Email 與 Web Push 通知你。',
+  '登入後可購買堂數、預約時段、改期或取消預約。',
+  '教練核准後會以推播通知你。',
   '資料安全：密碼以 bcrypt 雜湊儲存、session 採 httpOnly cookie。',
 ]
 
@@ -108,18 +109,12 @@ function LoginForm() {
           >
             {isPending ? '登入中...' : '登入'}
           </Button>
-          <Button
-            type="button"
-            variant="pill-outline"
-            size="pill"
-            render={
-              <Link
-                href={`/signup${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
-              />
-            }
+          <Link
+            href={`/signup${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
+            className={cn(buttonVariants({ variant: 'pill-outline', size: 'pill' }))}
           >
             建立帳號
-          </Button>
+          </Link>
         </div>
         <div className="font-mono mt-1 text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">
           登入即表示同意服務條款 · 隱私權政策

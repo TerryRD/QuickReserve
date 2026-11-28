@@ -1,0 +1,42 @@
+-- ============================================================================
+-- 站內通知：使用者只能改「已讀時間」
+-- 【已由 terry 執行（2026-11-27）】可重複執行。不改欄位、不動資料。
+-- 要在 20261126120000_in_app_notifications.sql 之後執行。
+-- 執行後已由整合測試確認：使用者改自己通知的標題會被拒絕，改已讀時間可以
+-- （tests/integration/in-app-notifications.test.ts）。
+--
+-- 白話說明：
+--   哪張表：通知紀錄 notification_log。
+--   執行前：登入的使用者可以修改「自己那幾筆」通知的任何欄位——不只已讀時間，
+--   連標題、內文、連結、類型、狀態都改得到（只影響他自己看到的內容）。
+--   畫面上唯一需要的修改是「標為已讀」。
+--
+--   這次改成：登入的使用者只能改 read_at（已讀時間）這一欄，其他欄位一律改不到。
+--   做法是收回整張表的修改權限，再只開放 read_at 這一欄。
+--   「只能改自己的」那條既有規則（notif_log_self_update）不動，兩道一起生效。
+--
+--   不受影響的：
+--     讀取：照舊，只有自己（與平台管理員）。
+--     新增：照舊，只有後端。
+--     後端（service role）：照舊，全部欄位都能寫——發通知、把舊的未讀標為已讀都走後端。
+--     畫面上的「標為已讀」「全部標為已讀」：只改 read_at，照常運作。
+--
+-- 執行後驗證：
+--   select grantee, privilege_type from information_schema.table_privileges
+--    where table_schema = 'public' and table_name = 'notification_log'
+--      and privilege_type = 'UPDATE' and grantee in ('anon', 'authenticated');
+--   -- 0 列（整張表的修改權限已收回）
+--
+--   select grantee, column_name from information_schema.column_privileges
+--    where table_schema = 'public' and table_name = 'notification_log'
+--      and privilege_type = 'UPDATE' and grantee in ('anon', 'authenticated');
+--   -- 1 列：authenticated / read_at
+--
+-- 回滾（還原成執行前：整張表都可改，仍受「只能改自己的」限制）：
+--   revoke update (read_at) on public.notification_log from authenticated;
+--   grant update on public.notification_log to anon, authenticated;
+-- ============================================================================
+
+revoke update on public.notification_log from anon, authenticated;
+
+grant update (read_at) on public.notification_log to authenticated;

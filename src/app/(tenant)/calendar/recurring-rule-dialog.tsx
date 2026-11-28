@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { formatTaipeiDateTime, taipeiDateKey } from '@/lib/taipei-time'
 import { createRecurringRuleAction, previewRecurringRuleAction } from './recurring-actions'
 
 type Service = { id: string; name: string; duration_minutes: number }
@@ -35,8 +36,7 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
   const [byWeekday, setByWeekday] = useState<number[]>([1, 3, 5]) // Mon Wed Fri default
   const [byMonthDay, setByMonthDay] = useState('1')
 
-  const today = new Date()
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const todayStr = taipeiDateKey(new Date())
 
   const [startDate, setStartDate] = useState(todayStr)
   const [startTime, setStartTime] = useState('19:00')
@@ -176,12 +176,8 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
   }
 
   function jumpToConflict(c: ConflictDetail) {
-    const localDate = new Date(c.startAt)
-    const yyyy = localDate.getFullYear()
-    const mm = String(localDate.getMonth() + 1).padStart(2, '0')
-    const dd = String(localDate.getDate()).padStart(2, '0')
     setOpen(false)
-    window.location.href = `/calendar?week=${yyyy}-${mm}-${dd}&fromConflict=1`
+    window.location.href = `/calendar?week=${taipeiDateKey(c.startAt)}&fromConflict=1`
   }
 
   if (services.length === 0) {
@@ -439,8 +435,8 @@ export default function RecurringRuleDialog({ services }: { services: Service[] 
                     className="flex items-center justify-between gap-2 rounded-lg bg-background p-2"
                   >
                     <span className="font-cjk">
-                      {new Date(c.startAt).toLocaleString('zh-TW')}
-                      {c.endAt && ` — ${new Date(c.endAt).toLocaleString('zh-TW')}`}
+                      {formatTaipeiDateTime(c.startAt, { withYear: true })}
+                      {c.endAt && ` — ${formatTaipeiDateTime(c.endAt, { withYear: true })}`}
                       {c.serviceName ? ` (${c.serviceName})` : ''}
                     </span>
                     <Button

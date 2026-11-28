@@ -33,6 +33,73 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          actor_role: string
+          actor_user_id: string | null
+          booking_id: string | null
+          created_at: string
+          customer_id: string | null
+          detail: Json
+          event: string
+          id: string
+          reason: string | null
+          subject_id: string
+          subject_type: string
+          tenant_id: string
+        }
+        Insert: {
+          actor_role: string
+          actor_user_id?: string | null
+          booking_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          detail?: Json
+          event: string
+          id?: string
+          reason?: string | null
+          subject_id: string
+          subject_type: string
+          tenant_id: string
+        }
+        Update: {
+          actor_role?: string
+          actor_user_id?: string | null
+          booking_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          detail?: Json
+          event?: string
+          id?: string
+          reason?: string | null
+          subject_id?: string
+          subject_type?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'activity_log_booking_id_fkey'
+            columns: ['booking_id']
+            isOneToOne: false
+            referencedRelation: 'bookings'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'activity_log_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'customers'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'activity_log_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       availability_slots: {
         Row: {
           created_at: string
@@ -209,16 +276,23 @@ export type Database = {
       }
       bookings: {
         Row: {
+          cancel_actor_role: string | null
+          cancel_category: string | null
+          cancel_deadline_at: string | null
+          cancel_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           checked_in_at: string | null
           checked_in_by: string | null
+          class_disposition: string | null
           created_at: string
           customer_id: string
           customer_notes: string | null
           extended_properties: Json | null
           id: string
+          leave_source: string | null
           purchase_id: string
+          rescheduled_from_booking_id: string | null
           service_id: string
           slot_id: string
           status: string
@@ -227,16 +301,23 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cancel_actor_role?: string | null
+          cancel_category?: string | null
+          cancel_deadline_at?: string | null
+          cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           checked_in_at?: string | null
           checked_in_by?: string | null
+          class_disposition?: string | null
           created_at?: string
           customer_id: string
           customer_notes?: string | null
           extended_properties?: Json | null
           id?: string
+          leave_source?: string | null
           purchase_id: string
+          rescheduled_from_booking_id?: string | null
           service_id: string
           slot_id: string
           status?: string
@@ -245,16 +326,23 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cancel_actor_role?: string | null
+          cancel_category?: string | null
+          cancel_deadline_at?: string | null
+          cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           checked_in_at?: string | null
           checked_in_by?: string | null
+          class_disposition?: string | null
           created_at?: string
           customer_id?: string
           customer_notes?: string | null
           extended_properties?: Json | null
           id?: string
+          leave_source?: string | null
           purchase_id?: string
+          rescheduled_from_booking_id?: string | null
           service_id?: string
           slot_id?: string
           status?: string
@@ -275,6 +363,13 @@ export type Database = {
             columns: ['purchase_id']
             isOneToOne: false
             referencedRelation: 'customer_purchases'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'bookings_rescheduled_from_booking_id_fkey'
+            columns: ['rescheduled_from_booking_id']
+            isOneToOne: false
+            referencedRelation: 'bookings'
             referencedColumns: ['id']
           },
           {
@@ -300,6 +395,51 @@ export type Database = {
           },
         ]
       }
+      class_ledger: {
+        Row: {
+          actor_user_id: string | null
+          booking_id: string | null
+          created_at: string
+          delta: number
+          id: string
+          purchase_id: string
+          reason_code: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          booking_id?: string | null
+          created_at?: string
+          delta: number
+          id?: string
+          purchase_id: string
+          reason_code: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          booking_id?: string | null
+          created_at?: string
+          delta?: number
+          id?: string
+          purchase_id?: string
+          reason_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'class_ledger_booking_id_fkey'
+            columns: ['booking_id']
+            isOneToOne: false
+            referencedRelation: 'bookings'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'class_ledger_purchase_id_fkey'
+            columns: ['purchase_id']
+            isOneToOne: false
+            referencedRelation: 'customer_purchases'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       customer_purchases: {
         Row: {
           approval_status: string
@@ -311,6 +451,7 @@ export type Database = {
           customer_id: string
           expires_at: string | null
           id: string
+          origin: string
           package_id: string | null
           payment_self_reported: string
           receipt_note: string | null
@@ -328,6 +469,7 @@ export type Database = {
           customer_id: string
           expires_at?: string | null
           id?: string
+          origin?: string
           package_id?: string | null
           payment_self_reported: string
           receipt_note?: string | null
@@ -345,6 +487,7 @@ export type Database = {
           customer_id?: string
           expires_at?: string | null
           id?: string
+          origin?: string
           package_id?: string | null
           payment_self_reported?: string
           receipt_note?: string | null
@@ -406,6 +549,7 @@ export type Database = {
       }
       notification_log: {
         Row: {
+          body: string | null
           channel: string
           error_message: string | null
           id: string
@@ -414,10 +558,13 @@ export type Database = {
           scheduled_for: string | null
           sent_at: string
           status: string
+          title: string | null
           type: string
+          url: string | null
           user_id: string
         }
         Insert: {
+          body?: string | null
           channel?: string
           error_message?: string | null
           id?: string
@@ -426,10 +573,13 @@ export type Database = {
           scheduled_for?: string | null
           sent_at?: string
           status: string
+          title?: string | null
           type: string
+          url?: string | null
           user_id: string
         }
         Update: {
+          body?: string | null
           channel?: string
           error_message?: string | null
           id?: string
@@ -438,7 +588,9 @@ export type Database = {
           scheduled_for?: string | null
           sent_at?: string
           status?: string
+          title?: string | null
           type?: string
+          url?: string | null
           user_id?: string
         }
         Relationships: []
@@ -482,6 +634,24 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weekly_summary_enabled?: boolean
+        }
+        Relationships: []
+      }
+      platform_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
@@ -773,6 +943,7 @@ export type Database = {
       tenant_members: {
         Row: {
           created_at: string
+          display_name: string | null
           id: string
           invite_expires_at: string | null
           invite_token: string | null
@@ -785,6 +956,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          display_name?: string | null
           id?: string
           invite_expires_at?: string | null
           invite_token?: string | null
@@ -797,6 +969,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          display_name?: string | null
           id?: string
           invite_expires_at?: string | null
           invite_token?: string | null
@@ -978,16 +1151,23 @@ export type Database = {
           p_slot_id: string
         }
         Returns: {
+          cancel_actor_role: string | null
+          cancel_category: string | null
+          cancel_deadline_at: string | null
+          cancel_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           checked_in_at: string | null
           checked_in_by: string | null
+          class_disposition: string | null
           created_at: string
           customer_id: string
           customer_notes: string | null
           extended_properties: Json | null
           id: string
+          leave_source: string | null
           purchase_id: string
+          rescheduled_from_booking_id: string | null
           service_id: string
           slot_id: string
           status: string
@@ -1015,18 +1195,25 @@ export type Database = {
         }[]
       }
       cancel_booking: {
-        Args: { p_booking_id: string }
+        Args: { p_booking_id: string; p_reason?: string }
         Returns: {
+          cancel_actor_role: string | null
+          cancel_category: string | null
+          cancel_deadline_at: string | null
+          cancel_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           checked_in_at: string | null
           checked_in_by: string | null
+          class_disposition: string | null
           created_at: string
           customer_id: string
           customer_notes: string | null
           extended_properties: Json | null
           id: string
+          leave_source: string | null
           purchase_id: string
+          rescheduled_from_booking_id: string | null
           service_id: string
           slot_id: string
           status: string
@@ -1051,16 +1238,23 @@ export type Database = {
       confirm_booking: {
         Args: { p_booking_id: string }
         Returns: {
+          cancel_actor_role: string | null
+          cancel_category: string | null
+          cancel_deadline_at: string | null
+          cancel_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           checked_in_at: string | null
           checked_in_by: string | null
+          class_disposition: string | null
           created_at: string
           customer_id: string
           customer_notes: string | null
           extended_properties: Json | null
           id: string
+          leave_source: string | null
           purchase_id: string
+          rescheduled_from_booking_id: string | null
           service_id: string
           slot_id: string
           status: string
@@ -1077,20 +1271,48 @@ export type Database = {
       }
       current_user_owner_tenant_ids: { Args: never; Returns: string[] }
       current_user_tenant_ids: { Args: never; Returns: string[] }
+      is_own_slot_booking: { Args: { p_booking_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
-      reschedule_booking: {
-        Args: { p_new_slot_id: string; p_old_booking_id: string }
+      mark_no_show_bookings: { Args: { p_lookback?: unknown }; Returns: number }
+      public_bookable_slots: {
+        Args: {
+          p_from: string
+          p_service_id: string
+          p_tenant_id: string
+          p_to: string
+        }
         Returns: {
+          end_at: string
+          id: string
+          max_capacity: number
+          start_at: string
+          taken: number
+        }[]
+      }
+      reschedule_booking: {
+        Args: {
+          p_new_slot_id: string
+          p_old_booking_id: string
+          p_reason?: string
+        }
+        Returns: {
+          cancel_actor_role: string | null
+          cancel_category: string | null
+          cancel_deadline_at: string | null
+          cancel_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           checked_in_at: string | null
           checked_in_by: string | null
+          class_disposition: string | null
           created_at: string
           customer_id: string
           customer_notes: string | null
           extended_properties: Json | null
           id: string
+          leave_source: string | null
           purchase_id: string
+          rescheduled_from_booking_id: string | null
           service_id: string
           slot_id: string
           status: string
@@ -1105,6 +1327,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      slot_taken_count: { Args: { p_slot_id: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
